@@ -1,7 +1,8 @@
 import React from "react";
+import ResponsiveStudyForm from "./ResponsiveStudyForm";
 
 function Home() {
-  return <div>Home</div>;
+  return <ResponsiveStudyForm />;
 }
 
 export default Home;
