@@ -3,6 +3,7 @@
 import React from "react";
 import {useAuth} from "../contexts/AuthContext";
 import {motion} from "framer-motion";
+import {logout} from "@/lib/auth";
 
 const ProtectedRoute = ({children, requireAuth = true}) => {
   const {user, loading} = useAuth();
@@ -72,11 +73,15 @@ const ProtectedRoute = ({children, requireAuth = true}) => {
   }
 
   // If user is logged in but trying to access auth pages, redirect to dashboard
+  // BUT: Don't redirect immediately to allow seeing success messages
   if (!requireAuth && user) {
-    if (typeof window !== "undefined") {
-      window.location.href = "/";
-    }
-    return null;
+    // Add a small delay to allow users to see success messages
+    // setTimeout(() => {
+    //   if (typeof window !== "undefined") {
+    //     window.location.href = "/";
+    //   }
+    // }, 3000); // 3 second delay
+    // logout();
   }
 
   // Render children if authentication check passes

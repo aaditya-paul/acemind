@@ -6,6 +6,11 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {loginWithEmailAndPassword, signInWithGoogle} from "@/lib/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import {
+  parseFirebaseError,
+  validateEmail,
+  validatePassword,
+} from "@/lib/errorUtils";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -21,8 +26,17 @@ const LoginPage = () => {
     setError("");
     setSuccess("");
 
-    if (!email || !password) {
-      setError("Please fill in all fields");
+    // Validate email
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+
+    // Validate password
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
@@ -37,12 +51,14 @@ const LoginPage = () => {
           router.push("/"); // Redirect to main page
         }, 1500);
       } else {
-        setError(
-          result.error || "Failed to sign in. Please check your credentials."
-        );
+        // Use the error parsing utility to get user-friendly messages
+        const friendlyError = parseFirebaseError(result.error);
+        setError(friendlyError);
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      // Parse any unexpected errors
+      const friendlyError = parseFirebaseError(err);
+      setError(friendlyError);
       console.error("Login error:", err);
     } finally {
       setIsLoading(false);
@@ -63,12 +79,14 @@ const LoginPage = () => {
           router.push("/"); // Redirect to main page
         }, 1500);
       } else {
-        setError(
-          result.error || "Failed to sign in with Google. Please try again."
-        );
+        // Use the error parsing utility to get user-friendly messages
+        const friendlyError = parseFirebaseError(result.error);
+        setError(friendlyError);
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      // Parse any unexpected errors
+      const friendlyError = parseFirebaseError(err);
+      setError(friendlyError);
       console.error("Google sign-in error:", err);
     } finally {
       setIsLoading(false);
@@ -138,7 +156,7 @@ const LoginPage = () => {
 
   return (
     <ProtectedRoute requireAuth={false}>
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <motion.div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <motion.div
           className="w-full max-w-md"
           variants={containerVariants}
@@ -400,7 +418,7 @@ const LoginPage = () => {
             </p>
           </motion.div>
         </motion.div>
-      </div>
+      </motion.div>
     </ProtectedRoute>
   );
 };

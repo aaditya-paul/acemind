@@ -7,6 +7,8 @@ const StudyFormContent = () => {
   const [topic, setTopic] = useState("");
   const [syllabus, setSyllabus] = useState("");
   const [aiResponse, setAiResponse] = useState(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const popularTopics = [
     "JavaScript",
     "Python",
@@ -94,12 +96,15 @@ const StudyFormContent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
+
     if (!topic.trim()) {
-      alert("Please enter a topic");
+      setError("Please enter a topic");
       return;
     }
     if (!syllabus.trim()) {
-      alert("Please enter the syllabus");
+      setError("Please enter the syllabus");
       return;
     }
 
@@ -125,33 +130,30 @@ const StudyFormContent = () => {
       console.log("Response from backend:", data);
 
       if (data.success) {
-        alert("Form submitted successfully!");
+        setSuccess("Form submitted successfully!");
         // Clear the form
         // setTopic("");
         // setSyllabus("");
         setAiResponse(data.data.aiResponse);
       } else {
-        alert("Error: " + data.message);
+        setError("Error: " + data.message);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("Error submitting form. Please try again.");
+      setError("Error submitting form. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen w-full px-4 sm:px-6 lg:px-8 text-white flex items-center justify-center">
+    <div className="min-h-screen w-full  px-4 sm:px-6 lg:px-8 text-white flex items-center justify-center">
       <motion.div
-        className="w-full max-w-2xl md:p-4 py-10 md:py-14 overflow-y-auto"
+        className=" md:py-14 overflow-y-auto p-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         {/* Title */}
-        <motion.div
-          className="text-center md:mt-0 mt-5 mb-6"
-          variants={titleVariants}
-        >
+        <motion.div className="text-center mb-6" variants={titleVariants}>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
             What do you want to{" "}
             <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
@@ -163,6 +165,28 @@ const StudyFormContent = () => {
             learning
           </p>
         </motion.div>
+
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{opacity: 0, y: -10}}
+            animate={{opacity: 1, y: 0}}
+            className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200 text-sm w-full mx-auto"
+          >
+            {error}
+          </motion.div>
+        )}
+
+        {/* Success Message */}
+        {success && (
+          <motion.div
+            initial={{opacity: 0, y: -10}}
+            animate={{opacity: 1, y: 0}}
+            className="mb-4 p-3 bg-green-900/50 border border-green-500 rounded-lg text-green-200 text-sm w-full mx-auto"
+          >
+            {success}
+          </motion.div>
+        )}
 
         {/* Form */}
         <motion.form

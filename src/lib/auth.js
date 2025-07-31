@@ -18,6 +18,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import {auth, db, googleProvider} from "./firebase";
+import {createSampleUserData} from "./initializeData";
 
 // User registration with email and password
 export const registerWithEmailAndPassword = async (
@@ -27,6 +28,12 @@ export const registerWithEmailAndPassword = async (
   lastName
 ) => {
   try {
+    console.log("🔥 Starting user registration...", {
+      email,
+      firstName,
+      lastName,
+    });
+
     // Create user account
     const userCredential = await createUserWithEmailAndPassword(
       auth,
@@ -34,14 +41,16 @@ export const registerWithEmailAndPassword = async (
       password
     );
     const user = userCredential.user;
+    console.log("✅ Firebase Auth user created:", user.uid);
 
     // Update user profile with display name
     await updateProfile(user, {
       displayName: `${firstName} ${lastName}`,
     });
+    console.log("✅ User profile updated with display name");
 
-    // Save user data to Firestore
-    await setDoc(doc(db, "users", user.uid), {
+    // Prepare user data for Firestore
+    const userData = {
       uid: user.uid,
       firstName,
       lastName,
@@ -67,8 +76,30 @@ export const registerWithEmailAndPassword = async (
         topicsStudied: 0,
         streakDays: 0,
       },
-    });
+    };
 
+    console.log("📝 Saving user data to Firestore...", userData);
+
+    // Save user data to Firestore (removed merge: true to ensure clean write)
+    await setDoc(doc(db, "users", user.uid), userData);
+    console.log("✅ User data saved to Firestore successfully");
+
+    // Create sample user data for new user
+    try {
+      console.log("📊 Creating sample user data...");
+      await createSampleUserData(user.uid, {
+        firstName,
+        lastName,
+        email: user.email,
+        displayName: `${firstName} ${lastName}`,
+      });
+      console.log("✅ Sample user data created successfully");
+    } catch (sampleDataError) {
+      console.warn("⚠️ Failed to create sample user data:", sampleDataError);
+      // Don't fail registration if sample data creation fails
+    }
+
+    console.log("🎉 Registration completed successfully");
     return {
       success: true,
       user: {
@@ -79,10 +110,10 @@ export const registerWithEmailAndPassword = async (
       },
     };
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("❌ Registration error:", error);
     return {
       success: false,
-      error: error.message,
+      error: error.code || error.message,
     };
   }
 };
@@ -119,7 +150,7 @@ export const loginWithEmailAndPassword = async (email, password) => {
     console.error("Login error:", error);
     return {
       success: false,
-      error: error.message,
+      error: error.code || error.message,
     };
   }
 };
@@ -166,6 +197,19 @@ export const signInWithGoogle = async () => {
           streakDays: 0,
         },
       });
+
+      // Create sample user data for new Google user
+      try {
+        await createSampleUserData(user.uid, {
+          firstName,
+          lastName,
+          email: user.email,
+          displayName: user.displayName,
+        });
+      } catch (sampleDataError) {
+        console.warn("Failed to create sample user data:", sampleDataError);
+        // Don't fail sign-in if sample data creation fails
+      }
     } else {
       // Update last login time for existing user
       await setDoc(
@@ -190,7 +234,7 @@ export const signInWithGoogle = async () => {
     console.error("Google sign-in error:", error);
     return {
       success: false,
-      error: error.message,
+      error: error.code || error.message,
     };
   }
 };
@@ -204,7 +248,7 @@ export const logout = async () => {
     console.error("Logout error:", error);
     return {
       success: false,
-      error: error.message,
+      error: error.code || error.message,
     };
   }
 };
@@ -218,7 +262,7 @@ export const resetPassword = async (email) => {
     console.error("Password reset error:", error);
     return {
       success: false,
-      error: error.message,
+      error: error.code || error.message,
     };
   }
 };
@@ -242,7 +286,7 @@ export const getUserData = async (uid) => {
     console.error("Get user data error:", error);
     return {
       success: false,
-      error: error.message,
+      error: error.code || error.message,
     };
   }
 };
@@ -256,7 +300,7 @@ export const updateUserProfile = async (uid, updates) => {
     console.error("Update profile error:", error);
     return {
       success: false,
-      error: error.message,
+      error: error.code || error.message,
     };
   }
 };

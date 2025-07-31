@@ -6,6 +6,12 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {registerWithEmailAndPassword, signInWithGoogle} from "@/lib/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import {
+  parseFirebaseError,
+  validateEmail,
+  validateStrongPassword,
+  validateName,
+} from "@/lib/errorUtils";
 
 const SignupPage = () => {
   const router = useRouter();
@@ -35,20 +41,47 @@ const SignupPage = () => {
     setError("");
     setSuccess("");
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords don't match!");
+    // Validate first name
+    const firstNameError = validateName(formData.firstName);
+    if (firstNameError) {
+      setError(firstNameError);
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long!");
+    // Validate last name
+    const lastNameError = validateName(formData.lastName);
+    if (lastNameError) {
+      setError(lastNameError);
+      return;
+    }
+
+    // Validate email
+    const emailError = validateEmail(formData.email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+
+    // Validate password strength
+    const passwordError = validateStrongPassword(formData.password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
+    // Check if passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError(
+        "Passwords don't match. Please make sure both password fields are identical."
+      );
       return;
     }
 
     setIsLoading(true);
 
     try {
+      console.log("Registering user with data:", formData);
+
       const result = await registerWithEmailAndPassword(
         formData.email,
         formData.password,
@@ -59,13 +92,17 @@ const SignupPage = () => {
       if (result.success) {
         setSuccess("Account created successfully! Redirecting...");
         setTimeout(() => {
-          router.push("/"); // Redirect to main page
+          router.push("/"); // Redirect to main page after 2 seconds
         }, 2000);
       } else {
-        setError(result.error || "Failed to create account. Please try again.");
+        // Use the error parsing utility to get user-friendly messages
+        const friendlyError = parseFirebaseError(result.error);
+        setError(friendlyError);
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      // Parse any unexpected errors
+      const friendlyError = parseFirebaseError(err);
+      setError(friendlyError);
       console.error("Signup error:", err);
     } finally {
       setIsLoading(false);
@@ -83,15 +120,17 @@ const SignupPage = () => {
       if (result.success) {
         setSuccess("Account created successfully! Redirecting...");
         setTimeout(() => {
-          router.push("/"); // Redirect to main page
+          router.push("/"); // Redirect to main page after 1.5 seconds
         }, 1500);
       } else {
-        setError(
-          result.error || "Failed to sign up with Google. Please try again."
-        );
+        // Use the error parsing utility to get user-friendly messages
+        const friendlyError = parseFirebaseError(result.error);
+        setError(friendlyError);
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      // Parse any unexpected errors
+      const friendlyError = parseFirebaseError(err);
+      setError(friendlyError);
       console.error("Google signup error:", err);
     } finally {
       setIsLoading(false);
@@ -161,7 +200,7 @@ const SignupPage = () => {
 
   return (
     <ProtectedRoute requireAuth={false}>
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 py-12">
+      <motion.div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 py-12">
         <motion.div
           className="w-full max-w-lg"
           variants={containerVariants}
@@ -552,7 +591,7 @@ const SignupPage = () => {
             </p>
           </motion.div>
         </motion.div>
-      </div>
+      </motion.div>
     </ProtectedRoute>
   );
 };
