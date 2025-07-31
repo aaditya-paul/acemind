@@ -18,7 +18,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import {auth, db, googleProvider} from "./firebase";
-import {createSampleUserData} from "./initializeData";
+// import {createSampleUserData} from "./initializeData";
 
 // User registration with email and password
 export const registerWithEmailAndPassword = async (

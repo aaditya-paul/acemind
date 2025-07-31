@@ -2,6 +2,8 @@
 
 import React, {useState} from "react";
 import {motion} from "framer-motion";
+import {setResponseDB} from "@/lib/db";
+import {useAuth} from "@/contexts/AuthContext";
 
 const StudyFormContent = () => {
   const [topic, setTopic] = useState("");
@@ -9,6 +11,7 @@ const StudyFormContent = () => {
   const [aiResponse, setAiResponse] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const {user} = useAuth();
   const popularTopics = [
     "JavaScript",
     "Python",
@@ -112,7 +115,8 @@ const StudyFormContent = () => {
       console.log("Sending data to backend...");
       // Get the current host and use it for the API URL
       const currentHost = window.location.hostname;
-      const apiUrl = `http://${currentHost}:8000/api/submit`;
+      // const apiUrl = `http://${currentHost}:8000/api/submit`;
+      const apiUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
       console.log("API URL:", apiUrl);
 
       const response = await fetch(apiUrl, {
@@ -135,6 +139,7 @@ const StudyFormContent = () => {
         // setTopic("");
         // setSyllabus("");
         setAiResponse(data.data.aiResponse);
+        setResponseDB(data.data.responseDB, user.uid);
       } else {
         setError("Error: " + data.message);
       }
