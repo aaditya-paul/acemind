@@ -47,9 +47,11 @@ const LoginPage = () => {
 
       if (result.success) {
         setSuccess("Login successful! Redirecting...");
-        setTimeout(() => {
-          router.push("/"); // Redirect to main page
-        }, 1500);
+        router.push("/learn"); // Redirect to learn page
+
+        // setTimeout(() => {
+        //   router.push("/learn"); // Redirect to learn page
+        // }, 1500);
       } else {
         // Use the error parsing utility to get user-friendly messages
         const friendlyError = parseFirebaseError(result.error);
@@ -75,9 +77,11 @@ const LoginPage = () => {
 
       if (result.success) {
         setSuccess("Login successful! Redirecting...");
-        setTimeout(() => {
-          router.push("/"); // Redirect to main page
-        }, 1500);
+        router.push("/learn"); // Redirect to learn page
+
+        // setTimeout(() => {
+        //   router.push("/learn"); // Redirect to learn page
+        // }, 1500);
       } else {
         // Use the error parsing utility to get user-friendly messages
         const friendlyError = parseFirebaseError(result.error);

@@ -11,6 +11,7 @@ const StudyFormContent = () => {
   const [aiResponse, setAiResponse] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
   const {user} = useAuth();
   const popularTopics = [
     "JavaScript",
@@ -101,13 +102,16 @@ const StudyFormContent = () => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setLoading(true);
 
     if (!topic.trim()) {
       setError("Please enter a topic");
+      setLoading(false);
       return;
     }
     if (!syllabus.trim()) {
       setError("Please enter the syllabus");
+      setLoading(false);
       return;
     }
 
@@ -134,19 +138,31 @@ const StudyFormContent = () => {
       console.log("Response from backend:", data);
 
       if (data.success) {
-        setSuccess("Form submitted successfully!");
         // Clear the form
         // setTopic("");
         // setSyllabus("");
         setAiResponse(data.data.aiResponse);
-        setResponseDB(data.data.responseDB, user.uid);
+        const res = await setResponseDB(data.data, user.uid);
+        if (res.success) {
+          console.log("Response saved to DB:", res);
+          // setSuccess("Response saved successfully!");
+          setSuccess("Form submitted successfully!");
+        } else {
+          setError("Failed to save response to database.");
+        }
+        setLoading(false);
       } else {
         setError("Error: " + data.message);
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
       setError("Error submitting form. Please try again.");
+      setLoading(false);
+    } finally {
+      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (
@@ -263,7 +279,8 @@ const StudyFormContent = () => {
                 transition: {type: "spring", stiffness: 300, damping: 20},
               }}
             >
-              🚀 START STUDYING
+              {loading ? "🧠 Thinking..." : "🚀 START STUDYING"}
+              {/* 🚀 START STUDYING */}
             </motion.button>
           </motion.div>
         </motion.form>

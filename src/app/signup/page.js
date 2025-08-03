@@ -91,9 +91,11 @@ const SignupPage = () => {
 
       if (result.success) {
         setSuccess("Account created successfully! Redirecting...");
-        setTimeout(() => {
-          router.push("/"); // Redirect to main page after 2 seconds
-        }, 2000);
+        router.push("/learn"); // Redirect to learn page after 2 seconds
+
+        // setTimeout(() => {
+        //   router.push("/learn"); // Redirect to learn page after 2 seconds
+        // }, 2000);
       } else {
         // Use the error parsing utility to get user-friendly messages
         const friendlyError = parseFirebaseError(result.error);
@@ -119,9 +121,10 @@ const SignupPage = () => {
 
       if (result.success) {
         setSuccess("Account created successfully! Redirecting...");
-        setTimeout(() => {
-          router.push("/"); // Redirect to main page after 1.5 seconds
-        }, 1500);
+        router.push("/learn"); // Redirect to learn page after 1.5 seconds
+        // setTimeout(() => {
+        //   router.push("/learn"); // Redirect to main page after 1.5 seconds
+        // }, 1500);
       } else {
         // Use the error parsing utility to get user-friendly messages
         const friendlyError = parseFirebaseError(result.error);
