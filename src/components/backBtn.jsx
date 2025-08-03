@@ -10,7 +10,7 @@ function BackBtn() {
       onClick={() => {
         router.back();
       }}
-      className=" py-5 hover:text-yellow-300 cursor-pointer"
+      className="  hover:text-yellow-300 cursor-pointer"
     >
       <CircleChevronLeft size={36} />
     </div>

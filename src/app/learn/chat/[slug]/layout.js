@@ -1,9 +1,10 @@
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Sidebar from "@/components/Sidebar";
 
 export default function Layout({children}) {
   return (
-    <section>
+    <ProtectedRoute requireAuth={true}>
       <Sidebar>{children}</Sidebar>
-    </section>
+    </ProtectedRoute>
   );
 }

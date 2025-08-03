@@ -2,6 +2,7 @@ import {
   arrayUnion,
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   setDoc,
@@ -69,5 +70,23 @@ export async function getChats(uid) {
   } catch (error) {
     console.error("Error getting chats:", error);
     return {success: false, message: "Failed to get chats"};
+  }
+}
+
+export async function getSingleChat(chatID, uid) {
+  try {
+    const chatRef = doc(db, "chats", chatID);
+    const chatDoc = await getDoc(chatRef);
+    if (!chatDoc.exists()) {
+      return {success: false, message: "Chat not found", code: 404};
+    }
+    const chatData = chatDoc.data();
+    if (chatData.userId !== uid) {
+      return {success: false, message: "Unauthorized access", code: 403};
+    }
+    return {success: true, data: chatData, code: 200};
+  } catch (error) {
+    console.error("Error getting single chat:", error);
+    return {success: false, message: "Failed to get single chat", code: 500};
   }
 }

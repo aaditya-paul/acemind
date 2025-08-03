@@ -148,7 +148,9 @@ const ProfilePage = () => {
             animate="visible"
           >
             {/* Header */}
-            <BackBtn />
+            <div className="pb-2 md:py-5">
+              <BackBtn />
+            </div>
             <motion.div
               className="flex justify-between items-center mb-8"
               variants={itemVariants}
@@ -209,7 +211,7 @@ const ProfilePage = () => {
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        <span className="text-2xl text-gray-900">
+                        <span className="text-2xl font-bold text-gray-900">
                           {userData?.firstName?.[0]}
                           {userData?.lastName?.[0]}
                         </span>
@@ -226,7 +228,7 @@ const ProfilePage = () => {
                     <div className="grid grid-cols-2 gap-4 mt-6">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-yellow-400">
-                          {userData?.stats?.studySessions || 0}
+                          {userData?.chats?.length || 0}
                         </div>
                         <div className="text-xs text-gray-400">
                           Study Sessions
