@@ -1,12 +1,13 @@
 "use client";
 
 import {useAuth} from "@/contexts/AuthContext";
-import {getChats} from "@/lib/db";
+import {deleteSingleChat, getChats} from "@/lib/db";
 import Image from "next/image";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
 import React, {useEffect} from "react";
 import {formatTimeAgo} from "../../utils/formatTime";
+import {DeleteModal, GeneralInfoModal} from "./modal";
 
 const Sidebar = ({children}) => {
   const {user, userData} = useAuth();
@@ -15,9 +16,41 @@ const Sidebar = ({children}) => {
   const [email, setEmail] = React.useState("");
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [chats, setChats] = React.useState([]);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [chatToDelete, setChatToDelete] = React.useState(null);
+  const [showInfoModal, setShowInfoModal] = React.useState(false);
   const path = usePathname(); // Limit path length for better performance
 
   const router = useRouter();
+
+  const handleDeleteClick = (e, chat) => {
+    e.stopPropagation(); // Prevent navigation when clicking delete
+    setChatToDelete(chat);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (chatToDelete) {
+      console.log("Deleting chat:", chatToDelete.chatId, chatToDelete.topic);
+      // TODO: Add actual delete logic here
+      setShowDeleteModal(false);
+      setChatToDelete(null);
+      const res = await deleteSingleChat(chatToDelete.chatId, user?.uid);
+      if (res.success) {
+        console.log("Chat deleted successfully");
+        window.location.reload(); // Reload to reflect changes
+      } else {
+        console.error("Failed to delete chat:", res.message);
+        setShowInfoModal(true);
+        // alert("Failed to delete chat. Please try again.");
+      }
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setChatToDelete(null);
+  };
 
   useEffect(() => {
     // Only fetch chats if user.uid exists
@@ -49,10 +82,26 @@ const Sidebar = ({children}) => {
       setEmail(user?.email || "");
     }
     // console.log(userData);
-  }, [user, userData]);
+  }, [user, userData, router]);
 
   return (
     <>
+      {/* Delete Confirmation Modal */}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        chatToDelete={chatToDelete}
+      />
+      {/* Info Modal */}
+      <GeneralInfoModal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        info={{
+          title: "Chat Deletion",
+          message: "Failed to delete chat. Please try again later.",
+        }}
+      />
       {/* Sidebar Overlay for Mobile */}
       {sidebarOpen && (
         <div
@@ -126,7 +175,7 @@ const Sidebar = ({children}) => {
           </Link>
 
           {/* Chat History Section */}
-          <div className="flex-1 p-4 overflow-y-auto min-h-0">
+          <div className="flex-1 p-4 overflow-y-auto min-h-0 flex flex-col">
             <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">
               New Chat
             </h3>
@@ -148,7 +197,7 @@ const Sidebar = ({children}) => {
             <h3 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-wider">
               Recent Chats
             </h3>
-            <div className="space-y-2">
+            <div className="flex-1 overflow-y-auto space-y-2">
               {!user?.uid ? (
                 // Skeleton loading for chats
                 Array.from({length: 3}).map((_, index) => (
@@ -220,6 +269,25 @@ const Sidebar = ({children}) => {
                           {formatTimeAgo(chat.timestamp)}
                         </p>
                       </div>
+                      <button
+                        onClick={(e) => handleDeleteClick(e, chat)}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                        title="Delete chat"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 ))
