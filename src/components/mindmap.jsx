@@ -26,9 +26,15 @@ const CourseNode = ({data}) => (
 );
 
 const UnitNode = ({data}) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-gray-800 border-2 border-gray-600 min-w-[180px]">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-gray-800 border-2 border-gray-600 min-w-[180px] relative">
     <Handle type="target" position={Position.Left} className="w-3 h-3" />
     <Handle type="source" position={Position.Right} className="w-3 h-3" />
+    <button
+      onClick={data.onPlusClick}
+      className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-500 hover:bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center text-xs font-bold shadow-lg transition-colors z-10"
+    >
+      +
+    </button>
     <div className="text-center">
       <h4 className="font-semibold text-white">Unit {data.unit_num}</h4>
       <p className="text-sm text-gray-300 mt-1">{data.title}</p>
@@ -40,8 +46,14 @@ const UnitNode = ({data}) => (
 );
 
 const SubTopicNode = ({data}) => (
-  <div className="px-3 py-2 shadow-sm rounded-lg bg-gray-700 border border-gray-500 min-w-[150px]">
+  <div className="px-3 py-2 shadow-sm rounded-lg bg-gray-700 border border-gray-500 min-w-[150px] relative">
     <Handle type="target" position={Position.Left} className="w-2 h-2" />
+    <button
+      onClick={data.onPlusClick}
+      className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 hover:bg-green-400 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg transition-colors z-10"
+    >
+      +
+    </button>
     <div className="text-center">
       <p className="text-sm text-gray-200 font-medium">{data.title}</p>
     </div>
@@ -56,8 +68,25 @@ const nodeTypes = {
 };
 
 function MindMap({chatData}) {
+  const [expandedUnits, setExpandedUnits] = React.useState(new Set([0])); // First unit expanded by default
+  const [showAllUnits, setShowAllUnits] = React.useState(false);
+
+  const handleUnitPlusClick = (unitIndex) => {
+    console.log("Unit plus clicked:", unitIndex);
+    // Expand the clicked unit to show its subtopics
+    setExpandedUnits((prev) => new Set([...prev, unitIndex]));
+  };
+
+  const handleSubTopicPlusClick = (unitIndex, subTopicIndex) => {
+    console.log(
+      `Subtopic plus clicked: Unit ${unitIndex + 1}, Subtopic ${
+        subTopicIndex + 1
+      }`
+    );
+  };
+
   // Generate nodes and edges from chatData
-  const {initialNodes, initialEdges} = useMemo(() => {
+  const {initialNodes, initialEdges} = React.useMemo(() => {
     console.log("ChatData received:", chatData); // Debug log
 
     if (!chatData) {
@@ -94,31 +123,35 @@ function MindMap({chatData}) {
     nodes.push({
       id: "subject",
       type: "course",
-      position: {x: 50, y: 200},
+      position: {x: 50, y: 400},
       data: {
         title: courseData.courseTitle || courseData.title || "Subject",
         description: "",
       },
     });
 
-    // Calculate vertical spacing for units
-    const unitCount = courseData.units.length;
-    const unitStartY = 200 - ((unitCount - 1) * 100) / 2; // Center units vertically
+    // Determine which units to show - show all units
+    const unitsToShow = courseData.units;
+    const unitCount = unitsToShow.length;
+    const unitStartY = 400 - ((unitCount - 1) * 200) / 2; // Center units vertically with much more spacing
 
     // Create unit nodes and their subtopics
-    courseData.units.forEach((unit, unitIndex) => {
+    let currentSubTopicY = unitStartY; // Track the current Y position for subtopics
+
+    unitsToShow.forEach((unit, unitIndex) => {
       const unitId = `unit-${unit.unit_num || unitIndex}`;
-      const unitY = unitStartY + unitIndex * 100;
+      const unitY = unitStartY + unitIndex * 200; // Much more spacing between units
 
       // Unit node (middle column)
       nodes.push({
         id: unitId,
         type: "unit",
-        position: {x: 350, y: unitY},
+        position: {x: 600, y: unitY}, // Adjusted horizontal spacing from subject
         data: {
           unit_num: unit.unit_num || unitIndex + 1,
           title: unit.title,
           duration: unit.duration,
+          onPlusClick: () => handleUnitPlusClick(unitIndex),
         },
       });
 
@@ -131,27 +164,31 @@ function MindMap({chatData}) {
         style: {stroke: "#fbbf24", strokeWidth: 2},
       });
 
-      // Subtopics for this unit (rightmost)
-      if (unit.sub_topics && Array.isArray(unit.sub_topics)) {
-        const subTopicCount = unit.sub_topics.length;
-        const subTopicStartY = unitY - ((subTopicCount - 1) * 60) / 2; // Center subtopics around unit
+      // Show subtopics only for expanded units (first unit expanded by default)
+      if (
+        expandedUnits.has(unitIndex) &&
+        unit.sub_topics &&
+        Array.isArray(unit.sub_topics)
+      ) {
+        const subTopicsToShow = unit.sub_topics; // Show all subtopics
 
-        unit.sub_topics.forEach((subTopic, subIndex) => {
+        subTopicsToShow.forEach((subTopic, subIndex) => {
           const subTopicId = `subtopic-${
             unit.unit_num || unitIndex
           }-${subIndex}`;
-          const subTopicY = subTopicStartY + subIndex * 60;
+          const subTopicY = currentSubTopicY + subIndex * 120; // Use absolute positioning
 
           // Subtopic node
           nodes.push({
             id: subTopicId,
             type: "subtopic",
-            position: {x: 650, y: subTopicY},
+            position: {x: 1100, y: subTopicY}, // Moved much further right for perfect alignment
             data: {
               title:
                 typeof subTopic === "string"
                   ? subTopic
                   : subTopic.title || `Subtopic ${subIndex + 1}`,
+              onPlusClick: () => handleSubTopicPlusClick(unitIndex, subIndex),
             },
           });
 
@@ -164,14 +201,23 @@ function MindMap({chatData}) {
             style: {stroke: "#6b7280", strokeWidth: 1},
           });
         });
+
+        // Update the current Y position for next set of subtopics
+        currentSubTopicY += subTopicsToShow.length * 120;
       }
     });
 
     return {initialNodes: nodes, initialEdges: edges};
-  }, [chatData]);
+  }, [chatData, expandedUnits, showAllUnits]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Update nodes and edges when dependencies change
+  React.useEffect(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (params) => setEdges((eds) => addEdge(params, eds)),
@@ -200,10 +246,16 @@ function MindMap({chatData}) {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
-        // fitView
+        fitView
+        fitViewOptions={{
+          padding: 0.2,
+          includeHiddenNodes: false,
+          minZoom: 0.1,
+          maxZoom: 1.5,
+        }}
         attributionPosition="bottom-left"
         className="bg-gray-900"
-        // defaultViewport={{x: 0, y: 0, zoom: 0.8}}
+        defaultViewport={{x: 0, y: 0, zoom: 0.6}}
       >
         {/* <Controls className="bg-gray-800 border border-gray-600" /> */}
         {/* <MiniMap

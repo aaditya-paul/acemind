@@ -95,43 +95,34 @@ export async function getSingleChat(chatID, uid) {
 
 export async function deleteSingleChat(chatID, uid) {
   try {
-    // First, verify the chat exists and belongs to the user
     const chatRef = doc(db, "chats", chatID);
+    const userChatref = doc(db, "users", uid);
+    const userDoc = await getDoc(userChatref);
+    if (!userDoc.exists()) {
+      return {success: false, message: "User not found", code: 404};
+    }
+    // Remove chat from user's chats array
+    if (userDoc.data().uid !== uid) {
+      return {success: false, message: "Unauthorized access", code: 403};
+    }
+    await setDoc(
+      userChatref,
+      {
+        chats: arrayRemove({chatId: chatID}),
+      },
+      {merge: true}
+    );
+
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
       return {success: false, message: "Chat not found", code: 404};
     }
-
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
       return {success: false, message: "Unauthorized access", code: 403};
     }
-
-    // Get user document to verify it exists
-    const userChatref = doc(db, "users", uid);
-    const userDoc = await getDoc(userChatref);
-
-    if (!userDoc.exists()) {
-      return {success: false, message: "User not found", code: 404};
-    }
-
-    // Remove chat from user's chats array
-    if (userDoc.data().uid !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
-    }
-
-    await setDoc(
-      userChatref,
-      {
-        chats: userDoc.data().chats.filter((chat) => chat.chatId !== chatID),
-      },
-      {merge: true}
-    );
-
-    // Delete the chat document
     await deleteDoc(chatRef);
-
     return {success: true, message: "Chat deleted successfully", code: 200};
   } catch (error) {
     console.error("Error deleting single chat:", error);
