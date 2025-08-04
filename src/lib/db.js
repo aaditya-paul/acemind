@@ -108,7 +108,7 @@ export async function deleteSingleChat(chatID, uid) {
     await setDoc(
       userChatref,
       {
-        chats: arrayRemove({chatId: chatID}),
+        chats: userDoc.data().chats.filter((chat) => chat.chatId !== chatID),
       },
       {merge: true}
     );
