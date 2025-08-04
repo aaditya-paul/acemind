@@ -386,7 +386,8 @@ const Sidebar = ({children}) => {
                                 : "text-gray-300"
                             }`}
                           >
-                            {chat.topic?.[0]?.toUpperCase() || "?"}
+                            {chat?.aiResponse?.courseTitle?.[0]?.toUpperCase() ||
+                              "?"}
                           </span>
                         </div>
                       </div>
@@ -407,7 +408,8 @@ const Sidebar = ({children}) => {
                                 : "text-gray-300"
                             }`}
                           >
-                            {chat.topic?.[0]?.toUpperCase() || "?"}
+                            {chat?.aiResponse?.courseTitle?.[0]?.toUpperCase() ||
+                              "?"}
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">

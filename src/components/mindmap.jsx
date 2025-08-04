@@ -20,50 +20,152 @@ import GeneralInfoModal from "./GeneralInfoModal";
 import "@/styles/mindmap.css";
 // Custom Node Components
 const CourseNode = ({data}) => (
-  <div className="px-6 py-4 shadow-lg rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 border-2 border-yellow-600 min-w-[200px]">
-    <Handle type="source" position={Position.Right} className="w-3 h-3" />
-    <div className="text-center">
-      <h3 className="font-bold text-lg text-gray-900">{data.title}</h3>
-      <p className="text-sm text-gray-800 mt-1">{data.description}</p>
+  <div className="group relative">
+    <Handle
+      type="source"
+      position={Position.Right}
+      className="w-4 h-4 bg-yellow-400 border-2 border-yellow-600"
+    />
+    <div className="w-[280px] h-[140px] px-6 py-5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl border border-yellow-500/50 shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-sm flex flex-col justify-center">
+      <div className="text-center">
+        <div className="flex items-center justify-center mb-2">
+          <div className="w-3 h-3 bg-gray-900 rounded-full mr-2"></div>
+          <span className="text-xs font-bold text-gray-900 uppercase tracking-wider">
+            Course
+          </span>
+        </div>
+        <h3 className="font-bold text-lg text-gray-900 leading-tight line-clamp-2">
+          {data.title}
+        </h3>
+        {data.description && (
+          <p className="text-xs text-gray-800 mt-2 opacity-90 line-clamp-2">
+            {data.description}
+          </p>
+        )}
+      </div>
     </div>
   </div>
 );
 
 const UnitNode = ({data}) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-gray-800 border-2 border-gray-600 min-w-[180px] relative">
-    <Handle type="target" position={Position.Left} className="w-3 h-3" />
-    <Handle type="source" position={Position.Right} className="w-3 h-3" />
-    <button
-      onClick={data.onPlusClick}
-      className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-500 hover:bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center text-xs font-bold shadow-lg transition-colors z-10"
+  <div className="group relative">
+    <Handle
+      type="target"
+      position={Position.Left}
+      className="w-4 h-4 bg-gray-400 border-2 border-gray-500"
+    />
+    <Handle
+      type="source"
+      position={Position.Right}
+      className="w-4 h-4 bg-gray-400 border-2 border-gray-500"
+    />
+
+    <div
+      className={`w-[280px] h-[140px] px-5 py-4 rounded-xl border transition-all duration-300 backdrop-blur-sm flex flex-col justify-center ${
+        data.isExpanded
+          ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/40 shadow-lg"
+          : "bg-gray-800/90 border-gray-600/50 hover:border-gray-500/70 hover:bg-gray-750/90"
+      } shadow-lg hover:shadow-xl`}
     >
-      {data.isExpanded ? "−" : "+"}
-    </button>
-    <div className="text-center">
-      <h4 className="font-semibold text-white">Unit {data.unit_num}</h4>
-      <p className="text-sm text-gray-300 mt-1">{data.title}</p>
-      {data.duration !== undefined && data.duration !== null && (
-        <p className="text-xs text-gray-400 mt-1">
-          {data.duration === 0
-            ? null
-            : "Duration : " + data.duration + " Hours"}
-        </p>
-      )}
+      <button
+        onClick={data.onPlusClick}
+        className={`absolute -top-3 -right-3 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-10 ${
+          data.isExpanded
+            ? "bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 hover:from-yellow-300 hover:to-orange-400"
+            : "bg-gray-700 text-white hover:bg-gray-600 border border-gray-500"
+        }`}
+      >
+        {data.isExpanded ? "−" : "+"}
+      </button>
+
+      <div className="text-center">
+        <div className="flex items-center justify-center mb-2">
+          <div
+            className={`w-2 h-2 rounded-full mr-2 ${
+              data.isExpanded ? "bg-yellow-400" : "bg-gray-400"
+            }`}
+          ></div>
+          <span
+            className={`text-xs font-semibold uppercase tracking-wider ${
+              data.isExpanded ? "text-yellow-400" : "text-gray-400"
+            }`}
+          >
+            Unit {data.unit_num}
+          </span>
+        </div>
+        <h4
+          className={`font-bold text-sm leading-tight mb-2 line-clamp-2 ${
+            data.isExpanded ? "text-yellow-100" : "text-white"
+          }`}
+        >
+          {data.title}
+        </h4>
+        {data.duration !== undefined &&
+          data.duration !== null &&
+          data.duration > 0 && (
+            <div className="flex items-center justify-center mt-2">
+              <svg
+                className="w-3 h-3 text-gray-400 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-xs text-gray-400 font-medium">
+                {data.duration} Hours
+              </span>
+            </div>
+          )}
+      </div>
     </div>
   </div>
 );
 
 const SubTopicNode = ({data}) => (
-  <div className="px-3 py-2 shadow-sm rounded-lg bg-gray-700 border border-gray-500 min-w-[150px] relative">
-    <Handle type="target" position={Position.Left} className="w-2 h-2" />
-    <button
-      onClick={data.onPlusClick}
-      className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 hover:bg-green-400 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg transition-colors z-10"
-    >
-      +
-    </button>
-    <div className="text-center">
-      <p className="text-sm text-gray-200 font-medium">{data.title}</p>
+  <div className="group relative">
+    <Handle
+      type="target"
+      position={Position.Left}
+      className="w-3 h-3 bg-gray-500 border-2 border-gray-600"
+    />
+
+    <div className="w-[280px] h-[140px] px-5 py-4 bg-gray-800/50 hover:bg-gray-700/90 rounded-lg border border-gray-600/50 hover:border-gray-500/70 backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-center">
+      <button
+        onClick={data.onPlusClick}
+        className="absolute -top-2 -right-2 w-7 h-7 bg-green-500 hover:bg-green-400 text-white rounded-lg flex items-center justify-center text-xs font-bold shadow-lg transition-all duration-200 z-10 hover:scale-110"
+      >
+        <svg
+          className="w-3 h-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+          />
+        </svg>
+      </button>
+
+      <div className="text-center">
+        <div className="flex items-center justify-center mb-2">
+          <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></div>
+          <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">
+            Topic
+          </span>
+        </div>
+        <p className="text-sm text-gray-200 font-medium leading-snug group-hover:text-white transition-colors line-clamp-4">
+          {data.title}
+        </p>
+      </div>
     </div>
   </div>
 );
@@ -283,7 +385,29 @@ function MindMap({chatData, chatId, mindmapState}) {
     // Determine which units to show - show all units
     const unitsToShow = courseData.units;
     const unitCount = unitsToShow.length;
-    const unitStartY = 400 - ((unitCount - 1) * 200) / 2; // Center units vertically with much more spacing
+
+    // Calculate dynamic spacing based on expanded units and their subtopic counts
+    let totalRequiredHeight = 0;
+    const unitSpacingData = [];
+
+    unitsToShow.forEach((unit, unitIndex) => {
+      const isExpanded = expandedUnits.has(unitIndex);
+      const subTopicsCount =
+        isExpanded && unit.sub_topics ? unit.sub_topics.length : 0;
+      const unitRequiredHeight = Math.max(140, subTopicsCount * 180); // Minimum unit height or subtopics height
+
+      unitSpacingData.push({
+        unitIndex,
+        isExpanded,
+        subTopicsCount,
+        requiredHeight: unitRequiredHeight,
+        yPosition: totalRequiredHeight,
+      });
+
+      totalRequiredHeight += unitRequiredHeight + 120; // Add spacing between units
+    });
+
+    const unitStartY = 400 - (totalRequiredHeight - 120) / 2; // Center all units vertically
 
     // Create unit nodes and their subtopics
     let currentSubTopicY = unitStartY; // Track the current Y position for subtopics
@@ -296,13 +420,18 @@ function MindMap({chatData, chatId, mindmapState}) {
 
     unitsToShow.forEach((unit, unitIndex) => {
       const unitId = `unit-${unit.unit_num || unitIndex}`;
-      const unitY = unitStartY + unitIndex * 200; // Much more spacing between units
+      const spacingData = unitSpacingData[unitIndex];
+      const unitY =
+        unitStartY +
+        spacingData.yPosition +
+        spacingData.requiredHeight / 2 -
+        70; // Center unit in its allocated space
 
-      // Unit node (middle column)
+      // Unit node (middle column) - always in order
       nodes.push({
         id: unitId,
         type: "unit",
-        position: {x: 600, y: unitY}, // Adjusted horizontal spacing from subject
+        position: {x: 700, y: unitY}, // Fixed position to maintain order
         data: {
           unit_num: unit.unit_num || unitIndex + 1,
           title: unit.title,
@@ -317,36 +446,46 @@ function MindMap({chatData, chatId, mindmapState}) {
         id: `subject-${unitId}`,
         source: "subject",
         target: unitId,
-        type: "smoothstep",
-        style: {stroke: "#fbbf24", strokeWidth: 2},
+        type: "default",
+        style: {
+          stroke: expandedUnits.has(unitIndex) ? "#f59e0b" : "#fbbf24",
+          strokeWidth: expandedUnits.has(unitIndex) ? 3 : 2,
+          strokeDasharray: expandedUnits.has(unitIndex) ? "none" : "5,5",
+        },
+        animated: expandedUnits.has(unitIndex),
       });
 
-      // Show subtopics only for expanded units (first unit expanded by default)
+      // Show subtopics only for expanded units
       if (
         expandedUnits.has(unitIndex) &&
         unit.sub_topics &&
         Array.isArray(unit.sub_topics)
       ) {
-        const subTopicsToShow = unit.sub_topics; // Show all subtopics
+        const subTopicsToShow = unit.sub_topics;
+        const subTopicsCount = subTopicsToShow.length;
+
+        // Calculate subtopic positions to center them around the unit node
+        const totalSubTopicsHeight = (subTopicsCount - 1) * 180; // Total height span of subtopics
+        const subTopicsStartY = unitY - totalSubTopicsHeight / 2; // Center subtopics around unit Y position
 
         subTopicsToShow.forEach((subTopic, subIndex) => {
           const subTopicId = `subtopic-${
             unit.unit_num || unitIndex
           }-${subIndex}`;
-          const subTopicY = currentSubTopicY + subIndex * 120; // Use absolute positioning
+          const subTopicY = subTopicsStartY + subIndex * 180; // Position relative to unit center
 
-          // Dynamic horizontal indentation based on expanded units order
+          // Improved horizontal spacing to prevent overlaps
           const expandedUnitPosition = expandedUnitIndices.indexOf(unitIndex);
-          const totalExpandedUnits = expandedUnitIndices.length;
-          const horizontalIndent =
-            (totalExpandedUnits - expandedUnitPosition - 1) * 60; // Earlier expanded units get more space
-          const subTopicX = 1100 + horizontalIndent;
+          const baseSubTopicX = 1200;
+          const horizontalSpacing = 350; // Increased spacing between expanded units' subtopics
+          const subTopicX =
+            baseSubTopicX + expandedUnitPosition * horizontalSpacing;
 
           // Subtopic node
           nodes.push({
             id: subTopicId,
             type: "subtopic",
-            position: {x: subTopicX, y: subTopicY}, // Dynamically indented based on expansion order
+            position: {x: subTopicX, y: subTopicY}, // Better positioned to avoid overlaps
             data: {
               title:
                 typeof subTopic === "string"
@@ -354,21 +493,20 @@ function MindMap({chatData, chatId, mindmapState}) {
                   : subTopic.title || `Subtopic ${subIndex + 1}`,
               onPlusClick: () => handleSubTopicPlusClick(unitIndex, subIndex),
             },
-          });
-
-          // Edge from unit to subtopic
+          }); // Edge from unit to subtopic
           edges.push({
             id: `${unitId}-${subTopicId}`,
             source: unitId,
             target: subTopicId,
-            type: "smoothstep",
-            style: {stroke: "#6b7280", strokeWidth: 1},
+            type: "default",
+            style: {
+              stroke: "#10b981",
+              strokeWidth: 2,
+              strokeDasharray: "3,3",
+            },
+            animated: true,
           });
         });
-
-        // Update the current Y position for next set of subtopics
-        // Add some extra spacing between different unit's subtopics
-        currentSubTopicY += subTopicsToShow.length * 120 + 40; // 40px gap between unit groups
       }
     });
 
@@ -506,7 +644,13 @@ function MindMap({chatData, chatId, mindmapState}) {
             }
           }}
         /> */}
-        <Background color="#4b5563" gap={20} className="bg-gray-900" />
+        <Background
+          color="#374151"
+          gap={24}
+          size={1}
+          className="bg-gray-900 opacity-40"
+          variant="dots"
+        />
       </ReactFlow>
     </div>
   );

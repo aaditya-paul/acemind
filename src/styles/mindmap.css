@@ -9,3 +9,72 @@ root {
 body {
     overflow-y: hidden !important;
 }
+
+/* Custom mindmap node styles */
+.react-flow__node {
+    cursor: default;
+}
+
+.react-flow__node-course .react-flow__handle {
+    opacity: 0.8;
+    transition: all 0.2s ease;
+}
+
+.react-flow__node-course:hover .react-flow__handle {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.react-flow__node-unit .react-flow__handle {
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.react-flow__node-unit:hover .react-flow__handle {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.react-flow__node-subtopic .react-flow__handle {
+    opacity: 0.6;
+    transition: all 0.2s ease;
+}
+
+.react-flow__node-subtopic:hover .react-flow__handle {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Enhanced edge animations */
+.react-flow__edge.react-flow__edge-default {
+    stroke-linecap: round;
+}
+
+.react-flow__edge.react-flow__edge-smoothstep {
+    stroke-linecap: round;
+}
+
+.react-flow__edge-path {
+    transition: stroke-width 0.2s ease;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* Make curves more pronounced */
+.react-flow__edge-default .react-flow__edge-path {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Custom handle styling */
+.react-flow__handle {
+    border: 2px solid;
+    transition: all 0.2s ease;
+}
+
+.react-flow__handle-left {
+    left: -6px;
+}
+
+.react-flow__handle-right {
+    right: -6px;
+}
