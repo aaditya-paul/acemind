@@ -129,3 +129,41 @@ export async function deleteSingleChat(chatID, uid) {
     return {success: false, message: "Failed to delete single chat", code: 500};
   }
 }
+
+export async function saveMindmapState(chatID, uid, mindmapState) {
+  try {
+    const chatRef = doc(db, "chats", chatID);
+    const chatDoc = await getDoc(chatRef);
+
+    if (!chatDoc.exists()) {
+      return {success: false, message: "Chat not found", code: 404};
+    }
+
+    const chatData = chatDoc.data();
+    if (chatData.userId !== uid) {
+      return {success: false, message: "Unauthorized access", code: 403};
+    }
+
+    await setDoc(
+      chatRef,
+      {
+        mindmapState: {
+          expandedUnits: Array.from(mindmapState.expandedUnits),
+          viewport: mindmapState.viewport,
+          nodePositions: mindmapState.nodePositions,
+          savedAt: new Date().toISOString(),
+        },
+      },
+      {merge: true}
+    );
+
+    return {
+      success: true,
+      message: "Mindmap state saved successfully",
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error saving mindmap state:", error);
+    return {success: false, message: "Failed to save mindmap state", code: 500};
+  }
+}

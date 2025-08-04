@@ -190,7 +190,11 @@ function Page() {
             </div>
           </div>
         </div>
-        <MindMap chatData={chatData} />
+        <MindMap
+          chatData={chatData}
+          chatId={slug}
+          mindmapState={chatData?.mindmapState}
+        />
       </div>
     </div>
   );

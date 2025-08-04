@@ -15,7 +15,6 @@ const Sidebar = ({children}) => {
   const [lastName, setLastName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [chats, setChats] = React.useState([]);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [chatToDelete, setChatToDelete] = React.useState(null);
@@ -137,130 +136,67 @@ const Sidebar = ({children}) => {
         {/* Sidebar */}
         <aside
           className={`
-        ${
-          sidebarCollapsed ? "w-20" : "w-80"
-        } h-screen bg-gray-800 border-r border-gray-700 flex flex-col z-40 transition-all duration-300 ease-in-out
+        w-80 h-screen bg-gray-800 border-r border-gray-700 flex flex-col z-40
         lg:relative lg:translate-x-0
-        fixed inset-y-0 left-0 transform
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        fixed inset-y-0 left-0 transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}
         >
-          {/* AceMind Logo/Title */}
-          <div
-            className={`p-4 w-full border-b border-gray-700 flex ${
-              sidebarCollapsed ? "flex-col-reverse gap-3" : "flex-row"
-            } justify-between items-center `}
+          {/* Close button for mobile */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden absolute top-4 right-4 p-2 text-gray-400 hover:text-white"
           >
-            <Link
-              href={"/"}
-              className={`flex-shrink-0 ${sidebarCollapsed ? "px-2" : ""}`}
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {sidebarCollapsed ? (
-                <div className="flex justify-center">
-                  <span className="text-2xl">🧠</span>
-                </div>
-              ) : (
-                <>
-                  <h1 className="text-xl font-bold text-white tracking-tight flex items-center">
-                    <span className="text-2xl mr-2">🧠</span>
-                    AceMind
-                  </h1>
-                  <p className="text-gray-400 text-xs mt-1">
-                    AI-Powered Learning
-                  </p>
-                </>
-              )}
-            </Link>
-            {/* Close button for mobile and Collapse button for desktop */}
-            <div className="flex justify-between items-center p-0 lg:p-0">
-              {/* Desktop collapse button */}
-              <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="hidden lg:block p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                <svg
-                  className={`w-5 h-5 transition-transform duration-300 ${
-                    sidebarCollapsed ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                  />
-                </svg>
-              </button>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
 
-              {/* Mobile close button */}
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="lg:hidden p-2 text-gray-400 hover:text-white ml-auto"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+          {/* AceMind Logo/Title */}
+          <Link
+            href={"/"}
+            className="p-4 border-b border-gray-700 flex-shrink-0"
+          >
+            <h1 className="text-xl font-bold text-white tracking-tight flex items-center">
+              <span className="text-2xl mr-2">🧠</span>
+              AceMind
+            </h1>
+            <p className="text-gray-400 text-xs mt-1">AI-Powered Learning</p>
+          </Link>
 
           {/* Chat History Section */}
           <div className="flex-1 p-4 overflow-y-auto min-h-0 flex flex-col">
-            {!sidebarCollapsed && (
-              <>
-                <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">
-                  New Chat
-                </h3>
-                <div
-                  onClick={() => {
-                    router.push("/learn");
-                  }}
-                  className="p-3 rounded-xl cursor-pointer transition-all duration-200 group bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 hover:border-yellow-500/40 hover:from-yellow-500/20 hover:to-orange-500/20 mb-6"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                      <span className="text-sm font-bold text-gray-900">+</span>
-                    </div>
-                    <span className="text-sm font-medium text-white group-hover:text-yellow-400 transition-colors">
-                      Start a New Chat
-                    </span>
-                  </div>
-                </div>
-                <h3 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-wider">
-                  Recent Chats
-                </h3>
-              </>
-            )}
-
-            {/* Collapsed new chat button */}
-            {sidebarCollapsed && (
-              <div
-                onClick={() => {
-                  router.push("/learn");
-                }}
-                className="p-1 rounded-xl cursor-pointer transition-all duration-200 group bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 hover:border-yellow-500/40 hover:from-yellow-500/20 hover:to-orange-500/20 mb-4 flex justify-center"
-                title="Start a New Chat"
-              >
-                <div className="w-9 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+            <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">
+              New Chat
+            </h3>
+            <div
+              onClick={() => {
+                router.push("/learn");
+              }}
+              className="p-3 rounded-xl cursor-pointer transition-all duration-200 group bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 hover:border-yellow-500/40 hover:from-yellow-500/20 hover:to-orange-500/20 mb-6"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
                   <span className="text-sm font-bold text-gray-900">+</span>
                 </div>
+                <span className="text-sm font-medium text-white group-hover:text-yellow-400 transition-colors">
+                  Start a New Chat
+                </span>
               </div>
-            )}
-
+            </div>
+            <h3 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-wider">
+              Recent Chats
+            </h3>
             <div className="flex-1 overflow-y-auto space-y-2">
               {!user?.uid ? (
                 // Skeleton loading for chats
@@ -295,95 +231,64 @@ const Sidebar = ({children}) => {
                   <div
                     onClick={() => router.push(`/learn/chat/${chat.chatId}`)}
                     key={index}
-                    className={`rounded-xl cursor-pointer transition-all duration-200 group ${
+                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 group ${
                       path === `/learn/chat/${chat.chatId}`
                         ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/40 shadow-lg"
                         : "bg-gray-750/50 hover:bg-gray-700/70 border border-gray-600/30 hover:border-gray-500/50"
-                    }
-                    ${sidebarCollapsed ? "p-1" : "p-3"}
-                    `}
-                    title={
-                      sidebarCollapsed
-                        ? chat?.aiResponse.courseTitle || "Untitled Chat"
-                        : ""
-                    }
+                    }`}
                   >
-                    {sidebarCollapsed ? (
-                      // Collapsed view - only show icon
-                      <div className="flex justify-center">
-                        <div
-                          className={`w-9 h-8 rounded-lg flex items-center justify-center ${
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          path === `/learn/chat/${chat.chatId}`
+                            ? "bg-gradient-to-r from-yellow-400 to-orange-500"
+                            : "bg-gray-600 group-hover:bg-gray-500"
+                        }`}
+                      >
+                        <span
+                          className={`text-xs font-bold ${
                             path === `/learn/chat/${chat.chatId}`
-                              ? "bg-gradient-to-r from-yellow-400 to-orange-500"
-                              : "bg-gray-600 group-hover:bg-gray-500"
+                              ? "text-gray-900"
+                              : "text-gray-300"
                           }`}
                         >
-                          <span
-                            className={`text-xs font-bold ${
-                              path === `/learn/chat/${chat.chatId}`
-                                ? "text-gray-900"
-                                : "text-gray-300"
-                            }`}
-                          >
-                            {chat.topic?.[0]?.toUpperCase() || "?"}
-                          </span>
-                        </div>
+                          {chat.topic?.[0]?.toUpperCase() || "?"}
+                        </span>
                       </div>
-                    ) : (
-                      // Expanded view - full content
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm font-medium transition-colors truncate ${
                             path === `/learn/chat/${chat.chatId}`
-                              ? "bg-gradient-to-r from-yellow-400 to-orange-500"
-                              : "bg-gray-600 group-hover:bg-gray-500"
+                              ? "text-yellow-400"
+                              : "text-white group-hover:text-yellow-400"
                           }`}
                         >
-                          <span
-                            className={`text-xs font-bold ${
-                              path === `/learn/chat/${chat.chatId}`
-                                ? "text-gray-900"
-                                : "text-gray-300"
-                            }`}
-                          >
-                            {chat.topic?.[0]?.toUpperCase() || "?"}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className={`text-sm font-medium transition-colors truncate ${
-                              path === `/learn/chat/${chat.chatId}`
-                                ? "text-yellow-400"
-                                : "text-white group-hover:text-yellow-400"
-                            }`}
-                          >
-                            {chat?.aiResponse.courseTitle || "Untitled Chat"}
-                          </p>
-                          <p className="text-gray-400 text-xs mt-1">
-                            {formatTimeAgo(chat.timestamp)}
-                          </p>
-                        </div>
-                        <button
-                          onClick={(e) => handleDeleteClick(e, chat)}
-                          className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-                          title="Delete chat"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
+                          {chat.topic || "Untitled Chat"}
+                        </p>
+                        <p className="text-gray-400 text-xs mt-1">
+                          {formatTimeAgo(chat.timestamp)}
+                        </p>
                       </div>
-                    )}
+                      <button
+                        onClick={(e) => handleDeleteClick(e, chat)}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                        title="Delete chat"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -395,35 +300,20 @@ const Sidebar = ({children}) => {
           {/* User Profile Section */}
           <Link
             href="/profile"
-            className={`m-3  bg-gray-750/50 hover:bg-gray-700/70 rounded-xl border border-gray-600/30 hover:border-gray-500/50 transition-all duration-200 flex-shrink-0 group ${
-              sidebarCollapsed ? "mx-2 px-0 py-2 " : "p-4"
-            }`}
-            title={sidebarCollapsed ? `${firstName} ${lastName}` : ""}
+            className="m-3 p-4 bg-gray-750/50 hover:bg-gray-700/70 rounded-xl border border-gray-600/30 hover:border-gray-500/50 transition-all duration-200 flex-shrink-0 group"
           >
             {!user ? (
               // Skeleton loading for user profile
-              <div
-                className={`flex items-center animate-pulse ${
-                  sidebarCollapsed ? "justify-center" : "space-x-3"
-                }`}
-              >
+              <div className="flex items-center space-x-3 animate-pulse">
                 <div className="w-12 h-12 bg-gray-600 rounded-xl"></div>
-                {!sidebarCollapsed && (
-                  <>
-                    <div className="flex-1 min-w-0">
-                      <div className="h-4 bg-gray-600 rounded mb-2 w-3/4"></div>
-                      <div className="h-3 bg-gray-700 rounded w-1/2"></div>
-                    </div>
-                    <div className="w-5 h-5 bg-gray-600 rounded"></div>
-                  </>
-                )}
+                <div className="flex-1 min-w-0">
+                  <div className="h-4 bg-gray-600 rounded mb-2 w-3/4"></div>
+                  <div className="h-3 bg-gray-700 rounded w-1/2"></div>
+                </div>
+                <div className="w-5 h-5 bg-gray-600 rounded"></div>
               </div>
             ) : (
-              <div
-                className={`flex items-center ${
-                  sidebarCollapsed ? "justify-center" : "space-x-3"
-                }`}
-              >
+              <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg ring-2 ring-yellow-500/20">
                   {user?.photoURL ? (
                     <Image
@@ -440,31 +330,27 @@ const Sidebar = ({children}) => {
                     </span>
                   )}
                 </div>
-                {!sidebarCollapsed && (
-                  <>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium truncate group-hover:text-yellow-400 transition-colors">
-                        {firstName} {lastName}
-                      </p>
-                      <p className="text-gray-400 text-xs truncate">{email}</p>
-                    </div>
-                    <div className="p-2 text-gray-400 hover:text-yellow-400 transition-colors rounded-lg hover:bg-gray-600/50">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </div>
-                  </>
-                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium truncate group-hover:text-yellow-400 transition-colors">
+                    {firstName} {lastName}
+                  </p>
+                  <p className="text-gray-400 text-xs truncate">{email}</p>
+                </div>
+                <div className="p-2 text-gray-400 hover:text-yellow-400 transition-colors rounded-lg hover:bg-gray-600/50">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
               </div>
             )}
           </Link>
@@ -472,7 +358,7 @@ const Sidebar = ({children}) => {
         {
           /* Render children if provided */
           children ? (
-            <div className="flex-1 md:mt-0 md:pt-0 pt-16 ">{children}</div>
+            <div className="flex-1 md:mt-0 mt-16">{children}</div>
           ) : null
         }
       </div>

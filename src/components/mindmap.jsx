@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useCallback, useMemo} from "react";
+import React, {useCallback, useMemo, useRef} from "react";
 import {
   ReactFlow,
   MiniMap,
@@ -11,9 +11,13 @@ import {
   addEdge,
   Handle,
   Position,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-
+import {useAuth} from "../contexts/AuthContext";
+import {saveMindmapState} from "../lib/db";
+import GeneralInfoModal from "./GeneralInfoModal";
+import "@/styles/mindmap.css";
 // Custom Node Components
 const CourseNode = ({data}) => (
   <div className="px-6 py-4 shadow-lg rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 border-2 border-yellow-600 min-w-[200px]">
@@ -71,8 +75,182 @@ const nodeTypes = {
   subtopic: SubTopicNode,
 };
 
-function MindMap({chatData}) {
+function MindMap({chatData, chatId, mindmapState}) {
+  const {user} = useAuth();
+  const reactFlowInstance = useRef(null);
   const [expandedUnits, setExpandedUnits] = React.useState(new Set([0])); // First unit expanded by default
+  const [defaultViewport] = React.useState({x: 0, y: 0, zoom: 0.4});
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [modalState, setModalState] = React.useState({
+    isOpen: false,
+    type: "info",
+    title: "",
+    message: "",
+  });
+
+  // Load saved mindmap state on component mount
+  React.useEffect(() => {
+    if (mindmapState) {
+      const {
+        expandedUnits: savedExpanded,
+        viewport,
+        nodePositions,
+      } = mindmapState;
+
+      if (savedExpanded && Array.isArray(savedExpanded)) {
+        setExpandedUnits(new Set(savedExpanded));
+      }
+
+      if (viewport && reactFlowInstance.current) {
+        setTimeout(() => {
+          reactFlowInstance.current.setViewport(viewport);
+        }, 100);
+      }
+
+      // Apply saved node positions
+      if (nodePositions && reactFlowInstance.current) {
+        setTimeout(() => {
+          const currentNodes = reactFlowInstance.current.getNodes();
+          const updatedNodes = currentNodes.map((node) => ({
+            ...node,
+            position: nodePositions[node.id] || node.position,
+          }));
+          reactFlowInstance.current.setNodes(updatedNodes);
+        }, 150);
+      }
+    }
+  }, [mindmapState]);
+
+  const showModal = (type, title, message) => {
+    setModalState({
+      isOpen: true,
+      type,
+      title,
+      message,
+    });
+  };
+
+  const closeModal = () => {
+    setModalState((prev) => ({...prev, isOpen: false}));
+  };
+
+  const saveMindmapStateToDb = async () => {
+    if (!chatId || !user?.uid || !reactFlowInstance.current) {
+      showModal(
+        "error",
+        "Save Failed",
+        "Unable to save: Missing required data"
+      );
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const viewport = reactFlowInstance.current.getViewport();
+      const nodes = reactFlowInstance.current.getNodes();
+
+      const nodePositions = {};
+      nodes.forEach((node) => {
+        nodePositions[node.id] = node.position;
+      });
+
+      const mindmapStateToSave = {
+        expandedUnits,
+        viewport,
+        nodePositions,
+      };
+
+      const result = await saveMindmapState(
+        chatId,
+        user.uid,
+        mindmapStateToSave
+      );
+
+      if (result.success) {
+        showModal("success", "Success", "Mindmap state saved successfully!");
+      } else {
+        showModal(
+          "error",
+          "Save Failed",
+          result.message || "Failed to save mindmap state"
+        );
+      }
+    } catch (error) {
+      console.error("Error saving mindmap state:", error);
+      showModal("error", "Error", "An unexpected error occurred while saving");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetMindmapToDefault = () => {
+    // Reset expanded units to default (first unit expanded)
+    setExpandedUnits(new Set([0]));
+
+    // Reset viewport and node positions to default after a short delay to ensure nodes are updated
+    setTimeout(() => {
+      if (reactFlowInstance.current) {
+        // Reset viewport
+        reactFlowInstance.current.setViewport(defaultViewport);
+
+        // Reset node positions to default calculated positions
+        const currentNodes = reactFlowInstance.current.getNodes();
+        const resetNodes = currentNodes.map((node) => {
+          let defaultPosition;
+
+          if (node.id === "subject") {
+            defaultPosition = {x: 50, y: 400};
+          } else if (node.id.startsWith("unit-")) {
+            // Extract unit index from ID and calculate default position
+            const unitIndex = parseInt(node.id.split("-")[1]) || 0;
+            const unitCount = currentNodes.filter((n) =>
+              n.id.startsWith("unit-")
+            ).length;
+            const unitStartY = 400 - ((unitCount - 1) * 200) / 2;
+            defaultPosition = {x: 600, y: unitStartY + unitIndex * 200};
+          } else if (node.id.startsWith("subtopic-")) {
+            // For subtopics, calculate default position based on expanded units
+            const parts = node.id.split("-");
+            const unitIndex = parseInt(parts[1]) || 0;
+            const subIndex = parseInt(parts[2]) || 0;
+
+            // Calculate default subtopic position
+            const unitCount = currentNodes.filter((n) =>
+              n.id.startsWith("unit-")
+            ).length;
+            const unitStartY = 400 - ((unitCount - 1) * 200) / 2;
+            const baseSubTopicY = unitStartY + subIndex * 120;
+            defaultPosition = {x: 1100, y: baseSubTopicY};
+          } else {
+            // Keep current position if we can't determine default
+            defaultPosition = node.position;
+          }
+
+          return {
+            ...node,
+            position: defaultPosition,
+          };
+        });
+
+        // Apply reset positions
+        reactFlowInstance.current.setNodes(resetNodes);
+
+        // Fit view after resetting positions
+        reactFlowInstance.current.fitView({
+          padding: 0.1,
+          includeHiddenNodes: false,
+          minZoom: 0.1,
+          maxZoom: 1.5,
+        });
+      }
+    }, 100);
+
+    showModal(
+      "info",
+      "Reset Complete",
+      "Mindmap has been reset to default state with original positions"
+    );
+  };
 
   const handleUnitPlusClick = (unitIndex) => {
     console.log("Unit plus clicked:", unitIndex);
@@ -132,11 +310,15 @@ function MindMap({chatData}) {
     const nodes = [];
     const edges = [];
 
+    // Get saved node positions if available
+    const savedNodePositions = mindmapState?.nodePositions || {};
+
     // Subject/Topic node (leftmost)
+    const subjectPosition = savedNodePositions["subject"] || {x: 50, y: 400};
     nodes.push({
       id: "subject",
       type: "course",
-      position: {x: 50, y: 400},
+      position: subjectPosition,
       data: {
         title: chatData.topic || courseData.courseTitle || "Subject",
         description: "",
@@ -161,11 +343,14 @@ function MindMap({chatData}) {
       const unitId = `unit-${unit.unit_num || unitIndex}`;
       const unitY = unitStartY + unitIndex * 200; // Much more spacing between units
 
+      // Use saved position if available, otherwise use calculated position
+      const unitPosition = savedNodePositions[unitId] || {x: 600, y: unitY};
+
       // Unit node (middle column)
       nodes.push({
         id: unitId,
         type: "unit",
-        position: {x: 600, y: unitY}, // Adjusted horizontal spacing from subject
+        position: unitPosition,
         data: {
           unit_num: unit.unit_num || unitIndex + 1,
           title: unit.title,
@@ -205,11 +390,17 @@ function MindMap({chatData}) {
             (totalExpandedUnits - expandedUnitPosition - 1) * 60; // Earlier expanded units get more space
           const subTopicX = 1100 + horizontalIndent;
 
+          // Use saved position if available, otherwise use calculated position
+          const subTopicPosition = savedNodePositions[subTopicId] || {
+            x: subTopicX,
+            y: subTopicY,
+          };
+
           // Subtopic node
           nodes.push({
             id: subTopicId,
             type: "subtopic",
-            position: {x: subTopicX, y: subTopicY}, // Dynamically indented based on expansion order
+            position: subTopicPosition,
             data: {
               title:
                 typeof subTopic === "string"
@@ -236,7 +427,7 @@ function MindMap({chatData}) {
     });
 
     return {initialNodes: nodes, initialEdges: edges};
-  }, [chatData, expandedUnits]);
+  }, [chatData, expandedUnits, mindmapState]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -261,13 +452,80 @@ function MindMap({chatData}) {
   }
 
   return (
-    <div className="w-full h-screen md:h-screen bg-gray-900 rounded-xl overflow-hidden">
+    <div className="w-full h-screen md:h-screen bg-gray-900 rounded-xl md:overflow-y-auto overflow-y-hidden relative">
+      {/* General Info Modal */}
+      <GeneralInfoModal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        type={modalState.type}
+        title={modalState.title}
+        message={modalState.message}
+        autoClose={true}
+        autoCloseDelay={3000}
+      />
+
+      {/* Control buttons - Mobile optimized positioning */}
+      <div className="fixed md:absolute bottom-[max(1rem,env(safe-area-inset-bottom))] md:bottom-4 right-4 z-30 flex gap-2">
+        <button
+          onClick={saveMindmapStateToDb}
+          disabled={isLoading || !chatId || !user?.uid}
+          className="px-4 py-2 bg-green-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+        >
+          {isLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Saving...
+            </>
+          ) : (
+            <>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              Save State
+            </>
+          )}
+        </button>
+        <button
+          onClick={resetMindmapToDefault}
+          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+          Reset
+        </button>
+      </div>
+
       <ReactFlow
+        ref={reactFlowInstance}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
+        onInit={(instance) => {
+          reactFlowInstance.current = instance;
+        }}
         fitView
         fitViewOptions={{
           padding: 0.1,
@@ -277,7 +535,7 @@ function MindMap({chatData}) {
         }}
         attributionPosition="bottom-left"
         className="bg-gray-900"
-        defaultViewport={{x: 0, y: 0, zoom: 0.4}}
+        defaultViewport={defaultViewport}
         nodesConnectable={false}
         panOnDrag={true}
         zoomOnPinch={true}
