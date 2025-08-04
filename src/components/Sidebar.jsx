@@ -263,7 +263,7 @@ const Sidebar = ({children}) => {
                               : "text-white group-hover:text-yellow-400"
                           }`}
                         >
-                          {chat.topic || "Untitled Chat"}
+                          {chat?.aiResponse.courseTitle || "Untitled Chat"}
                         </p>
                         <p className="text-gray-400 text-xs mt-1">
                           {formatTimeAgo(chat.timestamp)}

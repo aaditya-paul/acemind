@@ -33,13 +33,17 @@ const UnitNode = ({data}) => (
       onClick={data.onPlusClick}
       className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-500 hover:bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center text-xs font-bold shadow-lg transition-colors z-10"
     >
-      +
+      {data.isExpanded ? "−" : "+"}
     </button>
     <div className="text-center">
       <h4 className="font-semibold text-white">Unit {data.unit_num}</h4>
       <p className="text-sm text-gray-300 mt-1">{data.title}</p>
-      {data.duration && (
-        <p className="text-xs text-gray-400 mt-1">{data.duration}</p>
+      {data.duration !== undefined && data.duration !== null && (
+        <p className="text-xs text-gray-400 mt-1">
+          {data.duration === 0
+            ? null
+            : "Duration : " + data.duration + " Hours"}
+        </p>
       )}
     </div>
   </div>
@@ -69,12 +73,21 @@ const nodeTypes = {
 
 function MindMap({chatData}) {
   const [expandedUnits, setExpandedUnits] = React.useState(new Set([0])); // First unit expanded by default
-  const [showAllUnits, setShowAllUnits] = React.useState(false);
 
   const handleUnitPlusClick = (unitIndex) => {
     console.log("Unit plus clicked:", unitIndex);
-    // Expand the clicked unit to show its subtopics
-    setExpandedUnits((prev) => new Set([...prev, unitIndex]));
+    // Toggle the clicked unit - expand if collapsed, collapse if expanded
+    setExpandedUnits((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(unitIndex)) {
+        // Unit is expanded, so collapse it
+        newSet.delete(unitIndex);
+      } else {
+        // Unit is collapsed, so expand it
+        newSet.add(unitIndex);
+      }
+      return newSet;
+    });
   };
 
   const handleSubTopicPlusClick = (unitIndex, subTopicIndex) => {
@@ -125,7 +138,7 @@ function MindMap({chatData}) {
       type: "course",
       position: {x: 50, y: 400},
       data: {
-        title: courseData.courseTitle || courseData.title || "Subject",
+        title: chatData.topic || courseData.courseTitle || "Subject",
         description: "",
       },
     });
@@ -137,6 +150,12 @@ function MindMap({chatData}) {
 
     // Create unit nodes and their subtopics
     let currentSubTopicY = unitStartY; // Track the current Y position for subtopics
+
+    // Get array of expanded unit indices for dynamic spacing calculation
+    const expandedUnitIndices = unitsToShow
+      .map((unit, index) => ({unit, index}))
+      .filter(({index}) => expandedUnits.has(index))
+      .map(({index}) => index);
 
     unitsToShow.forEach((unit, unitIndex) => {
       const unitId = `unit-${unit.unit_num || unitIndex}`;
@@ -151,6 +170,7 @@ function MindMap({chatData}) {
           unit_num: unit.unit_num || unitIndex + 1,
           title: unit.title,
           duration: unit.duration,
+          isExpanded: expandedUnits.has(unitIndex),
           onPlusClick: () => handleUnitPlusClick(unitIndex),
         },
       });
@@ -178,11 +198,18 @@ function MindMap({chatData}) {
           }-${subIndex}`;
           const subTopicY = currentSubTopicY + subIndex * 120; // Use absolute positioning
 
+          // Dynamic horizontal indentation based on expanded units order
+          const expandedUnitPosition = expandedUnitIndices.indexOf(unitIndex);
+          const totalExpandedUnits = expandedUnitIndices.length;
+          const horizontalIndent =
+            (totalExpandedUnits - expandedUnitPosition - 1) * 60; // Earlier expanded units get more space
+          const subTopicX = 1100 + horizontalIndent;
+
           // Subtopic node
           nodes.push({
             id: subTopicId,
             type: "subtopic",
-            position: {x: 1100, y: subTopicY}, // Moved much further right for perfect alignment
+            position: {x: subTopicX, y: subTopicY}, // Dynamically indented based on expansion order
             data: {
               title:
                 typeof subTopic === "string"
@@ -203,12 +230,13 @@ function MindMap({chatData}) {
         });
 
         // Update the current Y position for next set of subtopics
-        currentSubTopicY += subTopicsToShow.length * 120;
+        // Add some extra spacing between different unit's subtopics
+        currentSubTopicY += subTopicsToShow.length * 120 + 40; // 40px gap between unit groups
       }
     });
 
     return {initialNodes: nodes, initialEdges: edges};
-  }, [chatData, expandedUnits, showAllUnits]);
+  }, [chatData, expandedUnits]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
