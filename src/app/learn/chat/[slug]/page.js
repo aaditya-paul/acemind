@@ -197,7 +197,7 @@ function Page() {
       subtopicData={selectedSubtopic}
       sidebarOpen={sidebarOpen}
     >
-      <div className="flex flex-row h-screen justify-between overflow-hidden">
+      <div className="flex flex-row md:h-screen h-[90vh] justify-between hide-scroll-y  ">
         <div className="w-full h-screen flex flex-col overflow-hidden">
           <div className="flex-shrink-0 p-4 md:p-6 md:max-w-full ">
             <div className="flex items-center justify-between w-full border-b border-gray-700 pb-4">
