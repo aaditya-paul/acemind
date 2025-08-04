@@ -18,7 +18,7 @@ import {useAuth} from "../contexts/AuthContext";
 import {saveMindmapState} from "../lib/db";
 import GeneralInfoModal from "./GeneralInfoModal";
 import SubtopicSidebar from "./SubtopicSidebar";
-import "@/styles/mindmap.css";
+// import "@/styles/mindmap.css";
 // Custom Node Components
 const CourseNode = ({data}) => (
   <div className="group relative">

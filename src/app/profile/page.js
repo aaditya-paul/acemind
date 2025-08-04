@@ -140,7 +140,7 @@ const ProfilePage = () => {
   return (
     <ProtectedRoute requireAuth={true}>
       <Sidebar>
-        <motion.div className="min-h-screen bg-gray-900 p-4 md:pt-12">
+        <motion.div className="min-h-screen  bg-gray-900 p-4 md:pt-12">
           <motion.div
             className="max-w-4xl mx-auto"
             variants={containerVariants}
