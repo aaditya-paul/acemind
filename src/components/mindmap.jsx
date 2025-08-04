@@ -613,7 +613,7 @@ function MindMap({
   }
 
   return (
-    <div className="w-full h-full bg-gray-900 rounded-xl overflow-hidden relative flex flex-col">
+    <div className="w-full h-[80vh] md:h-full bg-gray-900 rounded-xl overflow-hidden relative flex flex-col">
       {/* General Info Modal */}
       <GeneralInfoModal
         isOpen={modalState.isOpen}

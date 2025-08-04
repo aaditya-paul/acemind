@@ -199,11 +199,11 @@ function Page() {
     >
       <div className="flex flex-row h-screen justify-between overflow-hidden">
         <div className="w-full h-screen flex flex-col overflow-hidden">
-          <div className="flex-shrink-0 p-4 md:p-6">
+          <div className="flex-shrink-0 p-4 md:p-6 md:max-w-full ">
             <div className="flex items-center justify-between w-full border-b border-gray-700 pb-4">
-              <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+              <div className="flex md:flex-row flex-col items-start  md:items-center gap-2 md:gap-4 flex-1 min-w-0">
                 <BackBtn />
-                <div className="text-sm md:text-lg lg:text-2xl font-bold truncate min-w-0 flex-1">
+                <div className="text-sm md:text-lg lg:text-2xl font-bold truncate min-w-0 md:max-w-full max-w-52  flex-1">
                   {chatData?.aiResponse?.courseTitle ||
                     chatData?.topic ||
                     "Untitled Chat"}

@@ -11,18 +11,18 @@ const SubtopicSidebar = ({
 }) => {
   // Reusable sidebar content component
   const SidebarContent = ({isMobile = false}) => (
-    <div className={`${isMobile ? "p-4" : "p-6"}`}>
+    <div className={`${isMobile ? "p-4 max-w-full" : "p-6"} overflow-x-hidden`}>
       <div className="flex justify-between items-center mb-6">
         <h2
           className={`${
             isMobile ? "text-xl" : "text-xl"
-          } font-semibold text-white`}
+          } font-semibold text-white truncate pr-2 flex-1`}
         >
           {subtopicData?.subtopicTitle || "Subtopic Details"}
         </h2>
         <button
           onClick={sidebarClose}
-          className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+          className="p-2 hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
         >
           <svg
             className={`${isMobile ? "w-6 h-6" : "w-5 h-5"} text-white`}
@@ -41,13 +41,13 @@ const SubtopicSidebar = ({
       </div>
 
       {/* Sidebar Content */}
-      <div className="space-y-6">
+      <div className="space-y-6 overflow-x-hidden">
         <div>
           <h3 className="text-lg font-medium text-gray-300 mb-3">
             Learning Objectives
           </h3>
           <div className="bg-blue-900/30 border border-blue-700/50 p-4 rounded-lg">
-            <p className="text-gray-300">
+            <p className="text-gray-300 break-words">
               {subtopicData?.objectives ||
                 "Master the key concepts and practical applications of this topic."}
             </p>
@@ -61,7 +61,7 @@ const SubtopicSidebar = ({
               <span
                 className={`${
                   isMobile ? "text-base" : "text-sm"
-                } font-medium text-green-300`}
+                } font-medium text-green-300 break-words`}
               >
                 📚 Reading Material
               </span>
@@ -70,7 +70,7 @@ const SubtopicSidebar = ({
               <span
                 className={`${
                   isMobile ? "text-base" : "text-sm"
-                } font-medium text-purple-300`}
+                } font-medium text-purple-300 break-words`}
               >
                 🎥 Video Lectures
               </span>
@@ -79,7 +79,7 @@ const SubtopicSidebar = ({
               <span
                 className={`${
                   isMobile ? "text-base" : "text-sm"
-                } font-medium text-orange-300`}
+                } font-medium text-orange-300 break-words`}
               >
                 💡 Practice Exercises
               </span>
@@ -108,7 +108,7 @@ const SubtopicSidebar = ({
   return (
     <>
       {/* Desktop/Tablet Layout */}
-      <div className="hidden md:flex h-screen overflow-hidden">
+      <div className="hidden md:flex h-full overflow-hidden">
         {/* Main Content */}
         <div
           className={`flex-1 transition-all duration-300 ${
@@ -133,7 +133,7 @@ const SubtopicSidebar = ({
       </div>
 
       {/* Mobile Layout */}
-      <div className="md:hidden relative h-screen overflow-hidden">
+      <div className="md:hidden relative w-full h-full overflow-x-hidden">
         {/* Main Content */}
         <div className="w-full h-full">{children}</div>
 
@@ -155,7 +155,7 @@ const SubtopicSidebar = ({
               animate={{x: 0}}
               exit={{x: "100%"}}
               transition={{type: "spring", damping: 25, stiffness: 300}}
-              className="fixed top-0 right-0 w-full h-full bg-gray-900 z-50 overflow-y-auto"
+              className="fixed top-0 right-0 w-screen h-screen bg-gray-900 z-50 overflow-y-auto overflow-x-hidden"
             >
               <SidebarContent isMobile={true} />
             </motion.div>
