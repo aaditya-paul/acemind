@@ -17,6 +17,7 @@ import "@xyflow/react/dist/style.css";
 import {useAuth} from "../contexts/AuthContext";
 import {saveMindmapState} from "../lib/db";
 import GeneralInfoModal from "./GeneralInfoModal";
+import SubtopicSidebar from "./SubtopicSidebar";
 import "@/styles/mindmap.css";
 // Custom Node Components
 const CourseNode = ({data}) => (
@@ -69,7 +70,7 @@ const UnitNode = ({data}) => (
     >
       <button
         onClick={data.onPlusClick}
-        className={`absolute -top-3 -right-3 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-10 ${
+        className={`absolute -top-4 -right-4 w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold shadow-lg transition-all duration-200 z-10 ${
           data.isExpanded
             ? "bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 hover:from-yellow-300 hover:to-orange-400"
             : "bg-gray-700 text-white hover:bg-gray-600 border border-gray-500"
@@ -135,13 +136,19 @@ const SubTopicNode = ({data}) => (
       className="w-3 h-3 bg-gray-500 border-2 border-gray-600"
     />
 
-    <div className="w-[280px] h-[140px] px-5 py-4 bg-gray-800/50 hover:bg-gray-700/90 rounded-lg border border-gray-600/50 hover:border-gray-500/70 backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-center">
+    <div
+      className="w-[280px] h-[140px] px-5 py-4 bg-gray-800/50 hover:bg-gray-700/90 rounded-lg border border-gray-600/50 hover:border-gray-500/70 backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-center"
+      onClick={data.onNodeClick}
+    >
       <button
-        onClick={data.onPlusClick}
-        className="absolute -top-2 -right-2 w-7 h-7 bg-green-500 hover:bg-green-400 text-white rounded-lg flex items-center justify-center text-xs font-bold shadow-lg transition-all duration-200 z-10 hover:scale-110"
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent node click when button is clicked
+          data.onPlusClick();
+        }}
+        className="absolute -top-3 -right-3 w-10 h-10 bg-green-500 hover:bg-green-400 text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-10 hover:scale-110"
       >
         <svg
-          className="w-3 h-3"
+          className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -177,7 +184,14 @@ const nodeTypes = {
   subtopic: SubTopicNode,
 };
 
-function MindMap({chatData, chatId, mindmapState}) {
+function MindMap({
+  chatData,
+  chatId,
+  mindmapState,
+  closeSidebar,
+  openSidebar,
+  setSelectedSubTopic,
+}) {
   const {user} = useAuth();
   const reactFlowInstance = useRef(null);
   const [expandedUnits, setExpandedUnits] = React.useState(new Set([0])); // First unit expanded by default
@@ -188,6 +202,10 @@ function MindMap({chatData, chatId, mindmapState}) {
     type: "info",
     title: "",
     message: "",
+  });
+  const [sidebarState, setSidebarState] = React.useState({
+    isOpen: false,
+    subtopicData: null,
   });
 
   // Load saved mindmap state on component mount
@@ -340,12 +358,37 @@ function MindMap({chatData, chatId, mindmapState}) {
     });
   };
 
-  const handleSubTopicPlusClick = (unitIndex, subTopicIndex) => {
+  const handleSubTopicPlusClick = (
+    unitIndex,
+    subTopicIndex,
+    subtopicTitle,
+    unitTitle,
+    unitNumber
+  ) => {
     console.log(
-      `Subtopic plus clicked: Unit ${unitIndex + 1}, Subtopic ${
+      `Subtopic PLUS button clicked: Unit ${unitIndex + 1}, Subtopic ${
         subTopicIndex + 1
-      }`
+      } - Add functionality here`
     );
+
+    // TODO: Add functionality for the plus button (e.g., add notes, mark as favorite, etc.)
+  };
+
+  const handleSubTopicNodeClick = (
+    unitIndex,
+    subTopicIndex,
+    subtopicTitle,
+    unitTitle,
+    unitNumber
+  ) => {
+    openSidebar();
+    setSelectedSubTopic({
+      unitIndex,
+      subTopicIndex,
+      subtopicTitle,
+      unitTitle,
+      unitNumber,
+    });
   };
 
   // Generate nodes and edges from chatData
@@ -506,7 +549,26 @@ function MindMap({chatData, chatId, mindmapState}) {
                 typeof subTopic === "string"
                   ? subTopic
                   : subTopic.title || `Subtopic ${subIndex + 1}`,
-              onPlusClick: () => handleSubTopicPlusClick(unitIndex, subIndex),
+              onNodeClick: () =>
+                handleSubTopicNodeClick(
+                  unitIndex,
+                  subIndex,
+                  typeof subTopic === "string"
+                    ? subTopic
+                    : subTopic.title || `Subtopic ${subIndex + 1}`,
+                  unit.title,
+                  unit.unit_num || unitIndex + 1
+                ),
+              onPlusClick: () =>
+                handleSubTopicPlusClick(
+                  unitIndex,
+                  subIndex,
+                  typeof subTopic === "string"
+                    ? subTopic
+                    : subTopic.title || `Subtopic ${subIndex + 1}`,
+                  unit.title,
+                  unit.unit_num || unitIndex + 1
+                ),
             },
           }); // Edge from unit to subtopic
           edges.push({
@@ -540,18 +602,26 @@ function MindMap({chatData, chatId, mindmapState}) {
   // If no data provided, show placeholder
   if (!chatData) {
     return (
-      <div className="w-full h-96 flex items-center justify-center bg-gray-900 rounded-xl">
-        <div className="text-center">
-          <div className="text-4xl mb-4">🧠</div>
-          <h3 className="text-xl font-semibold text-white mb-2">Mind Map</h3>
-          <p className="text-gray-400">No course data available to display</p>
+      <div className="">
+        <div className="w-full h-96 flex items-center justify-center bg-gray-900 rounded-xl">
+          <div className="text-center">
+            <div className="text-4xl mb-4">🧠</div>
+            <h3 className="text-xl font-semibold text-white mb-2">Mind Map</h3>
+            <p className="text-gray-400">No course data available to display</p>
+          </div>
         </div>
+        {/* ============================= */}
+        <div>HIi</div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-screen md:h-screen bg-gray-900 rounded-xl md:overflow-y-auto overflow-y-hidden relative">
+    <div
+      className={`w-full h-screen md:h-screen bg-gray-900 rounded-xl md:overflow-y-auto overflow-y-hidden relative transition-all duration-300 ${
+        sidebarState.isOpen ? "mr-96" : "mr-0"
+      }`}
+    >
       {/* General Info Modal */}
       <GeneralInfoModal
         isOpen={modalState.isOpen}

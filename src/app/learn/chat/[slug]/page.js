@@ -14,6 +14,7 @@ import {
   formatTime,
   formatTimeAgo,
 } from "../../../../../utils/formatTime";
+import SubtopicSidebar from "@/components/SubtopicSidebar";
 
 function Page() {
   const slug = usePathname().slice(12); // Extract slug from path
@@ -23,6 +24,22 @@ function Page() {
   const [errorCode, setErrorCode] = useState();
   const [chatData, setChatData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedSubtopic, setSelectedSubtopic] = useState(null);
+
+  useEffect(() => {
+    console.log("Sidebar open state:", sidebarOpen);
+  }, [sidebarOpen]);
+
+  const openSidebar = () => {
+    setSidebarOpen(true);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
   useEffect(() => {
     const fetchChat = async () => {
       const res = await getSingleChat(slug, user?.uid);
@@ -174,31 +191,49 @@ function Page() {
   }
 
   return (
-    <div className="md:p-12 p-5 h-screen overflow-y-hidden  ">
-      <div className="flex flex-col gap-6 h-full w-full">
-        <div className="flex items-center justify-between w-full border-b border-gray-700 pb-4 mb-4">
-          <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
-            <BackBtn />
-            <div className="text-sm md:text-lg lg:text-2xl font-bold truncate min-w-0 md:max-w-full max-w-48 flex-1">
-              {chatData?.aiResponse?.courseTitle ||
-                chatData?.topic ||
-                "Untitled Chat"}
+    <SubtopicSidebar
+      sidebarClose={closeSidebar}
+      // sidebarOpen={sidebarOpen}
+      subtopicData={selectedSubtopic}
+      sidebarOpen={sidebarOpen}
+    >
+      <div className="flex flex-row h-screen justify-between overflow-x-hidden">
+        <div className={`w-full md:p-12 p-5 h-screen  overflow-y-hidden`}>
+          <div className="flex flex-col gap-6 h-full w-full">
+            <div className="flex items-center justify-between w-full border-b border-gray-700 pb-4 mb-4">
+              <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+                <BackBtn />
+                <div className="text-sm md:text-lg lg:text-2xl font-bold truncate min-w-0 md:max-w-full max-basis-1/3 flex-1">
+                  {chatData?.aiResponse?.courseTitle ||
+                    chatData?.topic ||
+                    "Untitled Chat"}
+                </div>
+              </div>
+              <div className="text-gray-400 font-medium ml-2 flex-shrink-0">
+                <div className="text-xs md:text-sm flex flex-col text-right">
+                  <span>{formatDate(chatData?.timestamp)}</span>
+                  <span>{formatTime(chatData?.timestamp)}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="text-gray-400 font-medium ml-2 flex-shrink-0">
-            <div className="text-xs md:text-sm flex flex-col text-right">
-              <span>{formatDate(chatData?.timestamp)}</span>
-              <span>{formatTime(chatData?.timestamp)}</span>
-            </div>
+            <MindMap
+              chatData={chatData}
+              chatId={slug}
+              mindmapState={chatData?.mindmapState}
+              closeSidebar={closeSidebar}
+              openSidebar={openSidebar}
+              setSelectedSubTopic={setSelectedSubtopic}
+            />
           </div>
         </div>
-        <MindMap
-          chatData={chatData}
-          chatId={slug}
-          mindmapState={chatData?.mindmapState}
-        />
+        {/* <div
+        className={`
+        ${sidebarOpen ? "" : "hidden"} `}
+      >
+       
+      </div> */}
       </div>
-    </div>
+    </SubtopicSidebar>
   );
 }
 
