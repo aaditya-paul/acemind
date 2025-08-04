@@ -247,11 +247,6 @@ function MindMap({chatData}) {
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
-  const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  );
-
   // If no data provided, show placeholder
   if (!chatData) {
     return (
@@ -266,24 +261,30 @@ function MindMap({chatData}) {
   }
 
   return (
-    <div className="w-full h-[76vh] bg-gray-900 rounded-xl overflow-hidden">
+    <div className="w-full h-screen md:h-screen bg-gray-900 rounded-xl overflow-hidden">
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{
-          padding: 0.2,
+          padding: 0.1,
           includeHiddenNodes: false,
           minZoom: 0.1,
           maxZoom: 1.5,
         }}
         attributionPosition="bottom-left"
         className="bg-gray-900"
-        defaultViewport={{x: 0, y: 0, zoom: 0.6}}
+        defaultViewport={{x: 0, y: 0, zoom: 0.4}}
+        nodesConnectable={false}
+        panOnDrag={true}
+        zoomOnPinch={true}
+        zoomOnScroll={true}
+        panOnScroll={false}
+        minZoom={0.1}
+        maxZoom={1.5}
       >
         {/* <Controls className="bg-gray-800 border border-gray-600" /> */}
         {/* <MiniMap

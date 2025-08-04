@@ -174,12 +174,12 @@ function Page() {
   }
 
   return (
-    <div className="md:p-12 p-5 min-h-screen  ">
+    <div className="md:p-12 p-5 h-screen overflow-y-hidden  ">
       <div className="flex flex-col gap-6 h-full w-full">
         <div className="flex items-center justify-between w-full border-b border-gray-700 pb-4 mb-4">
           <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
             <BackBtn />
-            <div className="text-sm md:text-lg lg:text-2xl font-bold truncate min-w-0 flex-1">
+            <div className="text-sm md:text-lg lg:text-2xl font-bold truncate min-w-0 md:max-w-full max-w-48 flex-1">
               {chatData?.topic}
             </div>
           </div>
