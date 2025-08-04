@@ -187,55 +187,10 @@ function MindMap({chatData, chatId, mindmapState}) {
     // Reset expanded units to default (first unit expanded)
     setExpandedUnits(new Set([0]));
 
-    // Reset viewport and node positions to default after a short delay to ensure nodes are updated
+    // Reset viewport to default after a short delay to ensure nodes are updated
     setTimeout(() => {
       if (reactFlowInstance.current) {
-        // Reset viewport
         reactFlowInstance.current.setViewport(defaultViewport);
-
-        // Reset node positions to default calculated positions
-        const currentNodes = reactFlowInstance.current.getNodes();
-        const resetNodes = currentNodes.map((node) => {
-          let defaultPosition;
-
-          if (node.id === "subject") {
-            defaultPosition = {x: 50, y: 400};
-          } else if (node.id.startsWith("unit-")) {
-            // Extract unit index from ID and calculate default position
-            const unitIndex = parseInt(node.id.split("-")[1]) || 0;
-            const unitCount = currentNodes.filter((n) =>
-              n.id.startsWith("unit-")
-            ).length;
-            const unitStartY = 400 - ((unitCount - 1) * 200) / 2;
-            defaultPosition = {x: 600, y: unitStartY + unitIndex * 200};
-          } else if (node.id.startsWith("subtopic-")) {
-            // For subtopics, calculate default position based on expanded units
-            const parts = node.id.split("-");
-            const unitIndex = parseInt(parts[1]) || 0;
-            const subIndex = parseInt(parts[2]) || 0;
-
-            // Calculate default subtopic position
-            const unitCount = currentNodes.filter((n) =>
-              n.id.startsWith("unit-")
-            ).length;
-            const unitStartY = 400 - ((unitCount - 1) * 200) / 2;
-            const baseSubTopicY = unitStartY + subIndex * 120;
-            defaultPosition = {x: 1100, y: baseSubTopicY};
-          } else {
-            // Keep current position if we can't determine default
-            defaultPosition = node.position;
-          }
-
-          return {
-            ...node,
-            position: defaultPosition,
-          };
-        });
-
-        // Apply reset positions
-        reactFlowInstance.current.setNodes(resetNodes);
-
-        // Fit view after resetting positions
         reactFlowInstance.current.fitView({
           padding: 0.1,
           includeHiddenNodes: false,
@@ -248,7 +203,7 @@ function MindMap({chatData, chatId, mindmapState}) {
     showModal(
       "info",
       "Reset Complete",
-      "Mindmap has been reset to default state with original positions"
+      "Mindmap has been reset to default state"
     );
   };
 
@@ -343,14 +298,11 @@ function MindMap({chatData, chatId, mindmapState}) {
       const unitId = `unit-${unit.unit_num || unitIndex}`;
       const unitY = unitStartY + unitIndex * 200; // Much more spacing between units
 
-      // Use saved position if available, otherwise use calculated position
-      const unitPosition = savedNodePositions[unitId] || {x: 600, y: unitY};
-
       // Unit node (middle column)
       nodes.push({
         id: unitId,
         type: "unit",
-        position: unitPosition,
+        position: {x: 600, y: unitY}, // Adjusted horizontal spacing from subject
         data: {
           unit_num: unit.unit_num || unitIndex + 1,
           title: unit.title,
@@ -390,17 +342,11 @@ function MindMap({chatData, chatId, mindmapState}) {
             (totalExpandedUnits - expandedUnitPosition - 1) * 60; // Earlier expanded units get more space
           const subTopicX = 1100 + horizontalIndent;
 
-          // Use saved position if available, otherwise use calculated position
-          const subTopicPosition = savedNodePositions[subTopicId] || {
-            x: subTopicX,
-            y: subTopicY,
-          };
-
           // Subtopic node
           nodes.push({
             id: subTopicId,
             type: "subtopic",
-            position: subTopicPosition,
+            position: {x: subTopicX, y: subTopicY}, // Dynamically indented based on expansion order
             data: {
               title:
                 typeof subTopic === "string"
@@ -427,7 +373,7 @@ function MindMap({chatData, chatId, mindmapState}) {
     });
 
     return {initialNodes: nodes, initialEdges: edges};
-  }, [chatData, expandedUnits, mindmapState]);
+  }, [chatData, expandedUnits]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
