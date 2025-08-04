@@ -180,7 +180,9 @@ function Page() {
           <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
             <BackBtn />
             <div className="text-sm md:text-lg lg:text-2xl font-bold truncate min-w-0 md:max-w-full max-w-48 flex-1">
-              {chatData?.topic}
+              {chatData?.aiResponse?.courseTitle ||
+                chatData?.topic ||
+                "Untitled Chat"}
             </div>
           </div>
           <div className="text-gray-400 font-medium ml-2 flex-shrink-0">
