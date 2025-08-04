@@ -602,26 +602,18 @@ function MindMap({
   // If no data provided, show placeholder
   if (!chatData) {
     return (
-      <div className="">
-        <div className="w-full h-96 flex items-center justify-center bg-gray-900 rounded-xl">
-          <div className="text-center">
-            <div className="text-4xl mb-4">🧠</div>
-            <h3 className="text-xl font-semibold text-white mb-2">Mind Map</h3>
-            <p className="text-gray-400">No course data available to display</p>
-          </div>
+      <div className="w-full h-96 flex items-center justify-center bg-gray-900 rounded-xl">
+        <div className="text-center">
+          <div className="text-4xl mb-4">🧠</div>
+          <h3 className="text-xl font-semibold text-white mb-2">Mind Map</h3>
+          <p className="text-gray-400">No course data available to display</p>
         </div>
-        {/* ============================= */}
-        <div>HIi</div>
       </div>
     );
   }
 
   return (
-    <div
-      className={`w-full h-screen md:h-screen bg-gray-900 rounded-xl md:overflow-y-auto overflow-y-hidden relative transition-all duration-300 ${
-        sidebarState.isOpen ? "mr-96" : "mr-0"
-      }`}
-    >
+    <div className="w-full h-full bg-gray-900 rounded-xl overflow-hidden relative flex flex-col">
       {/* General Info Modal */}
       <GeneralInfoModal
         isOpen={modalState.isOpen}
@@ -634,21 +626,22 @@ function MindMap({
       />
 
       {/* Control buttons - Mobile optimized positioning */}
-      <div className="fixed md:absolute bottom-[max(1rem,env(safe-area-inset-bottom))] md:bottom-4 right-4 z-30 flex gap-2">
+      <div className="absolute top-4 right-4 z-30 flex flex-col sm:flex-row gap-2">
         <button
           onClick={saveMindmapStateToDb}
           disabled={isLoading || !chatId || !user?.uid}
-          className="px-4 py-2 bg-green-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+          className="px-3 py-2 sm:px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap"
         >
           {isLoading ? (
             <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Saving...
+              <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span className="hidden sm:inline">Saving...</span>
+              <span className="sm:hidden">Save</span>
             </>
           ) : (
             <>
               <svg
-                className="w-4 h-4"
+                className="w-3 h-3 sm:w-4 sm:h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -660,16 +653,17 @@ function MindMap({
                   d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"
                 />
               </svg>
-              Save State
+              <span className="hidden sm:inline">Save State</span>
+              <span className="sm:hidden">Save</span>
             </>
           )}
         </button>
         <button
           onClick={resetMindmapToDefault}
-          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+          className="px-3 py-2 sm:px-4 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap"
         >
           <svg
-            className="w-4 h-4"
+            className="w-3 h-3 sm:w-4 sm:h-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -681,62 +675,65 @@ function MindMap({
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
             />
           </svg>
-          Reset
+          <span className="hidden sm:inline">Reset</span>
+          <span className="sm:hidden">Reset</span>
         </button>
       </div>
 
-      <ReactFlow
-        ref={reactFlowInstance}
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        nodeTypes={nodeTypes}
-        onInit={(instance) => {
-          reactFlowInstance.current = instance;
-        }}
-        fitView
-        fitViewOptions={{
-          padding: 0.1,
-          includeHiddenNodes: false,
-          minZoom: 0.1,
-          maxZoom: 1.5,
-        }}
-        attributionPosition="bottom-left"
-        className="bg-gray-900"
-        defaultViewport={defaultViewport}
-        nodesConnectable={false}
-        panOnDrag={true}
-        zoomOnPinch={true}
-        zoomOnScroll={true}
-        panOnScroll={false}
-        minZoom={0.1}
-        maxZoom={1.5}
-      >
-        {/* <Controls className="bg-gray-800 border border-gray-600" /> */}
-        {/* <MiniMap
-          className="bg-gray-800 border border-gray-600"
-          nodeColor={(node) => {
-            switch (node.type) {
-              case "course":
-                return "#fbbf24";
-              case "unit":
-                return "#374151";
-              case "subtopic":
-                return "#6b7280";
-              default:
-                return "#9ca3af";
-            }
+      <div className="flex-1 w-full h-full">
+        <ReactFlow
+          ref={reactFlowInstance}
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          nodeTypes={nodeTypes}
+          onInit={(instance) => {
+            reactFlowInstance.current = instance;
           }}
-        /> */}
-        <Background
-          color="#374151"
-          gap={24}
-          size={1}
-          className="bg-gray-900 opacity-40"
-          variant="dots"
-        />
-      </ReactFlow>
+          fitView
+          fitViewOptions={{
+            padding: 0.1,
+            includeHiddenNodes: false,
+            minZoom: 0.1,
+            maxZoom: 1.5,
+          }}
+          attributionPosition="bottom-left"
+          className="bg-gray-900 w-full h-full"
+          defaultViewport={defaultViewport}
+          nodesConnectable={false}
+          panOnDrag={true}
+          zoomOnPinch={true}
+          zoomOnScroll={true}
+          panOnScroll={false}
+          minZoom={0.1}
+          maxZoom={1.5}
+        >
+          {/* <Controls className="bg-gray-800 border border-gray-600" /> */}
+          {/* <MiniMap
+            className="bg-gray-800 border border-gray-600"
+            nodeColor={(node) => {
+              switch (node.type) {
+                case "course":
+                  return "#fbbf24";
+                case "unit":
+                  return "#374151";
+                case "subtopic":
+                  return "#6b7280";
+                default:
+                  return "#9ca3af";
+              }
+            }}
+          /> */}
+          <Background
+            color="#374151"
+            gap={24}
+            size={1}
+            className="bg-gray-900 opacity-40"
+            variant="dots"
+          />
+        </ReactFlow>
+      </div>
     </div>
   );
 }

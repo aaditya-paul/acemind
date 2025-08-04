@@ -197,13 +197,13 @@ function Page() {
       subtopicData={selectedSubtopic}
       sidebarOpen={sidebarOpen}
     >
-      <div className="flex flex-row h-screen justify-between overflow-x-hidden">
-        <div className={`w-full md:p-12 p-5 h-screen  overflow-y-hidden`}>
-          <div className="flex flex-col gap-6 h-full w-full">
-            <div className="flex items-center justify-between w-full border-b border-gray-700 pb-4 mb-4">
+      <div className="flex flex-row h-screen justify-between overflow-hidden">
+        <div className="w-full h-screen flex flex-col overflow-hidden">
+          <div className="flex-shrink-0 p-4 md:p-6">
+            <div className="flex items-center justify-between w-full border-b border-gray-700 pb-4">
               <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
                 <BackBtn />
-                <div className="text-sm md:text-lg lg:text-2xl font-bold truncate min-w-0 md:max-w-full max-basis-1/3 flex-1">
+                <div className="text-sm md:text-lg lg:text-2xl font-bold truncate min-w-0 flex-1">
                   {chatData?.aiResponse?.courseTitle ||
                     chatData?.topic ||
                     "Untitled Chat"}
@@ -216,6 +216,8 @@ function Page() {
                 </div>
               </div>
             </div>
+          </div>
+          <div className="flex-1 overflow-hidden">
             <MindMap
               chatData={chatData}
               chatId={slug}
@@ -226,12 +228,6 @@ function Page() {
             />
           </div>
         </div>
-        {/* <div
-        className={`
-        ${sidebarOpen ? "" : "hidden"} `}
-      >
-       
-      </div> */}
       </div>
     </SubtopicSidebar>
   );
