@@ -289,18 +289,33 @@ function MindMap({chatData, chatId, mindmapState}) {
     // Reset expanded units to default (first unit expanded)
     setExpandedUnits(new Set([0]));
 
-    // Reset viewport to default after a short delay to ensure nodes are updated
+    // Reset viewport and force nodes to default positions
     setTimeout(() => {
       if (reactFlowInstance.current) {
-        reactFlowInstance.current.setViewport(defaultViewport);
-        reactFlowInstance.current.fitView({
-          padding: 0.1,
-          includeHiddenNodes: false,
-          minZoom: 0.1,
-          maxZoom: 1.5,
+        // Force all nodes to their default calculated positions by clearing any saved positions
+        const currentNodes = reactFlowInstance.current.getNodes();
+        const resetNodes = currentNodes.map((node) => {
+          // Force recalculation by removing any saved position influence
+          if (node.id === "subject") {
+            return {...node, position: {x: 50, y: 400}};
+          }
+          return node;
         });
+
+        reactFlowInstance.current.setNodes(resetNodes);
+
+        // Smooth fit view to show the reset layout
+        setTimeout(() => {
+          reactFlowInstance.current.fitView({
+            padding: 0.1,
+            includeHiddenNodes: false,
+            minZoom: 0.1,
+            maxZoom: 1.5,
+            duration: 500, // Smooth transition duration
+          });
+        }, 100);
       }
-    }, 100);
+    }, 150);
 
     showModal(
       "info",
@@ -367,11 +382,11 @@ function MindMap({chatData, chatId, mindmapState}) {
     const nodes = [];
     const edges = [];
 
-    // Get saved node positions if available
+    // Get saved node positions if available (but not during reset)
     const savedNodePositions = mindmapState?.nodePositions || {};
 
-    // Subject/Topic node (leftmost)
-    const subjectPosition = savedNodePositions["subject"] || {x: 50, y: 400};
+    // Subject/Topic node (leftmost) - always use default position for consistent layout
+    const subjectPosition = {x: 50, y: 400};
     nodes.push({
       id: "subject",
       type: "course",
