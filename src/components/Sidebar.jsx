@@ -365,7 +365,7 @@ const Sidebar = ({children}) => {
                     `}
                     title={
                       sidebarCollapsed
-                        ? chat?.aiResponse.courseTitle || "Untitled Chat"
+                        ? chat?.aiResponse?.courseTitle || "Untitled Chat"
                         : ""
                     }
                   >
@@ -420,7 +420,7 @@ const Sidebar = ({children}) => {
                                 : "text-white group-hover:text-yellow-400"
                             }`}
                           >
-                            {chat?.aiResponse.courseTitle || "Untitled Chat"}
+                            {chat?.aiResponse?.courseTitle || "Untitled Chat"}
                           </p>
                           <p className="text-gray-400 text-xs mt-1">
                             {formatTimeAgo(chat.timestamp)}

@@ -45,6 +45,7 @@ export async function setResponseDB(response, uid) {
         timestamp: new Date().toISOString(),
         userId: uid,
         chatId: chat_id,
+        syllabusContext: response.syllabusContext,
       },
       {merge: true}
     );

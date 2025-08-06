@@ -28,6 +28,8 @@ function Page() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedSubtopic, setSelectedSubtopic] = useState(null);
 
+  const [subtopicData, setSubtopicData] = useState(null);
+
   useEffect(() => {
     console.log("Sidebar open state:", sidebarOpen);
   }, [sidebarOpen]);
@@ -194,7 +196,7 @@ function Page() {
     <SubtopicSidebar
       sidebarClose={closeSidebar}
       // sidebarOpen={sidebarOpen}
-      subtopicData={selectedSubtopic}
+      subtopicData={subtopicData}
       sidebarOpen={sidebarOpen}
     >
       <div className="flex flex-row md:h-screen h-[90vh] justify-between hide-scroll-y  ">
@@ -225,6 +227,7 @@ function Page() {
               closeSidebar={closeSidebar}
               openSidebar={openSidebar}
               setSelectedSubTopic={setSelectedSubtopic}
+              setSubtopicData={setSubtopicData}
             />
           </div>
         </div>

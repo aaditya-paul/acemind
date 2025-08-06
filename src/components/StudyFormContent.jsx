@@ -125,7 +125,7 @@ const StudyFormContent = () => {
       const apiUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
       console.log("API URL:", apiUrl);
 
-      const response = await fetch(apiUrl, {
+      const response = await fetch(`${apiUrl}/api/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

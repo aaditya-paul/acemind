@@ -191,6 +191,7 @@ function MindMap({
   closeSidebar,
   openSidebar,
   setSelectedSubTopic,
+  setSubtopicData,
 }) {
   const {user} = useAuth();
   const reactFlowInstance = useRef(null);
@@ -374,21 +375,68 @@ function MindMap({
     // TODO: Add functionality for the plus button (e.g., add notes, mark as favorite, etc.)
   };
 
-  const handleSubTopicNodeClick = (
+  const handleSubTopicNodeClick = async (
+    syllabus,
+    topic,
     unitIndex,
     subTopicIndex,
     subtopicTitle,
     unitTitle,
     unitNumber
   ) => {
+    console.log("clicked");
+
     openSidebar();
-    setSelectedSubTopic({
-      unitIndex,
-      subTopicIndex,
-      subtopicTitle,
-      unitTitle,
-      unitNumber,
-    });
+    setSubtopicData(null);
+    // setSelectedSubTopic({
+    //   unitIndex,
+    //   subTopicIndex,
+    //   subtopicTitle,
+    //   unitTitle,
+    //   unitNumber,
+    //   notesContent: data, // Pass the fetched data
+    //   objectives:
+    //     data?.objectives ||
+    //     "Master the key concepts and practical applications of this topic.",
+    //   resources: data?.resources || [],
+    //   progress: data?.progress || 0,
+    // });
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
+
+    try {
+      let response = await fetch(`${apiUrl}/api/notes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          topic: topic,
+          subtopic: subtopicTitle,
+          syllabus: syllabus,
+        }),
+      });
+
+      if (!response.ok) {
+        showModal(
+          "error",
+          "Error",
+          "Failed to fetch subtopic details. Please try again."
+        );
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Subtopic details fetched successfully:", data.data);
+      setSubtopicData(data.data);
+    } catch (error) {
+      console.error("Error fetching subtopic details:", error);
+      showModal(
+        "error",
+        "Error",
+        "An unexpected error occurred while fetching subtopic details."
+      );
+    }
   };
 
   // Generate nodes and edges from chatData
@@ -551,6 +599,10 @@ function MindMap({
                   : subTopic.title || `Subtopic ${subIndex + 1}`,
               onNodeClick: () =>
                 handleSubTopicNodeClick(
+                  chatData.syllabusContext ||
+                    courseData.syllabusContext ||
+                    "No syllabus context provided",
+                  chatData.topic || "No topic",
                   unitIndex,
                   subIndex,
                   typeof subTopic === "string"
