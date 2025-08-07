@@ -15,7 +15,18 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {useAuth} from "../contexts/AuthContext";
-import {saveMindmapState} from "../lib/db";
+import {
+  saveMindmapState,
+  getSubtopicDataDB,
+  setSubtopicDataDB,
+  addExpandedSubtopics,
+  getExpandedSubtopics,
+  addMultiLevelSubtopics,
+  setHierarchicalSubtopicDataDB,
+  getHierarchicalSubtopicDataDB,
+  getCacheStatistics,
+  clearSubtopicCache,
+} from "../lib/db";
 import GeneralInfoModal from "./GeneralInfoModal";
 import SubtopicSidebar from "./SubtopicSidebar";
 // import "@/styles/mindmap.css";
@@ -135,6 +146,11 @@ const SubTopicNode = ({data}) => (
       position={Position.Left}
       className="w-3 h-3 bg-gray-500 border-2 border-gray-600"
     />
+    <Handle
+      type="source"
+      position={Position.Right}
+      className="w-3 h-3 bg-gray-500 border-2 border-gray-600"
+    />
 
     <div
       className="w-[280px] h-[140px] px-5 py-4 bg-gray-800/50 hover:bg-gray-700/90 rounded-lg border border-gray-600/50 hover:border-gray-500/70 backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-center"
@@ -145,7 +161,11 @@ const SubTopicNode = ({data}) => (
           e.stopPropagation(); // Prevent node click when button is clicked
           data.onPlusClick();
         }}
-        className="absolute -top-3 -right-3 w-10 h-10 bg-green-500 hover:bg-green-400 text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-10 hover:scale-110"
+        className={`absolute -top-3 -right-3 w-10 h-10 ${
+          data.hasExpandedSubtopics
+            ? "bg-purple-500 hover:bg-purple-400"
+            : "bg-green-500 hover:bg-green-400"
+        } text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-10 hover:scale-110`}
       >
         <svg
           className="w-4 h-4"
@@ -153,20 +173,33 @@ const SubTopicNode = ({data}) => (
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-          />
+          {data.hasExpandedSubtopics ? (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          ) : (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          )}
         </svg>
       </button>
 
       <div className="text-center">
         <div className="flex items-center justify-center mb-2">
-          <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></div>
+          <div
+            className={`w-1.5 h-1.5 ${
+              data.hasExpandedSubtopics ? "bg-purple-400" : "bg-green-400"
+            } rounded-full mr-1.5`}
+          ></div>
           <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">
-            Topic
+            {data.hasExpandedSubtopics ? "Expanded Topic" : "Topic"}
           </span>
         </div>
         <p className="text-sm text-gray-200 font-medium leading-snug group-hover:text-white transition-colors line-clamp-4">
@@ -177,11 +210,233 @@ const SubTopicNode = ({data}) => (
   </div>
 );
 
+const ExpandedSubTopicNode = ({data}) => (
+  <div className="group relative">
+    <Handle
+      type="target"
+      position={Position.Left}
+      className="w-2 h-2 bg-purple-500 border-2 border-purple-600"
+    />
+    <Handle
+      type="source"
+      position={Position.Right}
+      className="w-2 h-2 bg-purple-500 border-2 border-purple-600"
+    />
+
+    <div
+      className="w-[220px] h-[80px] px-3 py-2 bg-purple-800/30 hover:bg-purple-700/50 rounded-lg border border-purple-500/50 hover:border-purple-400/70 backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-center"
+      onClick={data.onNodeClick}
+    >
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent node click when button is clicked
+          data.onPlusClick();
+        }}
+        className={`absolute -top-2 -right-2 w-8 h-8 ${
+          data.hasSubExpandedTopics
+            ? "bg-indigo-500 hover:bg-indigo-400"
+            : "bg-purple-500 hover:bg-purple-400"
+        } text-white rounded-md flex items-center justify-center text-xs font-bold shadow-lg transition-all duration-200 z-10 hover:scale-110`}
+      >
+        <svg
+          className="w-3 h-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          {data.hasSubExpandedTopics ? (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          ) : (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          )}
+        </svg>
+      </button>
+
+      <div className="text-center">
+        <div className="flex items-center justify-center mb-1">
+          <div
+            className={`w-1 h-1 ${
+              data.hasSubExpandedTopics ? "bg-indigo-400" : "bg-purple-400"
+            } rounded-full mr-1`}
+          ></div>
+          <span className="text-xs text-purple-300 font-medium uppercase tracking-wide">
+            {data.hasSubExpandedTopics ? "Sub-Expanded" : "Expanded"}
+          </span>
+        </div>
+        <p className="text-xs text-purple-100 font-medium leading-snug group-hover:text-white transition-colors line-clamp-2">
+          {data.title}
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+// Generic recursive subtopic node that adapts based on level
+const RecursiveSubtopicNode = ({data}) => {
+  const level = data.level || 0;
+
+  // Color themes for different levels
+  const themes = [
+    {
+      // Level 0 - Original Subtopics (Green)
+      bg: "bg-gray-800/50 hover:bg-gray-700/90",
+      border: "border-gray-600/50 hover:border-gray-500/70",
+      button: data.hasChildren
+        ? "bg-purple-500 hover:bg-purple-400"
+        : "bg-green-500 hover:bg-green-400",
+      indicator: data.hasChildren ? "bg-purple-400" : "bg-green-400",
+      label: data.hasChildren ? "Expanded Topic" : "Topic",
+      text: "text-gray-200 group-hover:text-white",
+      labelColor: "text-gray-400",
+      size: "w-[280px] h-[140px] px-5 py-4",
+      indicatorSize: "w-1.5 h-1.5 mr-1.5",
+      buttonSize: "w-10 h-10 -top-3 -right-3",
+      iconSize: "w-4 h-4",
+      textSize: "text-sm",
+      handle: "w-3 h-3 bg-gray-500 border-2 border-gray-600",
+    },
+    {
+      // Level 1 - Purple theme
+      bg: "bg-purple-800/30 hover:bg-purple-700/50",
+      border: "border-purple-500/50 hover:border-purple-400/70",
+      button: data.hasChildren
+        ? "bg-indigo-500 hover:bg-indigo-400"
+        : "bg-purple-500 hover:bg-purple-400",
+      indicator: data.hasChildren ? "bg-indigo-400" : "bg-purple-400",
+      label: data.hasChildren ? "Sub-Expanded" : "Expanded",
+      text: "text-purple-100 group-hover:text-white",
+      labelColor: "text-purple-300",
+      size: "w-[220px] h-[80px] px-3 py-2",
+      indicatorSize: "w-1 h-1 mr-1",
+      buttonSize: "w-8 h-8 -top-2 -right-2",
+      iconSize: "w-3 h-3",
+      textSize: "text-xs",
+      handle: "w-2 h-2 bg-purple-500 border-2 border-purple-600",
+    },
+    {
+      // Level 2 - Indigo theme
+      bg: "bg-indigo-800/30 hover:bg-indigo-700/50",
+      border: "border-indigo-500/50 hover:border-indigo-400/70",
+      button: data.hasChildren
+        ? "bg-blue-500 hover:bg-blue-400"
+        : "bg-indigo-500 hover:bg-indigo-400",
+      indicator: data.hasChildren ? "bg-blue-400" : "bg-indigo-400",
+      label: data.hasChildren ? "Deep-Expanded" : "Sub-Expanded",
+      text: "text-indigo-100 group-hover:text-white",
+      labelColor: "text-indigo-300",
+      size: "w-[200px] h-[70px] px-2 py-1.5",
+      indicatorSize: "w-0.5 h-0.5 mr-0.5",
+      buttonSize: "w-7 h-7 -top-1.5 -right-1.5",
+      iconSize: "w-2.5 h-2.5",
+      textSize: "text-xs",
+      handle: "w-1.5 h-1.5 bg-indigo-500 border-2 border-indigo-600",
+    },
+    {
+      // Level 3+ - Blue theme (gets smaller and more compact)
+      bg: "bg-blue-800/30 hover:bg-blue-700/50",
+      border: "border-blue-500/50 hover:border-blue-400/70",
+      button: data.hasChildren
+        ? "bg-cyan-500 hover:bg-cyan-400"
+        : "bg-blue-500 hover:bg-blue-400",
+      indicator: data.hasChildren ? "bg-cyan-400" : "bg-blue-400",
+      label: data.hasChildren ? "Ultra-Deep" : "Deep",
+      text: "text-blue-100 group-hover:text-white",
+      labelColor: "text-blue-300",
+      size: "w-[180px] h-[60px] px-2 py-1",
+      indicatorSize: "w-0.5 h-0.5 mr-0.5",
+      buttonSize: "w-6 h-6 -top-1 -right-1",
+      iconSize: "w-2 h-2",
+      textSize: "text-xs",
+      handle: "w-1 h-1 bg-blue-500 border-2 border-blue-600",
+    },
+  ];
+
+  // Use theme based on level, fallback to last theme for deeper levels
+  const theme = themes[Math.min(level, themes.length - 1)];
+
+  return (
+    <div className="group relative">
+      <Handle type="target" position={Position.Left} className={theme.handle} />
+      <Handle
+        type="source"
+        position={Position.Right}
+        className={theme.handle}
+      />
+
+      <div
+        className={`${theme.size} ${theme.bg} rounded-lg border ${theme.border} backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-center`}
+        onClick={data.onNodeClick}
+      >
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            data.onPlusClick();
+          }}
+          className={`absolute ${theme.buttonSize} ${theme.button} text-white rounded-md flex items-center justify-center text-xs font-bold shadow-lg transition-all duration-200 z-10 hover:scale-110`}
+        >
+          <svg
+            className={theme.iconSize}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            {data.hasChildren ? (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            ) : (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            )}
+          </svg>
+        </button>
+
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-1">
+            <div
+              className={`${theme.indicatorSize} ${theme.indicator} rounded-full`}
+            ></div>
+            <span
+              className={`text-xs ${theme.labelColor} font-medium uppercase tracking-wide`}
+            >
+              {theme.label}
+            </span>
+          </div>
+          <p
+            className={`${theme.textSize} ${theme.text} font-medium leading-snug transition-colors line-clamp-2`}
+          >
+            {data.title}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Node types
 const nodeTypes = {
   course: CourseNode,
   unit: UnitNode,
   subtopic: SubTopicNode,
+  expandedSubtopic: ExpandedSubTopicNode,
+  recursiveSubtopic: RecursiveSubtopicNode,
 };
 
 function MindMap({
@@ -196,6 +451,7 @@ function MindMap({
   const {user} = useAuth();
   const reactFlowInstance = useRef(null);
   const [expandedUnits, setExpandedUnits] = React.useState(new Set([0])); // First unit expanded by default
+  const [expandedSubtopicsData, setExpandedSubtopicsData] = React.useState({}); // Track expanded subtopics
   const [defaultViewport] = React.useState({x: 0, y: 0, zoom: 0.4});
   const [isLoading, setIsLoading] = React.useState(false);
   const [modalState, setModalState] = React.useState({
@@ -241,6 +497,24 @@ function MindMap({
       }
     }
   }, [mindmapState]);
+
+  // Load expanded subtopics on component mount
+  React.useEffect(() => {
+    const loadExpandedSubtopics = async () => {
+      if (chatId && user?.uid) {
+        try {
+          const result = await getExpandedSubtopics(chatId, user.uid);
+          if (result.success) {
+            setExpandedSubtopicsData(result.data);
+          }
+        } catch (error) {
+          console.error("Error loading expanded subtopics:", error);
+        }
+      }
+    };
+
+    loadExpandedSubtopics();
+  }, [chatId, user?.uid]);
 
   const showModal = (type, title, message) => {
     setModalState({
@@ -343,6 +617,299 @@ function MindMap({
     );
   };
 
+  // Generic recursive handler for any level of subtopic expansion
+  const handleRecursiveSubtopicExpansion = async (
+    hierarchyPath,
+    subtopicTitle,
+    parentTitle,
+    level,
+    unitTitle,
+    contextData = {}
+  ) => {
+    console.log(
+      `🚀 Recursive subtopic expansion: Level ${level}, Path: ${hierarchyPath.join(
+        "-"
+      )}, Title: "${subtopicTitle}"`
+    );
+
+    setIsLoading(true);
+
+    try {
+      // Check if this path has already been expanded
+      const existingExpanded = await getExpandedSubtopics(chatId, user.uid);
+      const hierarchyKey = hierarchyPath.join("-");
+
+      if (existingExpanded.success && existingExpanded.data[hierarchyKey]) {
+        showModal(
+          "info",
+          "Already Expanded",
+          `This subtopic "${subtopicTitle}" has already been expanded with ${
+            existingExpanded.data[hierarchyKey].expandedTopics?.length || 4
+          } additional topics.`
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      // Generate 4 additional subtopics via API with enhanced context
+      const apiUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
+      const response = await fetch(`${apiUrl}/api/expand-subtopics`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          topic: chatData.topic,
+          subtopic: subtopicTitle,
+          unitTitle: unitTitle,
+          syllabus: chatData.syllabusContext || "No syllabus context provided",
+          count: 4,
+          level: level, // Include level for better AI context
+          parentContext: parentTitle, // Provide parent context
+          hierarchyPath: hierarchyPath, // Include full hierarchy path
+          ...contextData, // Include any additional context data
+        }),
+      });
+
+      if (!response.ok) {
+        showModal(
+          "error",
+          "API Error",
+          `Failed to generate level-${level} expanded subtopics. Please try again. (Status: ${response.status})`
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      console.log(`✅ Level-${level} subtopics generated:`, data);
+
+      // Ensure we always get an array of subtopics
+      let expandedSubtopics = [];
+      if (data.subtopics && Array.isArray(data.subtopics)) {
+        expandedSubtopics = data.subtopics;
+      } else if (data.data?.subtopics && Array.isArray(data.data.subtopics)) {
+        expandedSubtopics = data.data.subtopics;
+      } else if (
+        data.expandedSubtopics &&
+        Array.isArray(data.expandedSubtopics)
+      ) {
+        expandedSubtopics = data.expandedSubtopics;
+      } else if (Array.isArray(data.data)) {
+        expandedSubtopics = data.data;
+      } else if (Array.isArray(data)) {
+        expandedSubtopics = data;
+      }
+
+      if (!expandedSubtopics || expandedSubtopics.length === 0) {
+        showModal(
+          "error",
+          "No Subtopics Generated",
+          `Failed to generate level-${level} expanded subtopics for "${subtopicTitle}". Please try again.`
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      console.log(
+        `📊 Generated ${expandedSubtopics.length} subtopics for level ${level}:`,
+        expandedSubtopics
+      );
+
+      // Save using the new multi-level function with enhanced metadata
+      const result = await addMultiLevelSubtopics(
+        chatId,
+        user.uid,
+        hierarchyPath,
+        expandedSubtopics,
+        subtopicTitle,
+        level
+      );
+
+      if (result.success) {
+        showModal(
+          "success",
+          "Subtopics Expanded",
+          `Successfully generated ${expandedSubtopics.length} level-${level} subtopics for "${subtopicTitle}". Click them to explore further!`
+        );
+
+        // Refresh expanded subtopics data to update the mindmap
+        const updatedExpanded = await getExpandedSubtopics(chatId, user.uid);
+        if (updatedExpanded.success) {
+          setExpandedSubtopicsData(updatedExpanded.data);
+          console.log(
+            "🔄 Updated expanded subtopics data:",
+            updatedExpanded.data
+          );
+        }
+      } else {
+        showModal(
+          "error",
+          "Save Failed",
+          `Generated subtopics but failed to save them to database: ${result.message}`
+        );
+      }
+    } catch (error) {
+      console.error("Error in recursive subtopic expansion:", error);
+      showModal(
+        "error",
+        "Error",
+        "An unexpected error occurred while expanding subtopics."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Generic recursive handler for subtopic node clicks
+  const handleRecursiveSubtopicNodeClick = async (
+    hierarchyPath,
+    subtopicTitle,
+    level,
+    contextData = {}
+  ) => {
+    console.log(
+      `🎯 Recursive subtopic clicked: Level ${level}, Path: ${hierarchyPath.join(
+        "-"
+      )}, Title: "${subtopicTitle}"`
+    );
+
+    openSidebar();
+    setSubtopicData(null);
+
+    try {
+      // First check if content is already available in expandedSubtopicsData
+      const hierarchyKey = hierarchyPath.join("-");
+      const existingData = expandedSubtopicsData[hierarchyKey];
+
+      if (existingData && existingData.content) {
+        console.log("📚 Content found in expandedSubtopicsData:", existingData);
+        showModal(
+          "info",
+          "Loaded from Memory",
+          `Subtopic "${subtopicTitle}" loaded from memory cache.`
+        );
+        setSubtopicData(existingData);
+        return;
+      }
+
+      // Try to get detailed content from database using hierarchical path
+      const dbResult = await getHierarchicalSubtopicDataDB(
+        chatId,
+        user.uid,
+        hierarchyPath
+      );
+
+      if (dbResult.success) {
+        console.log(
+          "📚 Hierarchical subtopic data found in database:",
+          dbResult.data
+        );
+        // Show cache indicator in modal
+        // showModal(
+        //   "info",
+        //   "Loaded from Cache",
+        //   `Subtopic "${subtopicTitle}" loaded from cached data. Saved on: ${new Date(
+        //     dbResult.data.cacheTimestamp || dbResult.data.savedAt
+        //   ).toLocaleString()}`
+        // );
+        setSubtopicData(dbResult.data);
+        return;
+      }
+
+      // If not found in database, fetch from API
+      console.log(
+        "🌐 Hierarchical subtopic data not found in database, fetching from API..."
+      );
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
+      let response = await fetch(`${apiUrl}/api/notes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          topic: chatData.topic,
+          subtopic: subtopicTitle,
+          syllabus: chatData.syllabusContext || "No syllabus context provided",
+          level: level,
+          hierarchyPath: hierarchyPath,
+          parentContext:
+            hierarchyPath.length > 1
+              ? hierarchyPath.slice(0, -1).join(" > ")
+              : null,
+          ...contextData,
+        }),
+      });
+
+      if (!response.ok) {
+        showModal(
+          "error",
+          "API Error",
+          `Failed to fetch details for "${subtopicTitle}" (Level ${level}). Please try again. (Status: ${response.status})`
+        );
+        return;
+      }
+
+      const data = await response.json();
+      console.log(
+        "📖 Hierarchical subtopic details fetched from API:",
+        data.data
+      );
+
+      // Ensure proper data structure before saving
+      const apiResponseData = data.data || data;
+
+      // Add metadata to the subtopic data with enhanced context
+      const subtopicDataWithMeta = {
+        ...apiResponseData,
+        // Ensure proper data types
+        content: Array.isArray(apiResponseData.content)
+          ? apiResponseData.content
+          : [],
+        hierarchyPath,
+        subtopicTitle,
+        level,
+        syllabus: chatData.syllabusContext,
+        topic: chatData.topic,
+        isRecursiveSubtopic: true,
+        parentContext:
+          hierarchyPath.length > 1
+            ? hierarchyPath.slice(0, -1).join(" > ")
+            : null,
+        generationTimestamp: new Date().toISOString(),
+        dataSource: "api",
+        ...contextData,
+      };
+
+      // Save to database for future use with hierarchical support
+      const saveResult = await setHierarchicalSubtopicDataDB(
+        chatId,
+        user.uid,
+        subtopicDataWithMeta,
+        hierarchyPath
+      );
+
+      if (saveResult.success) {
+        console.log("💾 Hierarchical subtopic data saved to database");
+      } else {
+        console.warn(
+          "⚠️ Failed to save hierarchical subtopic data:",
+          saveResult.message
+        );
+      }
+
+      setSubtopicData(subtopicDataWithMeta);
+    } catch (error) {
+      console.error("❌ Error fetching hierarchical subtopic details:", error);
+      showModal(
+        "error",
+        "Unexpected Error",
+        `An unexpected error occurred while fetching details for "${subtopicTitle}". Please try again.`
+      );
+    }
+  };
+
   const handleUnitPlusClick = (unitIndex) => {
     console.log("Unit plus clicked:", unitIndex);
     // Toggle the clicked unit - expand if collapsed, collapse if expanded
@@ -359,7 +926,7 @@ function MindMap({
     });
   };
 
-  const handleSubTopicPlusClick = (
+  const handleSubTopicPlusClick = async (
     unitIndex,
     subTopicIndex,
     subtopicTitle,
@@ -369,10 +936,96 @@ function MindMap({
     console.log(
       `Subtopic PLUS button clicked: Unit ${unitIndex + 1}, Subtopic ${
         subTopicIndex + 1
-      } - Add functionality here`
+      } - Generating expanded subtopics...`
     );
 
-    // TODO: Add functionality for the plus button (e.g., add notes, mark as favorite, etc.)
+    // Use the recursive handler with level 1 expansion
+    const hierarchyPath = [unitIndex, subTopicIndex];
+    await handleRecursiveSubtopicExpansion(
+      hierarchyPath,
+      subtopicTitle,
+      subtopicTitle, // parent is self for first level
+      1, // level 1
+      unitTitle,
+      {
+        unitIndex,
+        subTopicIndex,
+        unitTitle,
+        unitNumber,
+      }
+    );
+  };
+
+  const handleExpandedSubTopicPlusClick = async (
+    unitIndex,
+    subTopicIndex,
+    expandedIndex,
+    expandedSubtopicTitle,
+    parentSubtopicTitle,
+    unitTitle,
+    unitNumber
+  ) => {
+    console.log(
+      `Expanded Subtopic PLUS button clicked: Unit ${unitIndex + 1}, Subtopic ${
+        subTopicIndex + 1
+      }, Expanded ${expandedIndex + 1} - Generating sub-expanded subtopics...`
+    );
+
+    // Use the recursive handler with level 2 expansion
+    const hierarchyPath = [unitIndex, subTopicIndex, expandedIndex];
+    await handleRecursiveSubtopicExpansion(
+      hierarchyPath,
+      expandedSubtopicTitle,
+      parentSubtopicTitle,
+      2, // level 2
+      unitTitle,
+      {
+        unitIndex,
+        subTopicIndex,
+        expandedIndex,
+        parentSubtopicTitle,
+        unitTitle,
+        unitNumber,
+      }
+    );
+  };
+
+  const handleExpandedSubTopicNodeClick = async (
+    syllabus,
+    topic,
+    unitIndex,
+    subTopicIndex,
+    expandedIndex,
+    expandedSubtopicTitle,
+    parentSubtopicTitle,
+    unitTitle,
+    unitNumber
+  ) => {
+    console.log("Expanded subtopic clicked:", {
+      unitIndex,
+      subTopicIndex,
+      expandedIndex,
+      expandedSubtopicTitle,
+    });
+
+    // Use the recursive handler with level 2
+    const hierarchyPath = [unitIndex, subTopicIndex, expandedIndex];
+    await handleRecursiveSubtopicNodeClick(
+      hierarchyPath,
+      expandedSubtopicTitle,
+      2, // level 2
+      {
+        syllabus,
+        topic,
+        unitIndex,
+        subTopicIndex,
+        expandedIndex,
+        parentSubtopicTitle,
+        unitTitle,
+        unitNumber,
+        isExpandedSubtopic: true,
+      }
+    );
   };
 
   const handleSubTopicNodeClick = async (
@@ -384,27 +1037,53 @@ function MindMap({
     unitTitle,
     unitNumber
   ) => {
-    console.log("clicked");
+    console.log("Subtopic clicked:", {unitIndex, subTopicIndex, subtopicTitle});
 
     openSidebar();
     setSubtopicData(null);
-    // setSelectedSubTopic({
-    //   unitIndex,
-    //   subTopicIndex,
-    //   subtopicTitle,
-    //   unitTitle,
-    //   unitNumber,
-    //   notesContent: data, // Pass the fetched data
-    //   objectives:
-    //     data?.objectives ||
-    //     "Master the key concepts and practical applications of this topic.",
-    //   resources: data?.resources || [],
-    //   progress: data?.progress || 0,
-    // });
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
     try {
+      // Check if this is actually an expanded subtopic that might have content in memory
+      const hierarchyKey = `${unitIndex}-${subTopicIndex}`;
+      const memoryData = expandedSubtopicsData[hierarchyKey];
+
+      if (memoryData && memoryData.content) {
+        console.log("📚 Base subtopic content found in memory:", memoryData);
+        // showModal(
+        //   "info",
+        //   "Loaded from Memory",
+        //   `Subtopic "${subtopicTitle}" loaded from memory cache.`
+        // );
+        setSubtopicData(memoryData);
+        return;
+      }
+
+      // Try to get data from database cache
+      const dbResult = await getSubtopicDataDB(
+        chatId,
+        user.uid,
+        unitIndex,
+        subTopicIndex
+      );
+
+      if (dbResult.success) {
+        console.log("Subtopic data found in database:", dbResult.data);
+        // Show cache indicator in modal
+        // showModal(
+        //   "info",
+        //   "Loaded from Cache",
+        //   `Subtopic "${subtopicTitle}" loaded from cached data. Saved on: ${new Date(
+        //     dbResult.data.cacheTimestamp || dbResult.data.savedAt
+        //   ).toLocaleString()}`
+        // );
+        setSubtopicData(dbResult.data);
+        return;
+      }
+
+      // If not found in database, fetch from API
+      console.log("Subtopic data not found in database, fetching from API...");
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
       let response = await fetch(`${apiUrl}/api/notes`, {
         method: "POST",
         headers: {
@@ -427,8 +1106,33 @@ function MindMap({
       }
 
       const data = await response.json();
-      console.log("Subtopic details fetched successfully:", data.data);
-      setSubtopicData(data.data);
+      console.log("Subtopic details fetched successfully from API:", data.data);
+
+      // Ensure proper data structure before saving
+      const apiResponseData = data.data || data;
+
+      // Add metadata to the subtopic data
+      const subtopicDataWithMeta = {
+        ...apiResponseData,
+        // Ensure proper data types
+        content: Array.isArray(apiResponseData.content)
+          ? apiResponseData.content
+          : [],
+        unitIndex,
+        subTopicIndex,
+        subtopicTitle,
+        unitTitle,
+        unitNumber,
+        syllabus,
+        topic,
+        generationTimestamp: new Date().toISOString(),
+        dataSource: "api",
+      };
+
+      // Save to database for future use
+      await setSubtopicDataDB(chatId, user.uid, subtopicDataWithMeta);
+
+      setSubtopicData(subtopicDataWithMeta);
     } catch (error) {
       console.error("Error fetching subtopic details:", error);
       showModal(
@@ -437,6 +1141,155 @@ function MindMap({
         "An unexpected error occurred while fetching subtopic details."
       );
     }
+  };
+
+  // Recursive function to generate subtopic nodes at any depth
+  const generateRecursiveSubtopics = (
+    unitIndex,
+    subIndex,
+    parentNodeId,
+    parentX,
+    parentY,
+    expandedUnitPosition,
+    parentTitle,
+    unitTitle,
+    unitNumber,
+    chatData,
+    courseData,
+    nodes,
+    edges,
+    currentPath = [unitIndex, subIndex],
+    level = 1,
+    maxDepth = 10 // Reasonable limit to prevent infinite expansion
+  ) => {
+    if (level > maxDepth) {
+      console.log(
+        `Max depth ${maxDepth} reached for path: ${currentPath.join("-")}`
+      );
+      return;
+    }
+
+    const hierarchyKey = currentPath.join("-");
+    const rawExpandedSubtopics =
+      expandedSubtopicsData[hierarchyKey]?.expandedTopics;
+    const expandedSubtopics = Array.isArray(rawExpandedSubtopics)
+      ? rawExpandedSubtopics
+      : [];
+
+    if (expandedSubtopics.length === 0) {
+      return; // No children to create
+    }
+
+    const expandedCount = expandedSubtopics.length;
+
+    // Calculate positions for this level
+    const nodeSpacing = Math.max(60, 120 - level * 10); // Decrease spacing with depth
+    const expandedStartY = parentY - ((expandedCount - 1) * nodeSpacing) / 2;
+
+    // Calculate horizontal position based on level and unit position
+    const baseSpacing = 300; // Base horizontal spacing
+    const levelMultiplier = Math.max(0.7, 1 - level * 0.1); // Reduce spacing with depth
+    const horizontalSpacing = baseSpacing * levelMultiplier;
+    const unitOffset = expandedUnitPosition * 50; // Spacing offset between different units
+    const childX = parentX + horizontalSpacing + unitOffset;
+
+    expandedSubtopics.forEach((expandedTopic, expandedIndex) => {
+      const childPath = [...currentPath, expandedIndex];
+      const childId = `recursive-${childPath.join("-")}`;
+      const childY = expandedStartY + expandedIndex * nodeSpacing;
+
+      // Check if this child has its own children
+      const childHierarchyKey = childPath.join("-");
+      const childExpandedTopics =
+        expandedSubtopicsData[childHierarchyKey]?.expandedTopics;
+      const hasChildren =
+        Array.isArray(childExpandedTopics) && childExpandedTopics.length > 0;
+
+      // Create the node
+      nodes.push({
+        id: childId,
+        type: "recursiveSubtopic",
+        position: {x: childX, y: childY},
+        data: {
+          title: expandedTopic,
+          level: level,
+          hasChildren: hasChildren,
+          hierarchyPath: childPath,
+          onNodeClick: () =>
+            handleRecursiveSubtopicNodeClick(childPath, expandedTopic, level, {
+              unitIndex,
+              subIndex,
+              unitTitle,
+              unitNumber,
+              parentTitle,
+              syllabus:
+                chatData.syllabusContext ||
+                courseData.syllabusContext ||
+                "No syllabus context provided",
+              topic: chatData.topic || "No topic",
+            }),
+          onPlusClick: () =>
+            handleRecursiveSubtopicExpansion(
+              childPath,
+              expandedTopic,
+              parentTitle,
+              level + 1, // Next level
+              unitTitle,
+              {
+                unitIndex,
+                subIndex,
+                unitTitle,
+                unitNumber,
+                parentTitle,
+              }
+            ),
+        },
+      });
+
+      // Create edge from parent to child
+      const edgeColors = [
+        "#10b981",
+        "#a855f7",
+        "#3b82f6",
+        "#ef4444",
+        "#f59e0b",
+        "#8b5cf6",
+      ];
+      const edgeColor = edgeColors[Math.min(level - 1, edgeColors.length - 1)];
+
+      edges.push({
+        id: `${parentNodeId}-${childId}`,
+        source: parentNodeId,
+        target: childId,
+        type: "default",
+        style: {
+          stroke: edgeColor,
+          strokeWidth: Math.max(1, 2 - level * 0.2),
+          strokeDasharray: level === 1 ? "3,3" : `${2 + level},${2 + level}`,
+        },
+        animated: level <= 2,
+      });
+
+      // Recursively generate children for this node
+      generateRecursiveSubtopics(
+        unitIndex,
+        subIndex,
+        childId,
+        childX,
+        childY,
+        expandedUnitPosition,
+        expandedTopic, // This becomes the new parent title
+        unitTitle,
+        unitNumber,
+        chatData,
+        courseData,
+        nodes,
+        edges,
+        childPath,
+        level + 1,
+        maxDepth
+      );
+    });
   };
 
   // Generate nodes and edges from chatData
@@ -500,7 +1353,31 @@ function MindMap({
       const isExpanded = expandedUnits.has(unitIndex);
       const subTopicsCount =
         isExpanded && unit.sub_topics ? unit.sub_topics.length : 0;
-      const unitRequiredHeight = Math.max(140, subTopicsCount * 180); // Minimum unit height or subtopics height
+
+      // Calculate additional height needed for expanded subtopics
+      let expandedSubtopicsHeight = 0;
+      if (isExpanded && unit.sub_topics) {
+        unit.sub_topics.forEach((subTopic, subIndex) => {
+          const expandedKey = `${unitIndex}-${subIndex}`;
+          const rawExpandedSubtopics =
+            expandedSubtopicsData[expandedKey]?.expandedTopics;
+          const expandedSubtopics = Array.isArray(rawExpandedSubtopics)
+            ? rawExpandedSubtopics
+            : [];
+          if (expandedSubtopics.length > 0) {
+            expandedSubtopicsHeight = Math.max(
+              expandedSubtopicsHeight,
+              expandedSubtopics.length * 100
+            );
+          }
+        });
+      }
+
+      const unitRequiredHeight = Math.max(
+        140,
+        subTopicsCount * 180,
+        expandedSubtopicsHeight
+      ); // Account for expanded subtopics
 
       unitSpacingData.push({
         unitIndex,
@@ -587,16 +1464,26 @@ function MindMap({
           const subTopicX =
             baseSubTopicX + expandedUnitPosition * horizontalSpacing;
 
+          // Check if this subtopic has expanded subtopics
+          const expandedKey = `${unitIndex}-${subIndex}`;
+          const rawExpandedSubtopics =
+            expandedSubtopicsData[expandedKey]?.expandedTopics;
+          const expandedSubtopics = Array.isArray(rawExpandedSubtopics)
+            ? rawExpandedSubtopics
+            : [];
+          const hasExpandedSubtopics = expandedSubtopics.length > 0;
+
           // Subtopic node
           nodes.push({
             id: subTopicId,
             type: "subtopic",
-            position: {x: subTopicX, y: subTopicY}, // Better positioned to avoid overlaps
+            position: {x: subTopicX, y: subTopicY},
             data: {
               title:
                 typeof subTopic === "string"
                   ? subTopic
                   : subTopic.title || `Subtopic ${subIndex + 1}`,
+              hasExpandedSubtopics: hasExpandedSubtopics,
               onNodeClick: () =>
                 handleSubTopicNodeClick(
                   chatData.syllabusContext ||
@@ -635,12 +1522,31 @@ function MindMap({
             },
             animated: true,
           });
+
+          // Create recursive subtopic nodes using hierarchical data
+          generateRecursiveSubtopics(
+            unitIndex,
+            subIndex,
+            subTopicId,
+            subTopicX,
+            subTopicY,
+            expandedUnitPosition,
+            typeof subTopic === "string"
+              ? subTopic
+              : subTopic.title || `Subtopic ${subIndex + 1}`,
+            unit.title,
+            unit.unit_num || unitIndex + 1,
+            chatData,
+            courseData,
+            nodes,
+            edges
+          );
         });
       }
     });
 
     return {initialNodes: nodes, initialEdges: edges};
-  }, [chatData, expandedUnits]);
+  }, [chatData, expandedUnits, expandedSubtopicsData]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -679,6 +1585,87 @@ function MindMap({
 
       {/* Control buttons - Mobile optimized positioning */}
       <div className="absolute top-4 right-4 z-30 flex flex-col sm:flex-row gap-2">
+        {/* Cache Statistics Button */}
+        <button
+          onClick={async () => {
+            try {
+              const stats = await getCacheStatistics(chatId, user?.uid);
+              if (stats.success) {
+                showModal(
+                  "info",
+                  "Cache Statistics",
+                  `Cached Items: ${
+                    stats.data.totalCachedItems
+                  }\nRegular Subtopics: ${
+                    stats.data.regularSubtopics
+                  }\nHierarchical Subtopics: ${
+                    stats.data.hierarchicalSubtopics
+                  }\nCache Size: ${Math.round(
+                    stats.data.totalCacheSize / 1024
+                  )} KB\nOldest: ${
+                    stats.data.oldestCache
+                      ? new Date(stats.data.oldestCache).toLocaleDateString()
+                      : "N/A"
+                  }`
+                );
+              }
+            } catch (error) {
+              console.error("Error fetching cache stats:", error);
+            }
+          }}
+          className="px-3 py-2 sm:px-4 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap"
+        >
+          <svg
+            className="w-3 h-3 sm:w-4 sm:h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 7v10c0 2.21 3.58 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.58 4 8 4s8-1.79 8-4M4 7c0-2.21 3.58-4 8-4s8 1.79 8 4m0 5c0 2.21-3.58 4-8 4s-8-1.79-8-4"
+            />
+          </svg>
+          <span className="hidden sm:inline">Cache</span>
+        </button>
+
+        {/* Expansion Statistics Button */}
+        <button
+          onClick={async () => {
+            try {
+              const {getExpansionStatistics} = await import("../lib/db");
+              const stats = await getExpansionStatistics(chatId, user?.uid);
+              if (stats.success) {
+                showModal(
+                  "info",
+                  "Expansion Statistics",
+                  `Total Expansions: ${stats.data.totalExpansions}\nMax Depth: ${stats.data.maxDepthReached}\nSubtopics Generated: ${stats.data.totalSubtopicsGenerated}\nContent Generated: ${stats.data.totalContentGenerated}`
+                );
+              }
+            } catch (error) {
+              console.error("Error fetching stats:", error);
+            }
+          }}
+          className="px-3 py-2 sm:px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap"
+        >
+          <svg
+            className="w-3 h-3 sm:w-4 sm:h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
+          </svg>
+          <span className="hidden sm:inline">Stats</span>
+        </button>
+
         <button
           onClick={saveMindmapStateToDb}
           disabled={isLoading || !chatId || !user?.uid}
@@ -772,6 +1759,8 @@ function MindMap({
                   return "#374151";
                 case "subtopic":
                   return "#6b7280";
+                case "expandedSubtopic":
+                  return "#a855f7";
                 default:
                   return "#9ca3af";
               }
