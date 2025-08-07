@@ -56,7 +56,7 @@ const GeneralInfoModal = ({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed top-4 right-0 md:right-4 z-30 max-w-sm w-full px-4 md:px-0"
+          className="fixed top-4 right-0 md:right-4 z-40 max-w-sm w-full px-4 md:px-0"
           initial={{opacity: 0, x: 100, scale: 0.9}}
           animate={{opacity: 1, x: 0, scale: 1}}
           exit={{opacity: 0, x: 100, scale: 0.9}}

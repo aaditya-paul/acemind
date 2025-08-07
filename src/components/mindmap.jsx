@@ -163,7 +163,9 @@ const SubTopicNode = ({data}) => (
         }}
         className={`absolute -top-3 -right-3 w-10 h-10 ${
           data.hasExpandedSubtopics
-            ? "bg-purple-500 hover:bg-purple-400"
+            ? data.isCollapsed
+              ? "bg-green-500 hover:bg-green-400"
+              : "bg-orange-500 hover:bg-orange-400"
             : "bg-green-500 hover:bg-green-400"
         } text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-10 hover:scale-110`}
       >
@@ -173,14 +175,24 @@ const SubTopicNode = ({data}) => (
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          {data.hasExpandedSubtopics ? (
+          {data.hasExpandedSubtopics && !data.isCollapsed ? (
+            // Collapse icon (minus)
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M5 13l4 4L19 7"
+              d="M20 12H4"
+            />
+          ) : data.hasExpandedSubtopics && data.isCollapsed ? (
+            // Expand icon (plus)
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
             />
           ) : (
+            // Add new children icon (plus)
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -195,11 +207,19 @@ const SubTopicNode = ({data}) => (
         <div className="flex items-center justify-center mb-2">
           <div
             className={`w-1.5 h-1.5 ${
-              data.hasExpandedSubtopics ? "bg-purple-400" : "bg-green-400"
+              data.hasExpandedSubtopics 
+                ? data.isCollapsed 
+                  ? "bg-green-400" 
+                  : "bg-orange-400"
+                : "bg-green-400"
             } rounded-full mr-1.5`}
           ></div>
           <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">
-            {data.hasExpandedSubtopics ? "Expanded Topic" : "Topic"}
+            {data.hasExpandedSubtopics 
+              ? data.isCollapsed 
+                ? "Collapsed Topic" 
+                : "Expanded Topic"
+              : "Topic"}
           </span>
         </div>
         <p className="text-sm text-gray-200 font-medium leading-snug group-hover:text-white transition-colors line-clamp-4">
@@ -288,14 +308,24 @@ const RecursiveSubtopicNode = ({data}) => {
   // Color themes for different levels
   const themes = [
     {
-      // Level 0 - Original Subtopics (Green)
+      // Level 0 - Original Subtopics (Green/Orange based on state)
       bg: "bg-gray-800/50 hover:bg-gray-700/90",
       border: "border-gray-600/50 hover:border-gray-500/70",
       button: data.hasChildren
-        ? "bg-purple-500 hover:bg-purple-400"
+        ? data.isCollapsed 
+          ? "bg-green-500 hover:bg-green-400" 
+          : "bg-orange-500 hover:bg-orange-400"
         : "bg-green-500 hover:bg-green-400",
-      indicator: data.hasChildren ? "bg-purple-400" : "bg-green-400",
-      label: data.hasChildren ? "Expanded Topic" : "Topic",
+      indicator: data.hasChildren 
+        ? data.isCollapsed 
+          ? "bg-green-400" 
+          : "bg-orange-400"
+        : "bg-green-400",
+      label: data.hasChildren 
+        ? data.isCollapsed 
+          ? "Collapsed Topic" 
+          : "Expanded Topic"
+        : "Topic",
       text: "text-gray-200 group-hover:text-white",
       labelColor: "text-gray-400",
       size: "w-[280px] h-[140px] px-5 py-4",
@@ -310,10 +340,20 @@ const RecursiveSubtopicNode = ({data}) => {
       bg: "bg-purple-800/30 hover:bg-purple-700/50",
       border: "border-purple-500/50 hover:border-purple-400/70",
       button: data.hasChildren
-        ? "bg-indigo-500 hover:bg-indigo-400"
+        ? data.isCollapsed 
+          ? "bg-purple-500 hover:bg-purple-400" 
+          : "bg-orange-500 hover:bg-orange-400"
         : "bg-purple-500 hover:bg-purple-400",
-      indicator: data.hasChildren ? "bg-indigo-400" : "bg-purple-400",
-      label: data.hasChildren ? "Sub-Expanded" : "Expanded",
+      indicator: data.hasChildren 
+        ? data.isCollapsed 
+          ? "bg-purple-400" 
+          : "bg-orange-400"
+        : "bg-purple-400",
+      label: data.hasChildren 
+        ? data.isCollapsed 
+          ? "Collapsed Sub" 
+          : "Sub-Expanded"
+        : "Expanded",
       text: "text-purple-100 group-hover:text-white",
       labelColor: "text-purple-300",
       size: "w-[220px] h-[80px] px-3 py-2",
@@ -390,14 +430,24 @@ const RecursiveSubtopicNode = ({data}) => {
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            {data.hasChildren ? (
+            {data.hasChildren && !data.isCollapsed ? (
+              // Collapse icon (minus)
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M5 13l4 4L19 7"
+                d="M20 12H4"
+              />
+            ) : data.hasChildren && data.isCollapsed ? (
+              // Expand icon (plus)
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
               />
             ) : (
+              // Add new children icon (plus)
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -452,6 +502,7 @@ function MindMap({
   const reactFlowInstance = useRef(null);
   const [expandedUnits, setExpandedUnits] = React.useState(new Set([0])); // First unit expanded by default
   const [expandedSubtopicsData, setExpandedSubtopicsData] = React.useState({}); // Track expanded subtopics
+  const [collapsedSubtopics, setCollapsedSubtopics] = React.useState(new Set()); // Track collapsed subtopics
   const [defaultViewport] = React.useState({x: 0, y: 0, zoom: 0.4});
   const [isLoading, setIsLoading] = React.useState(false);
   const [modalState, setModalState] = React.useState({
@@ -617,6 +668,31 @@ function MindMap({
     );
   };
 
+  // Function to handle collapsing/expanding subtopics
+  const handleSubtopicCollapse = (hierarchyPath) => {
+    const hierarchyKey = hierarchyPath.join("-");
+    
+    setCollapsedSubtopics(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(hierarchyKey)) {
+        // Currently collapsed, so expand it
+        newSet.delete(hierarchyKey);
+        console.log(`🔄 Expanding subtopic: ${hierarchyKey}`);
+      } else {
+        // Currently expanded, so collapse it
+        newSet.add(hierarchyKey);
+        console.log(`🔽 Collapsing subtopic: ${hierarchyKey}`);
+      }
+      return newSet;
+    });
+  };
+
+  // Function to check if a subtopic should be shown (not collapsed)
+  const isSubtopicVisible = (hierarchyPath) => {
+    const hierarchyKey = hierarchyPath.join("-");
+    return !collapsedSubtopics.has(hierarchyKey);
+  };
+
   // Generic recursive handler for any level of subtopic expansion
   const handleRecursiveSubtopicExpansion = async (
     hierarchyPath,
@@ -632,26 +708,64 @@ function MindMap({
       )}, Title: "${subtopicTitle}"`
     );
 
+    const hierarchyKey = hierarchyPath.join("-");
+
+    // Check if this subtopic is currently collapsed but has data
+    if (collapsedSubtopics.has(hierarchyKey) && expandedSubtopicsData[hierarchyKey]) {
+      // Just expand (uncollapse) without API call
+      handleSubtopicCollapse(hierarchyPath);
+      // showModal(
+      //   "info",
+      //   "Expanded from Cache",
+      //   `Subtopic "${subtopicTitle}" expanded from cached data.`
+      // );
+      return;
+    }
+
+    // Check if it's currently expanded and should be collapsed
+    if (expandedSubtopicsData[hierarchyKey] && !collapsedSubtopics.has(hierarchyKey)) {
+      // Collapse it
+      handleSubtopicCollapse(hierarchyPath);
+      // showModal(
+      //   "info",
+      //   "Collapsed",
+      //   `Subtopic "${subtopicTitle}" has been collapsed.`
+      // );
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Check if this path has already been expanded
+      // Check if this path has already been expanded in the database
       const existingExpanded = await getExpandedSubtopics(chatId, user.uid);
-      const hierarchyKey = hierarchyPath.join("-");
 
       if (existingExpanded.success && existingExpanded.data[hierarchyKey]) {
-        showModal(
-          "info",
-          "Already Expanded",
-          `This subtopic "${subtopicTitle}" has already been expanded with ${
-            existingExpanded.data[hierarchyKey].expandedTopics?.length || 4
-          } additional topics.`
-        );
+        // Data exists in database, load it without API call
+        setExpandedSubtopicsData(prev => ({
+          ...prev,
+          [hierarchyKey]: existingExpanded.data[hierarchyKey]
+        }));
+        
+        // Make sure it's not collapsed
+        setCollapsedSubtopics(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(hierarchyKey);
+          return newSet;
+        });
+
+        // showModal(
+        //   "info",
+        //   "Loaded from Database",
+        //   `Subtopic "${subtopicTitle}" expanded with ${
+        //     existingExpanded.data[hierarchyKey].expandedTopics?.length || 4
+        //   } cached topics.`
+        // );
         setIsLoading(false);
         return;
       }
 
-      // Generate 4 additional subtopics via API with enhanced context
+      // If no data exists, generate new data via API
       const apiUrl = process.env.NEXT_PUBLIC_API_ENDPOINT;
       const response = await fetch(`${apiUrl}/api/expand-subtopics`, {
         method: "POST",
@@ -727,11 +841,11 @@ function MindMap({
       );
 
       if (result.success) {
-        showModal(
-          "success",
-          "Subtopics Expanded",
-          `Successfully generated ${expandedSubtopics.length} level-${level} subtopics for "${subtopicTitle}". Click them to explore further!`
-        );
+        // showModal(
+        //   "success",
+        //   "Subtopics Expanded",
+        //   `Successfully generated ${expandedSubtopics.length} level-${level} subtopics for "${subtopicTitle}". Click them to explore further!`
+        // );
 
         // Refresh expanded subtopics data to update the mindmap
         const updatedExpanded = await getExpandedSubtopics(chatId, user.uid);
@@ -742,6 +856,13 @@ function MindMap({
             updatedExpanded.data
           );
         }
+
+        // Make sure the new expansion is not collapsed
+        setCollapsedSubtopics(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(hierarchyKey);
+          return newSet;
+        });
       } else {
         showModal(
           "error",
@@ -784,11 +905,11 @@ function MindMap({
 
       if (existingData && existingData.content) {
         console.log("📚 Content found in expandedSubtopicsData:", existingData);
-        showModal(
-          "info",
-          "Loaded from Memory",
-          `Subtopic "${subtopicTitle}" loaded from memory cache.`
-        );
+        // showModal(
+        //   "info",
+        //   "Loaded from Memory",
+        //   `Subtopic "${subtopicTitle}" loaded from memory cache.`
+        // );
         setSubtopicData(existingData);
         return;
       }
@@ -936,7 +1057,7 @@ function MindMap({
     console.log(
       `Subtopic PLUS button clicked: Unit ${unitIndex + 1}, Subtopic ${
         subTopicIndex + 1
-      } - Generating expanded subtopics...`
+      } - Handling expand/collapse...`
     );
 
     // Use the recursive handler with level 1 expansion
@@ -1160,7 +1281,8 @@ function MindMap({
     edges,
     currentPath = [unitIndex, subIndex],
     level = 1,
-    maxDepth = 10 // Reasonable limit to prevent infinite expansion
+    maxDepth = 10, // Reasonable limit to prevent infinite expansion
+    totalExpandedUnits = 1 // Pass down total expanded units for better spacing
   ) => {
     if (level > maxDepth) {
       console.log(
@@ -1176,6 +1298,11 @@ function MindMap({
       ? rawExpandedSubtopics
       : [];
 
+    // Check if this subtopic is collapsed
+    if (collapsedSubtopics.has(hierarchyKey)) {
+      return; // Don't show children if collapsed
+    }
+
     if (expandedSubtopics.length === 0) {
       return; // No children to create
     }
@@ -1186,12 +1313,22 @@ function MindMap({
     const nodeSpacing = Math.max(60, 120 - level * 10); // Decrease spacing with depth
     const expandedStartY = parentY - ((expandedCount - 1) * nodeSpacing) / 2;
 
-    // Calculate horizontal position based on level and unit position
-    const baseSpacing = 300; // Base horizontal spacing
-    const levelMultiplier = Math.max(0.7, 1 - level * 0.1); // Reduce spacing with depth
+    // Enhanced horizontal position calculation to prevent overlapping
+    const baseSpacing = level === 1 ? 450 : 320; // Increased base spacing for first level, standard for deeper levels
+    const levelMultiplier = Math.max(0.8, 1 - level * 0.08); // More gradual reduction with depth
+
+    // Dynamic unit offset based on level, expanded unit position, and total expanded units
+    const unitOffsetMultiplier = Math.max(0.6, 1 - level * 0.1); // Reduce unit offset gradually with depth (fixed typo)
+    const totalUnitsMultiplier = Math.max(1, totalExpandedUnits * 0.2); // Account for total expanded units
+    const dynamicUnitOffset =
+      expandedUnitPosition * 80 * unitOffsetMultiplier * totalUnitsMultiplier;
+
+    // Level-based spacing to ensure each level has enough room
+    const levelSpacing = level * 40; // Additional spacing per level to prevent overlap
+
     const horizontalSpacing = baseSpacing * levelMultiplier;
-    const unitOffset = expandedUnitPosition * 50; // Spacing offset between different units
-    const childX = parentX + horizontalSpacing + unitOffset;
+    const childX =
+      parentX + horizontalSpacing + dynamicUnitOffset + levelSpacing;
 
     expandedSubtopics.forEach((expandedTopic, expandedIndex) => {
       const childPath = [...currentPath, expandedIndex];
@@ -1204,6 +1341,7 @@ function MindMap({
         expandedSubtopicsData[childHierarchyKey]?.expandedTopics;
       const hasChildren =
         Array.isArray(childExpandedTopics) && childExpandedTopics.length > 0;
+      const isCollapsed = collapsedSubtopics.has(childHierarchyKey);
 
       // Create the node
       nodes.push({
@@ -1214,6 +1352,7 @@ function MindMap({
           title: expandedTopic,
           level: level,
           hasChildren: hasChildren,
+          isCollapsed: isCollapsed,
           hierarchyPath: childPath,
           onNodeClick: () =>
             handleRecursiveSubtopicNodeClick(childPath, expandedTopic, level, {
@@ -1287,7 +1426,8 @@ function MindMap({
         edges,
         childPath,
         level + 1,
-        maxDepth
+        maxDepth,
+        totalExpandedUnits // Pass down total expanded units
       );
     });
   };
@@ -1457,10 +1597,16 @@ function MindMap({
           }-${subIndex}`;
           const subTopicY = subTopicsStartY + subIndex * 180; // Position relative to unit center
 
-          // Improved horizontal spacing to prevent overlaps
+          // Enhanced horizontal spacing to prevent overlaps across all levels
           const expandedUnitPosition = expandedUnitIndices.indexOf(unitIndex);
+          const totalExpandedUnits = expandedUnitIndices.length;
           const baseSubTopicX = 1200;
-          const horizontalSpacing = 350; // Increased spacing between expanded units' subtopics
+
+          // Dynamic spacing based on number of expanded units
+          const baseHorizontalSpacing = 400;
+          const spacingMultiplier = Math.max(1, totalExpandedUnits * 0.15); // Increase spacing with more expanded units
+          const horizontalSpacing = baseHorizontalSpacing * spacingMultiplier;
+
           const subTopicX =
             baseSubTopicX + expandedUnitPosition * horizontalSpacing;
 
@@ -1472,6 +1618,7 @@ function MindMap({
             ? rawExpandedSubtopics
             : [];
           const hasExpandedSubtopics = expandedSubtopics.length > 0;
+          const isCollapsed = collapsedSubtopics.has(expandedKey);
 
           // Subtopic node
           nodes.push({
@@ -1484,6 +1631,7 @@ function MindMap({
                   ? subTopic
                   : subTopic.title || `Subtopic ${subIndex + 1}`,
               hasExpandedSubtopics: hasExpandedSubtopics,
+              isCollapsed: isCollapsed,
               onNodeClick: () =>
                 handleSubTopicNodeClick(
                   chatData.syllabusContext ||
@@ -1539,14 +1687,18 @@ function MindMap({
             chatData,
             courseData,
             nodes,
-            edges
+            edges,
+            [unitIndex, subIndex], // currentPath
+            1, // level
+            10, // maxDepth
+            totalExpandedUnits // Pass total expanded units for proper spacing
           );
         });
       }
     });
 
     return {initialNodes: nodes, initialEdges: edges};
-  }, [chatData, expandedUnits, expandedSubtopicsData]);
+  }, [chatData, expandedUnits, expandedSubtopicsData, collapsedSubtopics]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -1591,23 +1743,23 @@ function MindMap({
             try {
               const stats = await getCacheStatistics(chatId, user?.uid);
               if (stats.success) {
-                showModal(
-                  "info",
-                  "Cache Statistics",
-                  `Cached Items: ${
-                    stats.data.totalCachedItems
-                  }\nRegular Subtopics: ${
-                    stats.data.regularSubtopics
-                  }\nHierarchical Subtopics: ${
-                    stats.data.hierarchicalSubtopics
-                  }\nCache Size: ${Math.round(
-                    stats.data.totalCacheSize / 1024
-                  )} KB\nOldest: ${
-                    stats.data.oldestCache
-                      ? new Date(stats.data.oldestCache).toLocaleDateString()
-                      : "N/A"
-                  }`
-                );
+                // showModal(
+                //   "info",
+                //   "Cache Statistics",
+                //   `Cached Items: ${
+                //     stats.data.totalCachedItems
+                //   }\nRegular Subtopics: ${
+                //     stats.data.regularSubtopics
+                //   }\nHierarchical Subtopics: ${
+                //     stats.data.hierarchicalSubtopics
+                //   }\nCache Size: ${Math.round(
+                //     stats.data.totalCacheSize / 1024
+                //   )} KB\nOldest: ${
+                //     stats.data.oldestCache
+                //       ? new Date(stats.data.oldestCache).toLocaleDateString()
+                //       : "N/A"
+                //   }`
+                // );
               }
             } catch (error) {
               console.error("Error fetching cache stats:", error);
@@ -1628,7 +1780,7 @@ function MindMap({
               d="M4 7v10c0 2.21 3.58 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.58 4 8 4s8-1.79 8-4M4 7c0-2.21 3.58-4 8-4s8 1.79 8 4m0 5c0 2.21-3.58 4-8 4s-8-1.79-8-4"
             />
           </svg>
-          <span className="hidden sm:inline">Cache</span>
+          <span className=" sm:inline">Cache</span>
         </button>
 
         {/* Expansion Statistics Button */}
@@ -1663,7 +1815,37 @@ function MindMap({
               d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             />
           </svg>
-          <span className="hidden sm:inline">Stats</span>
+          <span className=" sm:inline">Stats</span>
+        </button>
+
+        {/* Collapse All Button */}
+        <button
+          onClick={() => {
+            // Collapse all expanded subtopics
+            const allExpandedKeys = Object.keys(expandedSubtopicsData);
+            setCollapsedSubtopics(new Set(allExpandedKeys));
+            // showModal(
+            //   "info",
+            //   "Collapsed All",
+            //   "All expanded subtopics have been collapsed. Click the + buttons to expand them again."
+            // );
+          }}
+          className="px-3 py-2 sm:px-4 bg-orange-600 hover:bg-orange-700 text-white rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap"
+        >
+          <svg
+            className="w-3 h-3 sm:w-4 sm:h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M20 12H4"
+            />
+          </svg>
+          <span className=" sm:inline">Collapse</span>
         </button>
 
         <button
