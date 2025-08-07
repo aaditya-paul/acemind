@@ -207,17 +207,17 @@ const SubTopicNode = ({data}) => (
         <div className="flex items-center justify-center mb-2">
           <div
             className={`w-1.5 h-1.5 ${
-              data.hasExpandedSubtopics 
-                ? data.isCollapsed 
-                  ? "bg-green-400" 
+              data.hasExpandedSubtopics
+                ? data.isCollapsed
+                  ? "bg-green-400"
                   : "bg-orange-400"
                 : "bg-green-400"
             } rounded-full mr-1.5`}
           ></div>
           <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">
-            {data.hasExpandedSubtopics 
-              ? data.isCollapsed 
-                ? "Collapsed Topic" 
+            {data.hasExpandedSubtopics
+              ? data.isCollapsed
+                ? "Collapsed Topic"
                 : "Expanded Topic"
               : "Topic"}
           </span>
@@ -312,18 +312,18 @@ const RecursiveSubtopicNode = ({data}) => {
       bg: "bg-gray-800/50 hover:bg-gray-700/90",
       border: "border-gray-600/50 hover:border-gray-500/70",
       button: data.hasChildren
-        ? data.isCollapsed 
-          ? "bg-green-500 hover:bg-green-400" 
+        ? data.isCollapsed
+          ? "bg-green-500 hover:bg-green-400"
           : "bg-orange-500 hover:bg-orange-400"
         : "bg-green-500 hover:bg-green-400",
-      indicator: data.hasChildren 
-        ? data.isCollapsed 
-          ? "bg-green-400" 
+      indicator: data.hasChildren
+        ? data.isCollapsed
+          ? "bg-green-400"
           : "bg-orange-400"
         : "bg-green-400",
-      label: data.hasChildren 
-        ? data.isCollapsed 
-          ? "Collapsed Topic" 
+      label: data.hasChildren
+        ? data.isCollapsed
+          ? "Collapsed Topic"
           : "Expanded Topic"
         : "Topic",
       text: "text-gray-200 group-hover:text-white",
@@ -340,18 +340,18 @@ const RecursiveSubtopicNode = ({data}) => {
       bg: "bg-purple-800/30 hover:bg-purple-700/50",
       border: "border-purple-500/50 hover:border-purple-400/70",
       button: data.hasChildren
-        ? data.isCollapsed 
-          ? "bg-purple-500 hover:bg-purple-400" 
+        ? data.isCollapsed
+          ? "bg-purple-500 hover:bg-purple-400"
           : "bg-orange-500 hover:bg-orange-400"
         : "bg-purple-500 hover:bg-purple-400",
-      indicator: data.hasChildren 
-        ? data.isCollapsed 
-          ? "bg-purple-400" 
+      indicator: data.hasChildren
+        ? data.isCollapsed
+          ? "bg-purple-400"
           : "bg-orange-400"
         : "bg-purple-400",
-      label: data.hasChildren 
-        ? data.isCollapsed 
-          ? "Collapsed Sub" 
+      label: data.hasChildren
+        ? data.isCollapsed
+          ? "Collapsed Sub"
           : "Sub-Expanded"
         : "Expanded",
       text: "text-purple-100 group-hover:text-white",
@@ -671,8 +671,8 @@ function MindMap({
   // Function to handle collapsing/expanding subtopics
   const handleSubtopicCollapse = (hierarchyPath) => {
     const hierarchyKey = hierarchyPath.join("-");
-    
-    setCollapsedSubtopics(prev => {
+
+    setCollapsedSubtopics((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(hierarchyKey)) {
         // Currently collapsed, so expand it
@@ -711,7 +711,10 @@ function MindMap({
     const hierarchyKey = hierarchyPath.join("-");
 
     // Check if this subtopic is currently collapsed but has data
-    if (collapsedSubtopics.has(hierarchyKey) && expandedSubtopicsData[hierarchyKey]) {
+    if (
+      collapsedSubtopics.has(hierarchyKey) &&
+      expandedSubtopicsData[hierarchyKey]
+    ) {
       // Just expand (uncollapse) without API call
       handleSubtopicCollapse(hierarchyPath);
       // showModal(
@@ -723,7 +726,10 @@ function MindMap({
     }
 
     // Check if it's currently expanded and should be collapsed
-    if (expandedSubtopicsData[hierarchyKey] && !collapsedSubtopics.has(hierarchyKey)) {
+    if (
+      expandedSubtopicsData[hierarchyKey] &&
+      !collapsedSubtopics.has(hierarchyKey)
+    ) {
       // Collapse it
       handleSubtopicCollapse(hierarchyPath);
       // showModal(
@@ -742,13 +748,13 @@ function MindMap({
 
       if (existingExpanded.success && existingExpanded.data[hierarchyKey]) {
         // Data exists in database, load it without API call
-        setExpandedSubtopicsData(prev => ({
+        setExpandedSubtopicsData((prev) => ({
           ...prev,
-          [hierarchyKey]: existingExpanded.data[hierarchyKey]
+          [hierarchyKey]: existingExpanded.data[hierarchyKey],
         }));
-        
+
         // Make sure it's not collapsed
-        setCollapsedSubtopics(prev => {
+        setCollapsedSubtopics((prev) => {
           const newSet = new Set(prev);
           newSet.delete(hierarchyKey);
           return newSet;
@@ -858,7 +864,7 @@ function MindMap({
         }
 
         // Make sure the new expansion is not collapsed
-        setCollapsedSubtopics(prev => {
+        setCollapsedSubtopics((prev) => {
           const newSet = new Set(prev);
           newSet.delete(hierarchyKey);
           return newSet;
@@ -1738,7 +1744,7 @@ function MindMap({
       {/* Control buttons - Mobile optimized positioning */}
       <div className="absolute top-4 right-4 z-30 flex flex-col sm:flex-row gap-2">
         {/* Cache Statistics Button */}
-        <button
+        {/* <button
           onClick={async () => {
             try {
               const stats = await getCacheStatistics(chatId, user?.uid);
@@ -1781,7 +1787,7 @@ function MindMap({
             />
           </svg>
           <span className=" sm:inline">Cache</span>
-        </button>
+        </button> */}
 
         {/* Expansion Statistics Button */}
         <button
