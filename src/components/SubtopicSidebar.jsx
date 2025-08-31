@@ -4,6 +4,8 @@ import {motion, AnimatePresence} from "framer-motion";
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import {Minimize2Icon} from "lucide-react";
+import VideoPlayer from "./VideoPlayer";
+
 const SubtopicSidebar = ({
   sidebarOpen,
   sidebarClose,
@@ -235,59 +237,103 @@ const SubtopicSidebar = ({
         return null;
       case "youtube":
         const videoId = getYouTubeVideoId(item.url || "");
-        // return (
-        //   <motion.div
-        //     key={index}
-        //     initial={{opacity: 0, y: 10}}
-        //     animate={{opacity: 1, y: 0}}
-        //     transition={{duration: 0.2, delay: index * 0.03}}
-        //     className="mb-8"
-        //   >
-        //     {/* Section Heading if present */}
-        //     {item.heading && (
-        //       <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700/30 pb-2">
-        //         {item.heading}
-        //       </h2>
-        //     )}
+        return (
+          <motion.div
+            key={index}
+            initial={{opacity: 0, y: 10}}
+            animate={{opacity: 1, y: 0}}
+            transition={{duration: 0.2, delay: index * 0.03}}
+            className="mb-8"
+          >
+            {/* Section Heading if present */}
+            {item.heading && (
+              <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700/30 pb-2">
+                {item.heading}
+              </h2>
+            )}
 
-        //     {item.videoTitle && (
-        //       <p className="text-gray-400 text-sm mb-4 italic">
-        //         {item.videoTitle}
-        //       </p>
-        //     )}
+            {item.videoTitle && (
+              <p className="text-gray-400 text-sm mb-4 italic">
+                {item.videoTitle}
+              </p>
+            )}
 
-        //     {videoId ? (
-        //       <div className="relative w-full rounded-lg overflow-hidden border border-gray-700/50 bg-gray-900">
-        //         <div style={{paddingBottom: "56.25%"}} className="relative">
-        //           <iframe
-        //             className="absolute top-0 left-0 w-full h-full"
-        //             src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=1&cc_load_policy=0&iv_load_policy=3&showinfo=0&controls=1&disablekb=0&enablejsapi=0&autoplay=0&origin=${
-        //               typeof window !== "undefined"
-        //                 ? window.location.origin
-        //                 : ""
-        //             }`}
-        //             title={item.videoTitle || "Educational video"}
-        //             frameBorder="0"
-        //             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        //             referrerPolicy="strict-origin-when-cross-origin"
-        //             allowFullScreen
-        //             loading="lazy"
-        //           ></iframe>
-        //         </div>
-        //       </div>
-        //     ) : (
-        //       <div className="w-full h-32 bg-gray-800 border border-gray-700/50 rounded-lg flex items-center justify-center">
-        //         <div className="text-center">
-        //           <div className="text-2xl mb-2">🎥</div>
-        //           <div className="text-gray-400 text-sm">
-        //             Video not available
-        //           </div>
-        //         </div>
-        //       </div>
-        //     )}
-        //   </motion.div>
-        // );
-        return null;
+            {videoId ? (
+              <div className="relative w-full rounded-lg overflow-hidden border border-gray-700/50 bg-gray-900">
+                <div style={{paddingBottom: "56.25%"}} className="relative">
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full"
+                    src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=1&cc_load_policy=0&iv_load_policy=3&showinfo=0&controls=1&disablekb=0&enablejsapi=0&autoplay=0&origin=${
+                      typeof window !== "undefined"
+                        ? window.location.origin
+                        : ""
+                    }`}
+                    title={item.videoTitle || "Educational video"}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                    loading="lazy"
+                  ></iframe>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full h-32 bg-gray-800 border border-gray-700/50 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl mb-2">🎥</div>
+                  <div className="text-gray-400 text-sm">
+                    Video not available
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        );
+
+      case "video":
+        return (
+          <motion.div
+            key={index}
+            initial={{opacity: 0, y: 10}}
+            animate={{opacity: 1, y: 0}}
+            transition={{duration: 0.2, delay: index * 0.03}}
+            className="mb-8"
+          >
+            {/* Section Heading if present */}
+            {item.heading && (
+              <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700/30 pb-2">
+                {item.heading}
+              </h2>
+            )}
+
+            {item.videoTitle && (
+              <p className="text-gray-400 text-sm mb-4 italic">
+                {item.videoTitle}
+              </p>
+            )}
+
+            {item.url ? (
+              <VideoPlayer
+                src={item.url}
+                title={item.videoTitle || item.heading || "Video"}
+                poster={item.poster}
+                className="w-full aspect-video"
+                autoPlay={item.autoPlay || false}
+                loop={item.loop || false}
+                muted={item.muted || false}
+              />
+            ) : (
+              <div className="w-full h-32 bg-gray-800 border border-gray-700/50 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl mb-2">🎥</div>
+                  <div className="text-gray-400 text-sm">
+                    Video source not available
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        );
       case "practiceQuestions":
         return (
           <motion.div
@@ -399,6 +445,7 @@ const SubtopicSidebar = ({
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2">
         <div className="space-y-6">
+          {/* Render existing content if available */}
           {subtopicData?.aiResponse?.content ? (
             subtopicData?.aiResponse?.content.map((item, index) =>
               renderContentItem(item, index)
@@ -418,6 +465,27 @@ const SubtopicSidebar = ({
               ))}
             </>
           )}
+
+          {/* Always show VideoPlayer component at the bottom */}
+          <motion.div
+            initial={{opacity: 0, y: 10}}
+            animate={{opacity: 1, y: 0}}
+            transition={{duration: 0.3, delay: 0.2}}
+            className="mb-8"
+          >
+            <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700/30 pb-2">
+              Video Content
+            </h2>
+            <VideoPlayer
+              src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+              title={subtopicData?.aiResponse?.title || "Educational Video"}
+              poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg"
+              className="w-full aspect-video"
+              autoPlay={false}
+              loop={false}
+              muted={false}
+            />
+          </motion.div>
         </div>
       </div>
     </div>
