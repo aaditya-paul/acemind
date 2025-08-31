@@ -3,13 +3,19 @@
 import {motion, AnimatePresence} from "framer-motion";
 import React from "react";
 import ReactMarkdown from "react-markdown";
-
+import {Minimize2Icon} from "lucide-react";
 const SubtopicSidebar = ({
   sidebarOpen,
   sidebarClose,
   subtopicData,
   children,
 }) => {
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
+  // Toggle fullscreen mode
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
   // Helper to extract YouTube video ID from URL
   const getYouTubeVideoId = (url) => {
     const regExp =
@@ -338,25 +344,56 @@ const SubtopicSidebar = ({
             {subtopicData?.aiResponse?.title || "Learning Content"}
           </h1>
         </div>
-        <button
-          onClick={sidebarClose}
-          className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-gray-600"
-          aria-label="Close sidebar"
-        >
-          <svg
-            className="w-6 h-6 text-gray-400 hover:text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Fullscreen Button */}
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-600"
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+            <svg
+              className="w-5 h-5 text-gray-400 hover:text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {isFullscreen ? (
+                // Exit fullscreen icon
+                <Minimize2Icon className="w-5 h-5 text-gray-400 hover:text-white" />
+              ) : (
+                // Enter fullscreen icon
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"
+                />
+              )}
+            </svg>
+          </button>
+
+          {/* Close Button */}
+          <button
+            onClick={sidebarClose}
+            className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-600"
+            aria-label="Close sidebar"
+          >
+            <svg
+              className="w-6 h-6 text-gray-400 hover:text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Content Area */}
@@ -392,8 +429,12 @@ const SubtopicSidebar = ({
       <div className="hidden md:flex h-full overflow-hidden bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-gray-100 font-sans antialiased">
         {/* Main Content */}
         <div
-          className={`flex-1 transition-all duration-500 ease-in-out ${
-            sidebarOpen ? "md:w-1/2 lg:w-2/3" : "w-full"
+          className={`transition-all duration-500 ease-in-out ${
+            sidebarOpen
+              ? isFullscreen
+                ? "hidden"
+                : "md:w-1/2 lg:w-2/3"
+              : "w-full"
           }`}
         >
           {children}
@@ -411,7 +452,11 @@ const SubtopicSidebar = ({
                 stiffness: 300,
                 duration: 0.4,
               }}
-              className="md:w-1/2 lg:w-1/3 xl:w-2/5 max-w-[500px] bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 border-l border-gray-700/50 shadow-2xl overflow-hidden flex flex-col backdrop-blur-sm"
+              className={`${
+                isFullscreen
+                  ? "w-full"
+                  : "md:w-1/2 lg:w-1/3 xl:w-2/5 max-w-[500px]"
+              } bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 border-l border-gray-700/50 shadow-2xl overflow-hidden flex flex-col backdrop-blur-sm transition-all duration-500`}
             >
               <SidebarContent />
             </motion.div>
@@ -422,20 +467,28 @@ const SubtopicSidebar = ({
       {/* Mobile Layout */}
       <div className="md:hidden relative w-full h-full overflow-hidden bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-gray-100 font-sans antialiased">
         {/* Main Content */}
-        <div className="w-full h-full">{children}</div>
+        <div
+          className={`w-full h-full ${
+            sidebarOpen && isFullscreen ? "hidden" : ""
+          }`}
+        >
+          {children}
+        </div>
         {/* Mobile Sidebar Overlay */}
         <AnimatePresence>
           {sidebarOpen && (
             <>
-              {/* Backdrop */}
-              <motion.div
-                initial={{opacity: 0}}
-                animate={{opacity: 1}}
-                exit={{opacity: 0}}
-                transition={{duration: 0.3}}
-                onClick={sidebarClose}
-                className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
-              />
+              {/* Backdrop - only show if not fullscreen */}
+              {!isFullscreen && (
+                <motion.div
+                  initial={{opacity: 0}}
+                  animate={{opacity: 1}}
+                  exit={{opacity: 0}}
+                  transition={{duration: 0.3}}
+                  onClick={sidebarClose}
+                  className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
+                />
+              )}
 
               {/* Sidebar */}
               <motion.div
@@ -448,7 +501,9 @@ const SubtopicSidebar = ({
                   stiffness: 300,
                   duration: 0.4,
                 }}
-                className="fixed top-0 right-0 w-full h-full bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 z-50 overflow-hidden flex flex-col"
+                className={`fixed top-0 right-0 w-full h-full bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 ${
+                  isFullscreen ? "z-60" : "z-50"
+                } overflow-hidden flex flex-col`}
               >
                 <SidebarContent isMobile={true} />
               </motion.div>
