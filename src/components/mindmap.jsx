@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useCallback, useMemo, useRef} from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import {
   ReactFlow,
   MiniMap,
@@ -14,7 +14,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import {useAuth} from "../contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import {
   saveMindmapState,
   getSubtopicDataDB,
@@ -31,7 +31,7 @@ import GeneralInfoModal from "./GeneralInfoModal";
 import SubtopicSidebar from "./SubtopicSidebar";
 // import "@/styles/mindmap.css";
 // Custom Node Components
-const CourseNode = ({data}) => (
+const CourseNode = ({ data }) => (
   <div className="group relative">
     <Handle
       type="source"
@@ -59,7 +59,7 @@ const CourseNode = ({data}) => (
   </div>
 );
 
-const UnitNode = ({data}) => (
+const UnitNode = ({ data }) => (
   <div className="group relative">
     <Handle
       type="target"
@@ -139,7 +139,7 @@ const UnitNode = ({data}) => (
   </div>
 );
 
-const SubTopicNode = ({data}) => (
+const SubTopicNode = ({ data }) => (
   <div className="group relative">
     <Handle
       type="target"
@@ -230,7 +230,7 @@ const SubTopicNode = ({data}) => (
   </div>
 );
 
-const ExpandedSubTopicNode = ({data}) => (
+const ExpandedSubTopicNode = ({ data }) => (
   <div className="group relative">
     <Handle
       type="target"
@@ -302,7 +302,7 @@ const ExpandedSubTopicNode = ({data}) => (
 );
 
 // Generic recursive subtopic node that adapts based on level
-const RecursiveSubtopicNode = ({data}) => {
+const RecursiveSubtopicNode = ({ data }) => {
   const level = data.level || 0;
 
   // Color themes for different levels
@@ -497,14 +497,16 @@ function MindMap({
   openSidebar,
   setSelectedSubTopic,
   setSubtopicData,
+  setAllSubtopicsData,
 }) {
-  const {user} = useAuth();
+  const { user } = useAuth();
   const reactFlowInstance = useRef(null);
   const [expandedUnits, setExpandedUnits] = React.useState(new Set([0])); // First unit expanded by default
   const [expandedSubtopicsData, setExpandedSubtopicsData] = React.useState({}); // Track expanded subtopics
   const [collapsedSubtopics, setCollapsedSubtopics] = React.useState(new Set()); // Track collapsed subtopics
-  const [defaultViewport] = React.useState({x: 0, y: 0, zoom: 0.4});
+  const [defaultViewport] = React.useState({ x: 0, y: 0, zoom: 0.4 });
   const [isLoading, setIsLoading] = React.useState(false);
+  const [loadedSubtopicsData, setLoadedSubtopicsData] = React.useState({}); // Track all loaded subtopic data
   const [modalState, setModalState] = React.useState({
     isOpen: false,
     type: "info",
@@ -515,6 +517,27 @@ function MindMap({
     isOpen: false,
     subtopicData: null,
   });
+
+  // Update allSubtopicsData whenever loadedSubtopicsData changes
+  React.useEffect(() => {
+    if (setAllSubtopicsData && typeof setAllSubtopicsData === "function") {
+      const allData = Object.values(loadedSubtopicsData).filter(
+        (data) => data && data.aiResponse
+      );
+      setAllSubtopicsData(allData);
+    }
+  }, [loadedSubtopicsData, setAllSubtopicsData]);
+
+  // Helper function to update both subtopic data states
+  const updateSubtopicData = React.useCallback((data, hierarchyKey = null) => {
+    setSubtopicData(data);
+    if (data && hierarchyKey) {
+      setLoadedSubtopicsData((prev) => ({
+        ...prev,
+        [hierarchyKey]: data,
+      }));
+    }
+  }, []);
 
   // Load saved mindmap state on component mount
   React.useEffect(() => {
@@ -577,7 +600,7 @@ function MindMap({
   };
 
   const closeModal = () => {
-    setModalState((prev) => ({...prev, isOpen: false}));
+    setModalState((prev) => ({ ...prev, isOpen: false }));
   };
 
   const saveMindmapStateToDb = async () => {
@@ -641,7 +664,7 @@ function MindMap({
         const resetNodes = currentNodes.map((node) => {
           // Force recalculation by removing any saved position influence
           if (node.id === "subject") {
-            return {...node, position: {x: 50, y: 400}};
+            return { ...node, position: { x: 50, y: 400 } };
           }
           return node;
         });
@@ -916,7 +939,12 @@ function MindMap({
         //   "Loaded from Memory",
         //   `Subtopic "${subtopicTitle}" loaded from memory cache.`
         // );
-        setSubtopicData(existingData);
+        updateSubtopicData(existingData, hierarchyKey);
+        // Also store in loadedSubtopicsData
+        setLoadedSubtopicsData((prev) => ({
+          ...prev,
+          [hierarchyKey]: existingData,
+        }));
         return;
       }
 
@@ -1026,7 +1054,7 @@ function MindMap({
         );
       }
 
-      setSubtopicData(subtopicDataWithMeta);
+      updateSubtopicData(subtopicDataWithMeta, hierarchyPath.join("-"));
     } catch (error) {
       console.error("❌ Error fetching hierarchical subtopic details:", error);
       showModal(
@@ -1164,7 +1192,11 @@ function MindMap({
     unitTitle,
     unitNumber
   ) => {
-    console.log("Subtopic clicked:", {unitIndex, subTopicIndex, subtopicTitle});
+    console.log("Subtopic clicked:", {
+      unitIndex,
+      subTopicIndex,
+      subtopicTitle,
+    });
 
     openSidebar();
     setSubtopicData(null);
@@ -1353,7 +1385,7 @@ function MindMap({
       nodes.push({
         id: childId,
         type: "recursiveSubtopic",
-        position: {x: childX, y: childY},
+        position: { x: childX, y: childY },
         data: {
           title: expandedTopic,
           level: level,
@@ -1439,11 +1471,11 @@ function MindMap({
   };
 
   // Generate nodes and edges from chatData
-  const {initialNodes, initialEdges} = React.useMemo(() => {
+  const { initialNodes, initialEdges } = React.useMemo(() => {
     console.log("ChatData received:", chatData); // Debug log
 
     if (!chatData) {
-      return {initialNodes: [], initialEdges: []};
+      return { initialNodes: [], initialEdges: [] };
     }
 
     // Handle different data structures
@@ -1457,7 +1489,7 @@ function MindMap({
             : chatData.aiResponse;
       } catch (e) {
         console.error("Error parsing aiResponse:", e);
-        return {initialNodes: [], initialEdges: []};
+        return { initialNodes: [], initialEdges: [] };
       }
     } else {
       // Direct data structure
@@ -1466,7 +1498,7 @@ function MindMap({
 
     if (!courseData || !courseData.units || !Array.isArray(courseData.units)) {
       console.log("No units found in courseData:", courseData);
-      return {initialNodes: [], initialEdges: []};
+      return { initialNodes: [], initialEdges: [] };
     }
 
     const nodes = [];
@@ -1476,7 +1508,7 @@ function MindMap({
     const savedNodePositions = mindmapState?.nodePositions || {};
 
     // Subject/Topic node (leftmost) - always use default position for consistent layout
-    const subjectPosition = {x: 50, y: 400};
+    const subjectPosition = { x: 50, y: 400 };
     nodes.push({
       id: "subject",
       type: "course",
@@ -1543,9 +1575,9 @@ function MindMap({
 
     // Get array of expanded unit indices for dynamic spacing calculation
     const expandedUnitIndices = unitsToShow
-      .map((unit, index) => ({unit, index}))
-      .filter(({index}) => expandedUnits.has(index))
-      .map(({index}) => index);
+      .map((unit, index) => ({ unit, index }))
+      .filter(({ index }) => expandedUnits.has(index))
+      .map(({ index }) => index);
 
     unitsToShow.forEach((unit, unitIndex) => {
       const unitId = `unit-${unit.unit_num || unitIndex}`;
@@ -1560,7 +1592,7 @@ function MindMap({
       nodes.push({
         id: unitId,
         type: "unit",
-        position: {x: 700, y: unitY}, // Fixed position to maintain order
+        position: { x: 700, y: unitY }, // Fixed position to maintain order
         data: {
           unit_num: unit.unit_num || unitIndex + 1,
           title: unit.title,
@@ -1630,7 +1662,7 @@ function MindMap({
           nodes.push({
             id: subTopicId,
             type: "subtopic",
-            position: {x: subTopicX, y: subTopicY},
+            position: { x: subTopicX, y: subTopicY },
             data: {
               title:
                 typeof subTopic === "string"
@@ -1703,7 +1735,7 @@ function MindMap({
       }
     });
 
-    return {initialNodes: nodes, initialEdges: edges};
+    return { initialNodes: nodes, initialEdges: edges };
   }, [chatData, expandedUnits, expandedSubtopicsData, collapsedSubtopics]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -1793,7 +1825,7 @@ function MindMap({
         <button
           onClick={async () => {
             try {
-              const {getExpansionStatistics} = await import("../lib/db");
+              const { getExpansionStatistics } = await import("../lib/db");
               const stats = await getExpansionStatistics(chatId, user?.uid);
               if (stats.success) {
                 showModal(

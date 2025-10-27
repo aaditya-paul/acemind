@@ -1,11 +1,11 @@
 "use client";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Sidebar from "@/components/Sidebar";
-import {useAuth} from "@/contexts/AuthContext";
-import {getSingleChat} from "@/lib/db";
-import {usePathname, useRouter} from "next/navigation";
-import {motion} from "framer-motion";
-import React, {useEffect, useState} from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { getSingleChat } from "@/lib/db";
+import { usePathname, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import React, { useEffect, useState } from "react";
 import BackBtn from "@/components/backBtn";
 import Loading from "@/components/loading";
 import MindMap from "@/components/mindmap";
@@ -19,7 +19,7 @@ import SubtopicSidebar from "@/components/SubtopicSidebar";
 function Page() {
   const slug = usePathname().slice(12); // Extract slug from path
   const router = useRouter();
-  const {user, userData} = useAuth();
+  const { user, userData } = useAuth();
   const [error, setError] = useState("");
   const [errorCode, setErrorCode] = useState();
   const [chatData, setChatData] = useState(null);
@@ -29,6 +29,7 @@ function Page() {
   const [selectedSubtopic, setSelectedSubtopic] = useState(null);
 
   const [subtopicData, setSubtopicData] = useState(null);
+  const [allSubtopicsData, setAllSubtopicsData] = useState([]);
 
   useEffect(() => {
     console.log("Sidebar open state:", sidebarOpen);
@@ -68,12 +69,12 @@ function Page() {
       <div className="min-h-[80vh] md:min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <motion.div
           className="text-center max-w-md"
-          initial={{opacity: 0, y: 20}}
-          animate={{opacity: 1, y: 0}}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
           <motion.div
             className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-400 to-red-600 rounded-full mb-6"
-            whileHover={{scale: 1.1}}
+            whileHover={{ scale: 1.1 }}
           >
             <span className="text-3xl">🚫</span>
           </motion.div>
@@ -87,16 +88,16 @@ function Page() {
             <motion.button
               onClick={() => router.push("/learn")}
               className="block w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 font-bold rounded-xl text-center"
-              whileHover={{scale: 1.02}}
-              whileTap={{scale: 0.98}}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Back to Learn
             </motion.button>
             <motion.button
               onClick={() => router.push("/")}
               className="block w-full py-3 bg-gray-700 text-white font-medium rounded-xl text-center border border-gray-600"
-              whileHover={{scale: 1.02}}
-              whileTap={{scale: 0.98}}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Go Home
             </motion.button>
@@ -111,12 +112,12 @@ function Page() {
       <div className="min-h-[80vh] md:min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <motion.div
           className="text-center max-w-md"
-          initial={{opacity: 0, y: 20}}
-          animate={{opacity: 1, y: 0}}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
           <motion.div
             className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mb-6"
-            whileHover={{scale: 1.1}}
+            whileHover={{ scale: 1.1 }}
           >
             <span className="text-3xl">❓</span>
           </motion.div>
@@ -128,16 +129,16 @@ function Page() {
             <motion.button
               onClick={() => router.push("/learn")}
               className="block w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 font-bold rounded-xl text-center"
-              whileHover={{scale: 1.02}}
-              whileTap={{scale: 0.98}}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Back to Learn
             </motion.button>
             <motion.button
               onClick={() => router.push("/")}
               className="block w-full py-3 bg-gray-700 text-white font-medium rounded-xl text-center border border-gray-600"
-              whileHover={{scale: 1.02}}
-              whileTap={{scale: 0.98}}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Go Home
             </motion.button>
@@ -152,12 +153,12 @@ function Page() {
       <div className="min-h-[80vh] md:min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <motion.div
           className="text-center max-w-md"
-          initial={{opacity: 0, y: 20}}
-          animate={{opacity: 1, y: 0}}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
           <motion.div
             className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-400 to-red-600 rounded-full mb-6"
-            whileHover={{scale: 1.1}}
+            whileHover={{ scale: 1.1 }}
           >
             <span className="text-3xl">⚠️</span>
           </motion.div>
@@ -169,16 +170,16 @@ function Page() {
             <motion.button
               onClick={() => router.push("/learn")}
               className="block w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 font-bold rounded-xl text-center"
-              whileHover={{scale: 1.02}}
-              whileTap={{scale: 0.98}}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Back to Learn
             </motion.button>
             <motion.button
               onClick={() => router.push("/")}
               className="block w-full py-3 bg-gray-700 text-white font-medium rounded-xl text-center border border-gray-600"
-              whileHover={{scale: 1.02}}
-              whileTap={{scale: 0.98}}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Go Home
             </motion.button>
@@ -195,9 +196,11 @@ function Page() {
   return (
     <SubtopicSidebar
       sidebarClose={closeSidebar}
-      // sidebarOpen={sidebarOpen}
       subtopicData={subtopicData}
+      allSubtopicsData={allSubtopicsData}
       sidebarOpen={sidebarOpen}
+      chatId={slug}
+      chatData={chatData}
     >
       <div className="flex flex-row md:h-screen h-[90vh] justify-between hide-scroll-y  ">
         <div className="w-full h-screen flex flex-col overflow-hidden">
@@ -228,6 +231,7 @@ function Page() {
               openSidebar={openSidebar}
               setSelectedSubTopic={setSelectedSubtopic}
               setSubtopicData={setSubtopicData}
+              setAllSubtopicsData={setAllSubtopicsData}
             />
           </div>
         </div>

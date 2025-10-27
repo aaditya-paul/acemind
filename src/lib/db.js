@@ -10,8 +10,8 @@ import {
   setDoc,
   where,
 } from "firebase/firestore";
-import {generateUniqueId} from "../../utils/IDGen";
-import {db} from "./firebase";
+import { generateUniqueId } from "../../utils/IDGen";
+import { db } from "./firebase";
 
 // Helper function to sanitize data for Firebase (removes nested arrays)
 function sanitizeForFirebase(obj) {
@@ -134,7 +134,7 @@ function restoreFromFirebase(obj) {
 export async function setResponseDB(response, uid) {
   const chat_id = generateUniqueId("chat_");
   if (response === null || response === undefined) {
-    return {success: false, message: "Response is null or undefined"};
+    return { success: false, message: "Response is null or undefined" };
   }
   try {
     // set in user's collection in Firestore
@@ -150,7 +150,7 @@ export async function setResponseDB(response, uid) {
           chatId: chat_id,
         }),
       },
-      {merge: true}
+      { merge: true }
     );
 
     // Sanitize the aiResponse to prevent nested array issues
@@ -170,7 +170,7 @@ export async function setResponseDB(response, uid) {
         chatId: chat_id,
         syllabusContext: response.syllabusContext,
       },
-      {merge: true}
+      { merge: true }
     );
     return {
       success: true,
@@ -179,7 +179,7 @@ export async function setResponseDB(response, uid) {
     };
   } catch (error) {
     console.error("Error setting response in DB:", error);
-    return {success: false, message: "Failed to save response"};
+    return { success: false, message: "Failed to save response" };
   }
 }
 
@@ -192,10 +192,10 @@ export async function getChats(uid) {
     querySnapshot.forEach((doc) => {
       chats.push(doc.data());
     });
-    return {success: true, chats};
+    return { success: true, chats };
   } catch (error) {
     console.error("Error getting chats:", error);
-    return {success: false, message: "Failed to get chats"};
+    return { success: false, message: "Failed to get chats" };
   }
 }
 
@@ -204,11 +204,11 @@ export async function getSingleChat(chatID, uid) {
     const chatRef = doc(db, "chats", chatID);
     const chatDoc = await getDoc(chatRef);
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     // Restore any sanitized nested arrays in the chat data
@@ -222,10 +222,10 @@ export async function getSingleChat(chatID, uid) {
         : chatData.subtopicData,
     };
 
-    return {success: true, data: restoredChatData, code: 200};
+    return { success: true, data: restoredChatData, code: 200 };
   } catch (error) {
     console.error("Error getting single chat:", error);
-    return {success: false, message: "Failed to get single chat", code: 500};
+    return { success: false, message: "Failed to get single chat", code: 500 };
   }
 }
 
@@ -235,34 +235,38 @@ export async function deleteSingleChat(chatID, uid) {
     const userChatref = doc(db, "users", uid);
     const userDoc = await getDoc(userChatref);
     if (!userDoc.exists()) {
-      return {success: false, message: "User not found", code: 404};
+      return { success: false, message: "User not found", code: 404 };
     }
     // Remove chat from user's chats array
     if (userDoc.data().uid !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
     await setDoc(
       userChatref,
       {
         chats: userDoc.data().chats.filter((chat) => chat.chatId !== chatID),
       },
-      {merge: true}
+      { merge: true }
     );
 
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
     await deleteDoc(chatRef);
-    return {success: true, message: "Chat deleted successfully", code: 200};
+    return { success: true, message: "Chat deleted successfully", code: 200 };
   } catch (error) {
     console.error("Error deleting single chat:", error);
-    return {success: false, message: "Failed to delete single chat", code: 500};
+    return {
+      success: false,
+      message: "Failed to delete single chat",
+      code: 500,
+    };
   }
 }
 
@@ -272,12 +276,12 @@ export async function saveMindmapState(chatID, uid, mindmapState) {
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     await setDoc(
@@ -290,7 +294,7 @@ export async function saveMindmapState(chatID, uid, mindmapState) {
           savedAt: new Date().toISOString(),
         },
       },
-      {merge: true}
+      { merge: true }
     );
 
     return {
@@ -300,7 +304,11 @@ export async function saveMindmapState(chatID, uid, mindmapState) {
     };
   } catch (error) {
     console.error("Error saving mindmap state:", error);
-    return {success: false, message: "Failed to save mindmap state", code: 500};
+    return {
+      success: false,
+      message: "Failed to save mindmap state",
+      code: 500,
+    };
   }
 }
 
@@ -311,12 +319,12 @@ export async function setSubtopicDataDB(chatID, uid, subtopicData) {
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     // Create subtopic key for storage
@@ -339,7 +347,7 @@ export async function setSubtopicDataDB(chatID, uid, subtopicData) {
           [subtopicKey]: sanitizedSubtopicData,
         },
       },
-      {merge: true}
+      { merge: true }
     );
 
     console.log(`💾 Saved regular subtopic data for key: ${subtopicKey}`);
@@ -352,7 +360,11 @@ export async function setSubtopicDataDB(chatID, uid, subtopicData) {
     };
   } catch (error) {
     console.error("Error saving subtopic data:", error);
-    return {success: false, message: "Failed to save subtopic data", code: 500};
+    return {
+      success: false,
+      message: "Failed to save subtopic data",
+      code: 500,
+    };
   }
 }
 
@@ -363,19 +375,19 @@ export async function getSubtopicDataDB(chatID, uid, unitIndex, subTopicIndex) {
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     const subtopicKey = `${unitIndex}-${subTopicIndex}`;
     const subtopicData = chatData.subtopicData?.[subtopicKey];
 
     if (!subtopicData) {
-      return {success: false, message: "Subtopic data not found", code: 404};
+      return { success: false, message: "Subtopic data not found", code: 404 };
     }
 
     // Restore the entire subtopic data object from sanitized format
@@ -407,7 +419,11 @@ export async function getSubtopicDataDB(chatID, uid, unitIndex, subTopicIndex) {
     };
   } catch (error) {
     console.error("Error getting subtopic data:", error);
-    return {success: false, message: "Failed to get subtopic data", code: 500};
+    return {
+      success: false,
+      message: "Failed to get subtopic data",
+      code: 500,
+    };
   }
 }
 
@@ -424,12 +440,12 @@ export async function addExpandedSubtopics(
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     // Parse the aiResponse if it's a string and restore sanitized data
@@ -444,7 +460,11 @@ export async function addExpandedSubtopics(
       courseData = restoreFromFirebase(courseData);
     } catch (e) {
       console.error("Error parsing aiResponse:", e);
-      return {success: false, message: "Invalid course data format", code: 400};
+      return {
+        success: false,
+        message: "Invalid course data format",
+        code: 400,
+      };
     }
 
     // Create expanded subtopics structure
@@ -471,7 +491,7 @@ export async function addExpandedSubtopics(
         aiResponse: sanitizedCourseData,
         updatedAt: new Date().toISOString(),
       },
-      {merge: true}
+      { merge: true }
     );
 
     return {
@@ -497,12 +517,12 @@ export async function getExpandedSubtopics(chatID, uid) {
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     // Parse the aiResponse if it's a string and restore sanitized data
@@ -517,7 +537,11 @@ export async function getExpandedSubtopics(chatID, uid) {
       courseData = restoreFromFirebase(courseData);
     } catch (e) {
       console.error("Error parsing aiResponse:", e);
-      return {success: false, message: "Invalid course data format", code: 400};
+      return {
+        success: false,
+        message: "Invalid course data format",
+        code: 400,
+      };
     }
 
     return {
@@ -549,12 +573,12 @@ export async function addMultiLevelSubtopics(
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     // Parse the aiResponse if it's a string and restore sanitized data
@@ -569,7 +593,11 @@ export async function addMultiLevelSubtopics(
       courseData = restoreFromFirebase(courseData);
     } catch (e) {
       console.error("Error parsing aiResponse:", e);
-      return {success: false, message: "Invalid course data format", code: 400};
+      return {
+        success: false,
+        message: "Invalid course data format",
+        code: 400,
+      };
     }
 
     // Initialize expanded subtopics structure if it doesn't exist
@@ -599,7 +627,7 @@ export async function addMultiLevelSubtopics(
         aiResponse: sanitizedCourseData,
         updatedAt: new Date().toISOString(),
       },
-      {merge: true}
+      { merge: true }
     );
 
     return {
@@ -631,12 +659,12 @@ export async function setHierarchicalSubtopicDataDB(
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     // Create hierarchical key for the subtopic data
@@ -686,7 +714,7 @@ export async function setHierarchicalSubtopicDataDB(
           [hierarchyKey]: sanitizedSubtopicData,
         },
       },
-      {merge: true}
+      { merge: true }
     );
 
     console.log(`💾 Saved hierarchical subtopic data for key: ${hierarchyKey}`);
@@ -719,12 +747,12 @@ export async function getHierarchicalSubtopicDataDB(
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     const hierarchyKey = hierarchyPath.join("-");
@@ -778,12 +806,12 @@ export async function getExpansionStatistics(chatID, uid) {
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     // Parse the aiResponse to get expanded subtopics data and restore sanitized data
@@ -798,7 +826,11 @@ export async function getExpansionStatistics(chatID, uid) {
       courseData = restoreFromFirebase(courseData);
     } catch (e) {
       console.error("Error parsing aiResponse:", e);
-      return {success: false, message: "Invalid course data format", code: 400};
+      return {
+        success: false,
+        message: "Invalid course data format",
+        code: 400,
+      };
     }
 
     const expandedSubtopics = courseData.expandedSubtopics || {};
@@ -823,7 +855,7 @@ export async function getExpansionStatistics(chatID, uid) {
 
       // Level breakdown
       if (!stats.levelBreakdown[level]) {
-        stats.levelBreakdown[level] = {count: 0, subtopics: 0};
+        stats.levelBreakdown[level] = { count: 0, subtopics: 0 };
       }
       stats.levelBreakdown[level].count++;
       stats.levelBreakdown[level].subtopics += subtopicsCount;
@@ -863,18 +895,18 @@ export async function clearSubtopicCache(chatID, uid, hierarchyPath = null) {
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     if (hierarchyPath) {
       // Clear specific subtopic cache
       const hierarchyKey = hierarchyPath.join("-");
-      const updatedSubtopicData = {...chatData.subtopicData};
+      const updatedSubtopicData = { ...chatData.subtopicData };
       delete updatedSubtopicData[hierarchyKey];
 
       await setDoc(
@@ -883,7 +915,7 @@ export async function clearSubtopicCache(chatID, uid, hierarchyPath = null) {
           subtopicData: updatedSubtopicData,
           cacheCleared: new Date().toISOString(),
         },
-        {merge: true}
+        { merge: true }
       );
 
       console.log(`🗑️ Cleared cache for subtopic: ${hierarchyKey}`);
@@ -900,7 +932,7 @@ export async function clearSubtopicCache(chatID, uid, hierarchyPath = null) {
           subtopicData: {},
           cacheCleared: new Date().toISOString(),
         },
-        {merge: true}
+        { merge: true }
       );
 
       console.log("🗑️ Cleared all subtopic cache");
@@ -927,12 +959,12 @@ export async function getCacheStatistics(chatID, uid) {
     const chatDoc = await getDoc(chatRef);
 
     if (!chatDoc.exists()) {
-      return {success: false, message: "Chat not found", code: 404};
+      return { success: false, message: "Chat not found", code: 404 };
     }
 
     const chatData = chatDoc.data();
     if (chatData.userId !== uid) {
-      return {success: false, message: "Unauthorized access", code: 403};
+      return { success: false, message: "Unauthorized access", code: 403 };
     }
 
     const subtopicData = chatData.subtopicData || {};
@@ -972,6 +1004,171 @@ export async function getCacheStatistics(chatID, uid) {
     return {
       success: false,
       message: "Failed to get cache statistics",
+      code: 500,
+    };
+  }
+}
+
+// ==================== DOUBT CHAT FUNCTIONS ====================
+
+// Save a doubt message (question or answer)
+export async function saveDoubtMessage(chatID, uid, message) {
+  try {
+    const chatRef = doc(db, "chats", chatID);
+    const chatDoc = await getDoc(chatRef);
+
+    if (!chatDoc.exists()) {
+      return { success: false, message: "Chat not found", code: 404 };
+    }
+
+    const chatData = chatDoc.data();
+    if (chatData.userId !== uid) {
+      return { success: false, message: "Unauthorized access", code: 403 };
+    }
+
+    // Initialize doubtMessages array if it doesn't exist
+    const doubtMessages = chatData.doubtMessages || [];
+
+    // Add new message with timestamp
+    const newMessage = {
+      ...message,
+      timestamp: message.timestamp || new Date().toISOString(),
+    };
+
+    doubtMessages.push(newMessage);
+
+    await setDoc(
+      chatRef,
+      {
+        doubtMessages: doubtMessages,
+        lastDoubtMessageAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+
+    return {
+      success: true,
+      message: "Doubt message saved successfully",
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error saving doubt message:", error);
+    return {
+      success: false,
+      message: "Failed to save doubt message",
+      code: 500,
+    };
+  }
+}
+
+// Get all doubt messages for a chat
+export async function getDoubtMessages(chatID, uid) {
+  try {
+    const chatRef = doc(db, "chats", chatID);
+    const chatDoc = await getDoc(chatRef);
+
+    if (!chatDoc.exists()) {
+      return { success: false, message: "Chat not found", code: 404 };
+    }
+
+    const chatData = chatDoc.data();
+    if (chatData.userId !== uid) {
+      return { success: false, message: "Unauthorized access", code: 403 };
+    }
+
+    const doubtMessages = chatData.doubtMessages || [];
+
+    return {
+      success: true,
+      data: doubtMessages,
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error getting doubt messages:", error);
+    return {
+      success: false,
+      message: "Failed to get doubt messages",
+      code: 500,
+    };
+  }
+}
+
+// Delete a specific doubt message by ID
+export async function deleteDoubtMessage(chatID, uid, messageId) {
+  try {
+    const chatRef = doc(db, "chats", chatID);
+    const chatDoc = await getDoc(chatRef);
+
+    if (!chatDoc.exists()) {
+      return { success: false, message: "Chat not found", code: 404 };
+    }
+
+    const chatData = chatDoc.data();
+    if (chatData.userId !== uid) {
+      return { success: false, message: "Unauthorized access", code: 403 };
+    }
+
+    const doubtMessages = chatData.doubtMessages || [];
+    const updatedMessages = doubtMessages.filter((msg) => msg.id !== messageId);
+
+    await setDoc(
+      chatRef,
+      {
+        doubtMessages: updatedMessages,
+        lastDoubtMessageDeletedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+
+    return {
+      success: true,
+      message: "Doubt message deleted successfully",
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error deleting doubt message:", error);
+    return {
+      success: false,
+      message: "Failed to delete doubt message",
+      code: 500,
+    };
+  }
+}
+
+// Clear all doubt messages for a chat
+export async function clearAllDoubtMessages(chatID, uid) {
+  try {
+    const chatRef = doc(db, "chats", chatID);
+    const chatDoc = await getDoc(chatRef);
+
+    if (!chatDoc.exists()) {
+      return { success: false, message: "Chat not found", code: 404 };
+    }
+
+    const chatData = chatDoc.data();
+    if (chatData.userId !== uid) {
+      return { success: false, message: "Unauthorized access", code: 403 };
+    }
+
+    await setDoc(
+      chatRef,
+      {
+        doubtMessages: [],
+        lastDoubtMessagesClearedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+
+    return {
+      success: true,
+      message: "All doubt messages cleared successfully",
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error clearing doubt messages:", error);
+    return {
+      success: false,
+      message: "Failed to clear doubt messages",
       code: 500,
     };
   }

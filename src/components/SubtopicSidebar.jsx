@@ -1,18 +1,46 @@
 "use client";
 
-import {motion, AnimatePresence} from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import {Minimize2Icon} from "lucide-react";
+import { Minimize2Icon } from "lucide-react";
 import VideoPlayer from "./VideoPlayer";
+import DoubtChatbox from "./DoubtChatbox";
+import TextSelectionToolbar from "./TextSelectionToolbar";
 
 const SubtopicSidebar = ({
   sidebarOpen,
   sidebarClose,
   subtopicData,
+  allSubtopicsData = [],
+  chatId,
+  chatData,
   children,
 }) => {
   const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [selectedText, setSelectedText] = React.useState("");
+  const doubtChatboxRef = React.useRef(null);
+
+  // Listen for clear selected text event from DoubtChatbox
+  React.useEffect(() => {
+    const handleClearSelectedText = () => {
+      setSelectedText("");
+    };
+
+    window.addEventListener("clearSelectedText", handleClearSelectedText);
+    return () => {
+      window.removeEventListener("clearSelectedText", handleClearSelectedText);
+    };
+  }, []);
+
+  // Handle ask doubt from toolbar
+  const handleAskDoubtFromToolbar = (text) => {
+    // Set selected text only when ask doubt is clicked
+    setSelectedText(text);
+    if (doubtChatboxRef.current) {
+      doubtChatboxRef.current.openWithText(text);
+    }
+  };
 
   // Toggle fullscreen mode
   const toggleFullscreen = () => {
@@ -33,18 +61,18 @@ const SubtopicSidebar = ({
     return (
       <ReactMarkdown
         components={{
-          p: ({children}) => (
+          p: ({ children }) => (
             <span className="text-gray-200 text-base font-normal leading-relaxed">
               {children}
             </span>
           ),
-          strong: ({children}) => (
+          strong: ({ children }) => (
             <strong className="text-white font-semibold">{children}</strong>
           ),
-          em: ({children}) => (
+          em: ({ children }) => (
             <em className="text-gray-300 italic">{children}</em>
           ),
-          code: ({children}) => (
+          code: ({ children }) => (
             <code className="bg-gray-800 text-yellow-300 px-1.5 py-0.5 rounded text-sm font-mono">
               {children}
             </code>
@@ -63,9 +91,9 @@ const SubtopicSidebar = ({
         return (
           <motion.div
             key={index}
-            initial={{opacity: 0, y: 10}}
-            animate={{opacity: 1, y: 0}}
-            transition={{duration: 0.2, delay: index * 0.03}}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: index * 0.03 }}
             className="mb-8"
           >
             {/* Section Heading if present */}
@@ -85,9 +113,9 @@ const SubtopicSidebar = ({
         return (
           <motion.div
             key={index}
-            initial={{opacity: 0, y: 10}}
-            animate={{opacity: 1, y: 0}}
-            transition={{duration: 0.2, delay: index * 0.03}}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: index * 0.03 }}
             className="mb-8"
           >
             {/* Section Heading if present */}
@@ -114,9 +142,9 @@ const SubtopicSidebar = ({
         return (
           <motion.div
             key={index}
-            initial={{opacity: 0, y: 10}}
-            animate={{opacity: 1, y: 0}}
-            transition={{duration: 0.2, delay: index * 0.03}}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: index * 0.03 }}
             className="mb-8"
           >
             {/* Section Heading if present */}
@@ -168,9 +196,9 @@ const SubtopicSidebar = ({
         return (
           <motion.div
             key={index}
-            initial={{opacity: 0, y: 10}}
-            animate={{opacity: 1, y: 0}}
-            transition={{duration: 0.2, delay: index * 0.03}}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: index * 0.03 }}
             className="mb-8"
           >
             {/* Section Heading if present */}
@@ -235,68 +263,68 @@ const SubtopicSidebar = ({
         //   </motion.div>
         // );
         return null;
-      case "youtube":
-        const videoId = getYouTubeVideoId(item.url || "");
+        // case "youtube":
+        //   const videoId = getYouTubeVideoId(item.url || "");
+        //   return (
+        //     <motion.div
+        //       key={index}
+        //       initial={{opacity: 0, y: 10}}
+        //       animate={{opacity: 1, y: 0}}
+        //       transition={{duration: 0.2, delay: index * 0.03}}
+        //       className="mb-8"
+        //     >
+        //       {/* Section Heading if present */}
+        //       {item.heading && (
+        //         <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700/30 pb-2">
+        //           {item.heading}
+        //         </h2>
+        //       )}
+
+        //       {item.videoTitle && (
+        //         <p className="text-gray-400 text-sm mb-4 italic">
+        //           {item.videoTitle}
+        //         </p>
+        //       )}
+
+        //       {videoId ? (
+        //         <div className="relative w-full rounded-lg overflow-hidden border border-gray-700/50 bg-gray-900">
+        //           <div style={{paddingBottom: "56.25%"}} className="relative">
+        //             <iframe
+        //               className="absolute top-0 left-0 w-full h-full"
+        //               src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=1&cc_load_policy=0&iv_load_policy=3&showinfo=0&controls=1&disablekb=0&enablejsapi=0&autoplay=0&origin=${
+        //                 typeof window !== "undefined"
+        //                   ? window.location.origin
+        //                   : ""
+        //               }`}
+        //               title={item.videoTitle || "Educational video"}
+        //               frameBorder="0"
+        //               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        //               referrerPolicy="strict-origin-when-cross-origin"
+        //               allowFullScreen
+        //               loading="lazy"
+        //             ></iframe>
+        //           </div>
+        //         </div>
+        //       ) : (
+        //         <div className="w-full h-32 bg-gray-800 border border-gray-700/50 rounded-lg flex items-center justify-center">
+        //           <div className="text-center">
+        //             <div className="text-2xl mb-2">🎥</div>
+        //             <div className="text-gray-400 text-sm">
+        //               Video not available
+        //             </div>
+        //           </div>
+        //         </div>
+        //       )}
+        //     </motion.div>
+        //   );
+
+        // case "video":
         return (
           <motion.div
             key={index}
-            initial={{opacity: 0, y: 10}}
-            animate={{opacity: 1, y: 0}}
-            transition={{duration: 0.2, delay: index * 0.03}}
-            className="mb-8"
-          >
-            {/* Section Heading if present */}
-            {item.heading && (
-              <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700/30 pb-2">
-                {item.heading}
-              </h2>
-            )}
-
-            {item.videoTitle && (
-              <p className="text-gray-400 text-sm mb-4 italic">
-                {item.videoTitle}
-              </p>
-            )}
-
-            {videoId ? (
-              <div className="relative w-full rounded-lg overflow-hidden border border-gray-700/50 bg-gray-900">
-                <div style={{paddingBottom: "56.25%"}} className="relative">
-                  <iframe
-                    className="absolute top-0 left-0 w-full h-full"
-                    src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=1&cc_load_policy=0&iv_load_policy=3&showinfo=0&controls=1&disablekb=0&enablejsapi=0&autoplay=0&origin=${
-                      typeof window !== "undefined"
-                        ? window.location.origin
-                        : ""
-                    }`}
-                    title={item.videoTitle || "Educational video"}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen
-                    loading="lazy"
-                  ></iframe>
-                </div>
-              </div>
-            ) : (
-              <div className="w-full h-32 bg-gray-800 border border-gray-700/50 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl mb-2">🎥</div>
-                  <div className="text-gray-400 text-sm">
-                    Video not available
-                  </div>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        );
-
-      case "video":
-        return (
-          <motion.div
-            key={index}
-            initial={{opacity: 0, y: 10}}
-            animate={{opacity: 1, y: 0}}
-            transition={{duration: 0.2, delay: index * 0.03}}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: index * 0.03 }}
             className="mb-8"
           >
             {/* Section Heading if present */}
@@ -338,9 +366,9 @@ const SubtopicSidebar = ({
         return (
           <motion.div
             key={index}
-            initial={{opacity: 0, y: 10}}
-            animate={{opacity: 1, y: 0}}
-            transition={{duration: 0.2, delay: index * 0.03}}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: index * 0.03 }}
             className="mb-8"
           >
             {/* Section Heading if present */}
@@ -379,7 +407,7 @@ const SubtopicSidebar = ({
   };
 
   // Sidebar content component with enhanced layout
-  const SidebarContent = ({isMobile = false}) => (
+  const SidebarContent = ({ isMobile = false }) => (
     <div
       className={`${isMobile ? "p-4" : "p-6"} h-full flex flex-col bg-gray-900`}
     >
@@ -467,10 +495,10 @@ const SubtopicSidebar = ({
           )}
 
           {/* Always show VideoPlayer component at the bottom */}
-          <motion.div
-            initial={{opacity: 0, y: 10}}
-            animate={{opacity: 1, y: 0}}
-            transition={{duration: 0.3, delay: 0.2}}
+          {/* <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
             className="mb-8"
           >
             <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700/30 pb-2">
@@ -485,7 +513,7 @@ const SubtopicSidebar = ({
               loop={false}
               muted={false}
             />
-          </motion.div>
+          </motion.div> */}
         </div>
       </div>
     </div>
@@ -493,6 +521,19 @@ const SubtopicSidebar = ({
 
   return (
     <>
+      {/* Text Selection Toolbar */}
+      <TextSelectionToolbar onAskDoubt={handleAskDoubtFromToolbar} />
+
+      {/* Doubt Chatbox - Available globally */}
+      <DoubtChatbox
+        ref={doubtChatboxRef}
+        currentSubtopicData={subtopicData}
+        allSubtopicsData={allSubtopicsData}
+        selectedText={selectedText}
+        chatId={chatId}
+        chatData={chatData}
+      />
+
       {/* Desktop/Tablet Layout */}
       <div className="hidden md:flex h-full overflow-hidden bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-gray-100 font-sans antialiased">
         {/* Main Content */}
@@ -511,9 +552,9 @@ const SubtopicSidebar = ({
         <AnimatePresence>
           {sidebarOpen && (
             <motion.div
-              initial={{x: "100%", opacity: 0}}
-              animate={{x: 0, opacity: 1}}
-              exit={{x: "100%", opacity: 0}}
+              initial={{ x: "100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "100%", opacity: 0 }}
               transition={{
                 type: "spring",
                 damping: 25,
@@ -549,10 +590,10 @@ const SubtopicSidebar = ({
               {/* Backdrop - only show if not fullscreen */}
               {!isFullscreen && (
                 <motion.div
-                  initial={{opacity: 0}}
-                  animate={{opacity: 1}}
-                  exit={{opacity: 0}}
-                  transition={{duration: 0.3}}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
                   onClick={sidebarClose}
                   className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
                 />
@@ -560,9 +601,9 @@ const SubtopicSidebar = ({
 
               {/* Sidebar */}
               <motion.div
-                initial={{x: "100%"}}
-                animate={{x: 0}}
-                exit={{x: "100%"}}
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
                 transition={{
                   type: "spring",
                   damping: 30,

@@ -108,6 +108,7 @@ body {
 /* Scrollbar styling for dark theme */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -121,6 +122,20 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #6b7280;
+}
+
+/* Custom scrollbar for chatbox */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thumb-gray-700::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 2px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 Custom Typography Overrides for Lists .prose ul {
@@ -190,4 +205,40 @@ ol {
 
 li {
   list-style-position: outside;
+}
+
+/* Text highlight styles */
+.text-highlight {
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.text-highlight:hover {
+  filter: brightness(1.1);
+}
+
+/* Remove highlight button (appears on hover) */
+.text-highlight::before {
+  content: "×";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  background: #1f2937;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.text-highlight:hover::before {
+  opacity: 1;
+  pointer-events: all;
 }
