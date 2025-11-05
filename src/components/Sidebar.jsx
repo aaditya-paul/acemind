@@ -1,17 +1,17 @@
 "use client";
 
-import {useAuth} from "@/contexts/AuthContext";
-import {deleteSingleChat, getChats} from "@/lib/db";
+import { useAuth } from "@/contexts/AuthContext";
+import { deleteSingleChat, getChats } from "@/lib/db";
 import Image from "next/image";
 import Link from "next/link";
-import {usePathname, useRouter} from "next/navigation";
-import React, {useEffect} from "react";
-import {formatTimeAgo} from "../../utils/formatTime";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect } from "react";
+import { formatTimeAgo } from "../../utils/formatTime";
 import DeleteModal from "./DeleteModal";
 import GeneralInfoModal from "./GeneralInfoModal";
 
-const Sidebar = ({children}) => {
-  const {user, userData} = useAuth();
+const Sidebar = ({ children }) => {
+  const { user, userData } = useAuth();
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -40,7 +40,7 @@ const Sidebar = ({children}) => {
   };
 
   const closeModal = () => {
-    setModalState((prev) => ({...prev, isOpen: false}));
+    setModalState((prev) => ({ ...prev, isOpen: false }));
   };
 
   const handleDeleteClick = (e, chat) => {
@@ -325,7 +325,7 @@ const Sidebar = ({children}) => {
             <div className="flex-1 overflow-y-auto space-y-2">
               {!user?.uid ? (
                 // Skeleton loading for chats
-                Array.from({length: 3}).map((_, index) => (
+                Array.from({ length: 3 }).map((_, index) => (
                   <div
                     key={index}
                     className="p-3 rounded-xl bg-gray-750/50 animate-pulse border border-gray-600/30"
@@ -454,6 +454,88 @@ const Sidebar = ({children}) => {
 
             {/* Render children if provided */}
           </div>
+
+          {/* Quiz Section */}
+          {!sidebarCollapsed && (
+            <div className="mx-3 mb-3">
+              <Link
+                href="/learn/quizzes"
+                className="block bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded-xl p-3 transition-all duration-200 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white text-sm font-bold group-hover:text-purple-400 transition-colors">
+                        Quiz Center
+                      </p>
+                      <p className="text-gray-400 text-xs">
+                        Test your knowledge
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-gray-400 group-hover:text-purple-400 transition-colors">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          )}
+
+          {/* Collapsed Quiz Button */}
+          {sidebarCollapsed && (
+            <div className="mx-2 mb-3">
+              <Link
+                href="/learn/quizzes"
+                className="block bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded-xl p-2 transition-all duration-200"
+                title="Quiz Center"
+              >
+                <div className="flex justify-center">
+                  <div className="w-9 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          )}
 
           {/* User Profile Section */}
           <Link

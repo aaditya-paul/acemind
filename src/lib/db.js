@@ -1173,3 +1173,195 @@ export async function clearAllDoubtMessages(chatID, uid) {
     };
   }
 }
+
+// ============= QUIZ SYSTEM FUNCTIONS =============
+
+// Save quiz progress and results
+export async function saveQuizResult(chatID, uid, quizData) {
+  try {
+    const chatRef = doc(db, "chats", chatID);
+    const chatDoc = await getDoc(chatRef);
+
+    if (!chatDoc.exists()) {
+      return { success: false, message: "Chat not found", code: 404 };
+    }
+
+    const chatData = chatDoc.data();
+    if (chatData.userId !== uid) {
+      return { success: false, message: "Unauthorized access", code: 403 };
+    }
+
+    const quizResult = {
+      id: generateUniqueId(),
+      ...quizData,
+      timestamp: new Date().toISOString(),
+    };
+
+    await setDoc(
+      chatRef,
+      {
+        quizResults: arrayUnion(quizResult),
+        totalQuizzesTaken: (chatData.totalQuizzesTaken || 0) + 1,
+        lastQuizTakenAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+
+    // Update user stats
+    await updateUserQuizStats(uid, quizResult);
+
+    return {
+      success: true,
+      message: "Quiz result saved successfully",
+      data: quizResult,
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error saving quiz result:", error);
+    return {
+      success: false,
+      message: "Failed to save quiz result",
+      code: 500,
+    };
+  }
+}
+
+// Get all quiz results for a chat
+export async function getQuizResults(chatID, uid) {
+  try {
+    const chatRef = doc(db, "chats", chatID);
+    const chatDoc = await getDoc(chatRef);
+
+    if (!chatDoc.exists()) {
+      return { success: false, message: "Chat not found", code: 404 };
+    }
+
+    const chatData = chatDoc.data();
+    if (chatData.userId !== uid) {
+      return { success: false, message: "Unauthorized access", code: 403 };
+    }
+
+    return {
+      success: true,
+      data: chatData.quizResults || [],
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error fetching quiz results:", error);
+    return {
+      success: false,
+      message: "Failed to fetch quiz results",
+      code: 500,
+    };
+  }
+}
+
+// Update user-wide quiz statistics
+async function updateUserQuizStats(uid, quizResult) {
+  try {
+    const userRef = doc(db, "users", uid);
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists()) {
+      return;
+    }
+
+    const userData = userDoc.data();
+    const currentStats = userData.quizStats || {
+      totalQuizzes: 0,
+      totalQuestions: 0,
+      totalCorrect: 0,
+      totalTime: 0,
+      averageScore: 0,
+      highestScore: 0,
+      streakCount: 0,
+      lastQuizDate: null,
+      level: 1,
+      xp: 0,
+    };
+
+    const newStats = {
+      totalQuizzes: currentStats.totalQuizzes + 1,
+      totalQuestions: currentStats.totalQuestions + quizResult.totalQuestions,
+      totalCorrect: currentStats.totalCorrect + quizResult.correctAnswers,
+      totalTime: currentStats.totalTime + quizResult.timeTaken,
+      averageScore:
+        (currentStats.averageScore * currentStats.totalQuizzes +
+          quizResult.score) /
+        (currentStats.totalQuizzes + 1),
+      highestScore: Math.max(currentStats.highestScore, quizResult.score),
+      lastQuizDate: new Date().toISOString(),
+    };
+
+    // Calculate XP and level
+    const xpGained = Math.floor(
+      quizResult.score * 10 + quizResult.correctAnswers * 5
+    );
+    newStats.xp = currentStats.xp + xpGained;
+    newStats.level = Math.floor(newStats.xp / 100) + 1;
+
+    // Calculate streak
+    const lastQuizDate = currentStats.lastQuizDate
+      ? new Date(currentStats.lastQuizDate)
+      : null;
+    const today = new Date();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    if (
+      lastQuizDate &&
+      today - lastQuizDate < oneDayMs &&
+      today.toDateString() !== lastQuizDate.toDateString()
+    ) {
+      newStats.streakCount = currentStats.streakCount + 1;
+    } else if (!lastQuizDate || today - lastQuizDate >= oneDayMs * 2) {
+      newStats.streakCount = 1;
+    } else {
+      newStats.streakCount = currentStats.streakCount;
+    }
+
+    await setDoc(userRef, { quizStats: newStats }, { merge: true });
+  } catch (error) {
+    console.error("Error updating user quiz stats:", error);
+  }
+}
+
+// Get user quiz statistics
+export async function getUserQuizStats(uid) {
+  try {
+    const userRef = doc(db, "users", uid);
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists()) {
+      return {
+        success: false,
+        message: "User not found",
+        code: 404,
+      };
+    }
+
+    const userData = userDoc.data();
+    return {
+      success: true,
+      data: userData.quizStats || {
+        totalQuizzes: 0,
+        totalQuestions: 0,
+        totalCorrect: 0,
+        totalTime: 0,
+        averageScore: 0,
+        highestScore: 0,
+        streakCount: 0,
+        lastQuizDate: null,
+        level: 1,
+        xp: 0,
+      },
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error fetching user quiz stats:", error);
+    return {
+      success: false,
+      message: "Failed to fetch quiz stats",
+      code: 500,
+    };
+  }
+}
