@@ -1,5 +1,5 @@
 "use client";
-import React, {useState} from "react";
+import React, { useState } from "react";
 
 function Form() {
   const [topic, setTopic] = useState("");
@@ -53,10 +53,13 @@ function Form() {
       formData.append("topic", topic);
       formData.append("syllabus", syllabusPdf);
 
-      const response = await fetch("http://localhost:8000/api/submit", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API_ENDPOINT + "/api/submit",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (response.ok) {
         const result = await response.json();

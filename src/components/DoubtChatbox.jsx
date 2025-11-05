@@ -300,24 +300,27 @@ const DoubtChatbox = forwardRef(
         const context = prepareContext();
 
         // Call the API
-        const response = await fetch("http://localhost:8000/api/doubt-chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            question: inputMessage,
-            context: context,
-            selectedText: selectedText || null,
-            conversationHistory: messages
-              .filter((msg) => msg.type !== "system")
-              .slice(-5) // Last 5 messages for context
-              .map((msg) => ({
-                role: msg.type === "user" ? "user" : "assistant",
-                content: msg.content,
-              })),
-          }),
-        });
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_API_ENDPOINT + "/api/doubt-chat",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              question: inputMessage,
+              context: context,
+              selectedText: selectedText || null,
+              conversationHistory: messages
+                .filter((msg) => msg.type !== "system")
+                .slice(-5) // Last 5 messages for context
+                .map((msg) => ({
+                  role: msg.type === "user" ? "user" : "assistant",
+                  content: msg.content,
+                })),
+            }),
+          }
+        );
 
         const data = await response.json();
 

@@ -209,16 +209,19 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         )}...`
       );
 
-      const response = await fetch("http://localhost:8000/api/generate-quiz", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: topicString,
-          difficulty,
-          questionCount: count,
-          courseContext,
-        }),
-      });
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API_ENDPOINT + "/api/generate-quiz",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topic: topicString,
+            difficulty,
+            questionCount: count,
+            courseContext,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
