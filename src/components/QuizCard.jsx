@@ -9,9 +9,10 @@ import {
   Star,
   TrendingUp,
   Clock,
+  History,
 } from "lucide-react";
 
-const QuizCard = ({ quiz, onClick, isLocked, index }) => {
+const QuizCard = ({ quiz, onClick, onViewResults, isLocked, index }) => {
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
       case "beginner":
@@ -103,12 +104,28 @@ const QuizCard = ({ quiz, onClick, isLocked, index }) => {
 
       {/* Best Score */}
       {quiz.bestScore !== undefined && !isLocked && (
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-700/50">
-          <TrendingUp className="w-4 h-4 text-green-400" />
-          <span className="text-sm text-gray-300">Best Score:</span>
-          <span className="text-sm font-bold text-green-400">
-            {quiz.bestScore}%
-          </span>
+        <div className="mt-3 pt-3 border-t border-gray-700/50">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-green-400" />
+              <span className="text-sm text-gray-300">Best Score:</span>
+              <span className="text-sm font-bold text-green-400">
+                {quiz.bestScore}%
+              </span>
+            </div>
+          </div>
+
+          {/* View Results Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering quiz start
+              onViewResults?.();
+            }}
+            className="w-full mt-2 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 rounded-lg text-blue-400 text-xs font-medium transition-all flex items-center justify-center gap-1.5"
+          >
+            <History className="w-3.5 h-3.5" />
+            View Results History
+          </button>
         </div>
       )}
 

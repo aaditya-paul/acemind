@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy,
@@ -10,7 +11,6 @@ import {
   Award,
   Target,
   Clock,
-  X,
 } from "lucide-react";
 import QuizCard from "./QuizCard";
 import QuizInterface from "./QuizInterface";
@@ -20,18 +20,49 @@ import { saveQuizResult, getQuizResults, getUserQuizStats } from "@/lib/db";
 
 const QuizDashboard = ({ chatId, chatData, onClose }) => {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const [quizzes, setQuizzes] = useState([]);
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [quizResults, setQuizResults] = useState(null);
   const [userStats, setUserStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [previousLevel, setPreviousLevel] = useState(null);
+  const [quizHistory, setQuizHistory] = useState([]); // Store all results for a quiz
+  const [selectedHistoryResult, setSelectedHistoryResult] = useState(null); // For viewing specific result
 
   useEffect(() => {
     if (chatId && user?.uid) {
       loadQuizData();
     }
   }, [chatId, user?.uid]);
+
+  // Restore state from URL on mount
+  useEffect(() => {
+    const viewResultParam = searchParams.get("viewResult");
+    if (viewResultParam && quizHistory.length > 0) {
+      // Find the result by timestamp
+      const result = quizHistory.find((r) => r.timestamp === viewResultParam);
+      if (result) {
+        setSelectedHistoryResult(result);
+      }
+    }
+  }, [searchParams, quizHistory]);
+
+  // Handle browser back button
+  useEffect(() => {
+    const handlePopState = () => {
+      const viewResultParam = new URLSearchParams(window.location.search).get(
+        "viewResult"
+      );
+      if (!viewResultParam) {
+        // If viewResult is not in URL, clear the selected result
+        setSelectedHistoryResult(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const loadQuizData = async () => {
     try {
@@ -52,6 +83,11 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       );
 
       setQuizzes(generatedQuizzes);
+
+      // Store all results for history viewing
+      if (resultsData.success) {
+        setQuizHistory(resultsData.data);
+      }
     } catch (error) {
       console.error("Error loading quiz data:", error);
     } finally {
@@ -359,6 +395,33 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
     loadQuizData(); // Reload to update stats and unlock new quizzes
   };
 
+  const handleViewResults = (quizId) => {
+    // Get all results for this specific quiz
+    const results = quizHistory.filter((r) => r.quizId === quizId);
+
+    // If there are results, show the most recent one directly
+    if (results.length > 0) {
+      const mostRecentResult = results.sort(
+        (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+      )[0];
+      handleViewSpecificResult(mostRecentResult);
+    }
+  };
+
+  const handleViewSpecificResult = (result) => {
+    setSelectedHistoryResult(result);
+
+    // Update URL with result timestamp
+    const url = new URL(window.location);
+    url.searchParams.set("viewResult", result.timestamp);
+    window.history.pushState({}, "", url);
+  };
+
+  const handleExitHistoryResult = () => {
+    // Use browser back to maintain history stack
+    window.history.back();
+  };
+
   const isQuizLocked = (quizIndex) => {
     if (quizIndex === 0) return false; // First quiz always unlocked
 
@@ -482,6 +545,26 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
     );
   }
 
+  // Show results from history
+  if (selectedHistoryResult) {
+    return (
+      <QuizResults
+        results={{
+          score: selectedHistoryResult.score,
+          correctAnswers: selectedHistoryResult.correctAnswers,
+          wrongAnswers: selectedHistoryResult.wrongAnswers,
+          totalQuestions: selectedHistoryResult.totalQuestions,
+          timeTaken: selectedHistoryResult.timeTaken,
+          mistakes: selectedHistoryResult.mistakes || [],
+          xpGained: selectedHistoryResult.xpGained || 0,
+          leveledUp: false, // Don't show level up for history
+        }}
+        onExit={handleExitHistoryResult}
+        difficulty={selectedHistoryResult.difficulty}
+      />
+    );
+  }
+
   // Show quiz interface
   if (activeQuiz && !quizResults) {
     return (
@@ -595,6 +678,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
                   onClick={() => handleStartQuiz(quiz)}
                   isLocked={isQuizLocked(index)}
                   index={index}
+                  onViewResults={() => handleViewResults(quiz.id)}
                 />
               ))}
             </div>
