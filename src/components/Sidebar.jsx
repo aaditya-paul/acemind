@@ -18,6 +18,7 @@ const Sidebar = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [chats, setChats] = React.useState([]);
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [chatToDelete, setChatToDelete] = React.useState(null);
   const [modalState, setModalState] = React.useState({
@@ -142,6 +143,140 @@ const Sidebar = ({ children }) => {
     }
     // console.log(userData);
   }, [user, userData, router]);
+
+  // Filter and group chats
+  const filteredChats = React.useMemo(() => {
+    if (!searchQuery) return chats;
+    return chats.filter((chat) =>
+      chat?.aiResponse?.courseTitle
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase())
+    );
+  }, [chats, searchQuery]);
+
+  const groupedChats = React.useMemo(() => {
+    const now = new Date();
+    const groups = {
+      today: [],
+      yesterday: [],
+      thisWeek: [],
+      older: [],
+    };
+
+    filteredChats.forEach((chat) => {
+      const chatDate = new Date(chat.timestamp);
+      const diffTime = now - chatDate;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) {
+        groups.today.push(chat);
+      } else if (diffDays === 1) {
+        groups.yesterday.push(chat);
+      } else if (diffDays <= 7) {
+        groups.thisWeek.push(chat);
+      } else {
+        groups.older.push(chat);
+      }
+    });
+
+    return groups;
+  }, [filteredChats]);
+
+  const renderChatItem = (chat, index) => (
+    <div
+      onClick={() => router.push(`/learn/chat/${chat.chatId}`)}
+      key={chat.chatId}
+      className={`rounded-xl cursor-pointer transition-all duration-200 group ${
+        path === `/learn/chat/${chat.chatId}`
+          ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/40 shadow-lg"
+          : "bg-gray-750/50 hover:bg-gray-700/70 border border-gray-600/30 hover:border-gray-500/50"
+      }
+      ${sidebarCollapsed ? "p-1" : "p-3"}
+      `}
+      title={
+        sidebarCollapsed ? chat?.aiResponse?.courseTitle || "Untitled Chat" : ""
+      }
+    >
+      {sidebarCollapsed ? (
+        // Collapsed view - only show icon
+        <div className="flex justify-center">
+          <div
+            className={`w-9 h-8 rounded-lg flex items-center justify-center ${
+              path === `/learn/chat/${chat.chatId}`
+                ? "bg-gradient-to-r from-yellow-400 to-orange-500"
+                : "bg-gray-600 group-hover:bg-gray-500"
+            }`}
+          >
+            <span
+              className={`text-xs font-bold ${
+                path === `/learn/chat/${chat.chatId}`
+                  ? "text-gray-900"
+                  : "text-gray-300"
+              }`}
+            >
+              {chat?.aiResponse?.courseTitle?.[0]?.toUpperCase() || "?"}
+            </span>
+          </div>
+        </div>
+      ) : (
+        // Expanded view - full content
+        <div className="flex items-center space-x-3">
+          <div
+            className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+              path === `/learn/chat/${chat.chatId}`
+                ? "bg-gradient-to-r from-yellow-400 to-orange-500"
+                : "bg-gray-600 group-hover:bg-gray-500"
+            }`}
+          >
+            <span
+              className={`text-xs font-bold ${
+                path === `/learn/chat/${chat.chatId}`
+                  ? "text-gray-900"
+                  : "text-gray-300"
+              }`}
+            >
+              {chat?.aiResponse?.courseTitle?.[0]?.toUpperCase() || "?"}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p
+              className={`text-sm font-medium transition-colors truncate ${
+                path === `/learn/chat/${chat.chatId}`
+                  ? "text-yellow-400"
+                  : "text-white group-hover:text-yellow-400"
+              }`}
+            >
+              {chat?.aiResponse?.courseTitle || "Untitled Chat"}
+            </p>
+            {!searchQuery && (
+              <p className="text-gray-400 text-xs mt-1">
+                {formatTimeAgo(chat.timestamp)}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={(e) => handleDeleteClick(e, chat)}
+            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 flex-shrink-0"
+            title="Delete chat"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -290,7 +425,7 @@ const Sidebar = ({ children }) => {
                   onClick={() => {
                     router.push("/learn");
                   }}
-                  className="p-3 rounded-xl cursor-pointer transition-all duration-200 group bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 hover:border-yellow-500/40 hover:from-yellow-500/20 hover:to-orange-500/20 mb-6"
+                  className="p-3 rounded-xl cursor-pointer transition-all duration-200 group bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 hover:border-yellow-500/40 hover:from-yellow-500/20 hover:to-orange-500/20 mb-4"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
@@ -301,6 +436,55 @@ const Sidebar = ({ children }) => {
                     </span>
                   </div>
                 </div>
+
+                {/* Search Bar */}
+                {chats.length > 5 && (
+                  <div className="mb-4">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search courses..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-gray-750/50 border border-gray-600/30 rounded-lg px-3 py-2 pl-9 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/40 transition-colors"
+                      />
+                      <svg
+                        className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <h3 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-wider">
                   Recent Chats
                 </h3>
@@ -351,104 +535,54 @@ const Sidebar = ({ children }) => {
                     Start a conversation to see your chat history
                   </div>
                 </div>
+              ) : sidebarCollapsed ? (
+                // Collapsed view - show all without grouping
+                filteredChats
+                  .slice(0, 15)
+                  .map((chat, index) => renderChatItem(chat, index))
               ) : (
-                chats.map((chat, index) => (
-                  <div
-                    onClick={() => router.push(`/learn/chat/${chat.chatId}`)}
-                    key={index}
-                    className={`rounded-xl cursor-pointer transition-all duration-200 group ${
-                      path === `/learn/chat/${chat.chatId}`
-                        ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/40 shadow-lg"
-                        : "bg-gray-750/50 hover:bg-gray-700/70 border border-gray-600/30 hover:border-gray-500/50"
-                    }
-                    ${sidebarCollapsed ? "p-1" : "p-3"}
-                    `}
-                    title={
-                      sidebarCollapsed
-                        ? chat?.aiResponse?.courseTitle || "Untitled Chat"
-                        : ""
-                    }
-                  >
-                    {sidebarCollapsed ? (
-                      // Collapsed view - only show icon
-                      <div className="flex justify-center">
-                        <div
-                          className={`w-9 h-8 rounded-lg flex items-center justify-center ${
-                            path === `/learn/chat/${chat.chatId}`
-                              ? "bg-gradient-to-r from-yellow-400 to-orange-500"
-                              : "bg-gray-600 group-hover:bg-gray-500"
-                          }`}
-                        >
-                          <span
-                            className={`text-xs font-bold ${
-                              path === `/learn/chat/${chat.chatId}`
-                                ? "text-gray-900"
-                                : "text-gray-300"
-                            }`}
-                          >
-                            {chat?.aiResponse?.courseTitle?.[0]?.toUpperCase() ||
-                              "?"}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      // Expanded view - full content
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                            path === `/learn/chat/${chat.chatId}`
-                              ? "bg-gradient-to-r from-yellow-400 to-orange-500"
-                              : "bg-gray-600 group-hover:bg-gray-500"
-                          }`}
-                        >
-                          <span
-                            className={`text-xs font-bold ${
-                              path === `/learn/chat/${chat.chatId}`
-                                ? "text-gray-900"
-                                : "text-gray-300"
-                            }`}
-                          >
-                            {chat?.aiResponse?.courseTitle?.[0]?.toUpperCase() ||
-                              "?"}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className={`text-sm font-medium transition-colors truncate ${
-                              path === `/learn/chat/${chat.chatId}`
-                                ? "text-yellow-400"
-                                : "text-white group-hover:text-yellow-400"
-                            }`}
-                          >
-                            {chat?.aiResponse?.courseTitle || "Untitled Chat"}
-                          </p>
-                          <p className="text-gray-400 text-xs mt-1">
-                            {formatTimeAgo(chat.timestamp)}
-                          </p>
-                        </div>
-                        <button
-                          onClick={(e) => handleDeleteClick(e, chat)}
-                          className=" opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-                          title="Delete chat"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))
+                // Grouped view
+                <div className="space-y-3">
+                  {/* Today's Chats */}
+                  {groupedChats.today.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs text-gray-500 px-2">Today</h4>
+                      {groupedChats.today.map((chat, index) =>
+                        renderChatItem(chat, index)
+                      )}
+                    </div>
+                  )}
+
+                  {/* Yesterday's Chats */}
+                  {groupedChats.yesterday.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs text-gray-500 px-2">Yesterday</h4>
+                      {groupedChats.yesterday.map((chat, index) =>
+                        renderChatItem(chat, index)
+                      )}
+                    </div>
+                  )}
+
+                  {/* This Week's Chats */}
+                  {groupedChats.thisWeek.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs text-gray-500 px-2">This Week</h4>
+                      {groupedChats.thisWeek.map((chat, index) =>
+                        renderChatItem(chat, index)
+                      )}
+                    </div>
+                  )}
+
+                  {/* Older Chats */}
+                  {groupedChats.older.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs text-gray-500 px-2">Older</h4>
+                      {groupedChats.older.map((chat, index) =>
+                        renderChatItem(chat, index)
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

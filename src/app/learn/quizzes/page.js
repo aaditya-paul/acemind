@@ -6,8 +6,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getChats, getUserQuizStats } from "@/lib/db";
 import Sidebar from "@/components/Sidebar";
 import QuizDashboard from "@/components/QuizDashboard";
-import { Trophy, TrendingUp, Target, Zap } from "lucide-react";
-import { motion } from "framer-motion";
+import {
+  Trophy,
+  TrendingUp,
+  Target,
+  Zap,
+  ChevronDown,
+  BookOpen,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function QuizzesPage() {
   const { user, loading: authLoading } = useAuth();
@@ -17,16 +24,27 @@ export default function QuizzesPage() {
   const [selectedChat, setSelectedChat] = useState(null);
   const [userStats, setUserStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Update URL when course is selected
   const handleCourseSelect = (chat) => {
     setSelectedChat(chat);
+    setDropdownOpen(false);
+    setSearchQuery("");
 
     // Update URL with course ID
     const params = new URLSearchParams(window.location.search);
     params.set("course", chat.chatId);
     window.history.replaceState({}, "", `/learn/quizzes?${params.toString()}`);
   };
+
+  // Filter chats based on search
+  const filteredChats = chats.filter((chat) =>
+    chat?.aiResponse?.courseTitle
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     // Don't redirect while auth is still loading
@@ -152,7 +170,7 @@ export default function QuizzesPage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden flex flex-col">
           {chats.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center p-6">
@@ -172,56 +190,138 @@ export default function QuizzesPage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row h-full">
-              {/* Course Selector - Responsive */}
-              <div className="w-full sm:w-64 border-b sm:border-b-0 sm:border-r border-gray-800 bg-gray-900/50 overflow-y-auto max-h-40 sm:max-h-full">
-                <div className="p-3">
-                  <h3 className="text-gray-500 text-xs font-medium mb-2 uppercase tracking-wider">
-                    Courses
-                  </h3>
-                  <div className="space-y-1.5">
-                    {chats.map((chat) => (
-                      <button
-                        key={chat.chatId}
-                        onClick={() => handleCourseSelect(chat)}
-                        className={`w-full text-left p-2.5 rounded-lg transition-all ${
-                          selectedChat?.chatId === chat.chatId
-                            ? "bg-purple-500/20 border border-purple-500/50"
-                            : "bg-gray-800/50 border border-gray-700/50 hover:border-gray-600"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${
-                              selectedChat?.chatId === chat.chatId
-                                ? "bg-purple-500"
-                                : "bg-gray-700"
-                            }`}
-                          >
-                            <span className="text-white font-semibold text-xs">
-                              {chat?.aiResponse?.courseTitle?.[0]?.toUpperCase() ||
-                                "?"}
-                            </span>
+            <>
+              {/* Course Dropdown Selector */}
+              <div className="border-b border-gray-800 mx-0 lg:mx-8 px-4 sm:px-6  py-3 bg-gray-900/50">
+                <div className="max-w-6xl mx-auto relative">
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="w-full sm:w-auto min-w-[300px] flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-2 border-purple-500/30 rounded-xl hover:border-purple-500/50 transition-all group"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-bold">
+                          {selectedChat?.aiResponse?.courseTitle?.[0]?.toUpperCase() ||
+                            "?"}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-white font-semibold text-sm truncate">
+                          {selectedChat?.aiResponse?.courseTitle ||
+                            "Select a course"}
+                        </p>
+                        <p className="text-purple-300 text-xs">
+                          {selectedChat?.aiResponse?.units?.length || 0} units •
+                          Click to change
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className={`w-5 h-5 text-purple-400 transition-transform flex-shrink-0 ${
+                        dropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  <AnimatePresence>
+                    {dropdownOpen && (
+                      <>
+                        {/* Backdrop */}
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setDropdownOpen(false)}
+                        />
+
+                        {/* Dropdown Content */}
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute top-full left-0 right-0 sm:right-auto sm:min-w-[400px] mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50"
+                        >
+                          {/* Search Bar */}
+                          {chats.length > 5 && (
+                            <div className="p-3 border-b border-gray-700">
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  placeholder="Search courses..."
+                                  value={searchQuery}
+                                  onChange={(e) =>
+                                    setSearchQuery(e.target.value)
+                                  }
+                                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 pl-9 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                <BookOpen className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Course List */}
+                          <div className="max-h-[400px] overflow-y-auto">
+                            {filteredChats.length === 0 ? (
+                              <div className="p-6 text-center">
+                                <p className="text-gray-400 text-sm">
+                                  No courses found
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="p-2">
+                                {filteredChats.map((chat) => (
+                                  <button
+                                    key={chat.chatId}
+                                    onClick={() => handleCourseSelect(chat)}
+                                    className={`w-full text-left p-3 rounded-lg transition-all mb-1 ${
+                                      selectedChat?.chatId === chat.chatId
+                                        ? "bg-purple-500/20 border border-purple-500/50"
+                                        : "hover:bg-gray-700/50"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div
+                                        className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                          selectedChat?.chatId === chat.chatId
+                                            ? "bg-gradient-to-br from-purple-500 to-blue-500"
+                                            : "bg-gray-600"
+                                        }`}
+                                      >
+                                        <span className="text-white font-bold text-sm">
+                                          {chat?.aiResponse?.courseTitle?.[0]?.toUpperCase() ||
+                                            "?"}
+                                        </span>
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p
+                                          className={`text-sm font-medium truncate ${
+                                            selectedChat?.chatId === chat.chatId
+                                              ? "text-purple-300"
+                                              : "text-white"
+                                          }`}
+                                        >
+                                          {chat?.aiResponse?.courseTitle ||
+                                            "Untitled Course"}
+                                        </p>
+                                        <p className="text-gray-400 text-xs">
+                                          {chat?.aiResponse?.units?.length || 0}{" "}
+                                          units
+                                        </p>
+                                      </div>
+                                      {selectedChat?.chatId === chat.chatId && (
+                                        <div className="w-2 h-2 rounded-full bg-purple-400 flex-shrink-0" />
+                                      )}
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p
-                              className={`text-sm font-medium truncate ${
-                                selectedChat?.chatId === chat.chatId
-                                  ? "text-purple-300"
-                                  : "text-gray-300"
-                              }`}
-                            >
-                              {chat?.aiResponse?.courseTitle ||
-                                "Untitled Course"}
-                            </p>
-                            <p className="text-gray-500 text-xs">
-                              {chat?.aiResponse?.units?.length || 0} units
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
@@ -242,7 +342,7 @@ export default function QuizzesPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
