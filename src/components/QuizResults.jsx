@@ -265,40 +265,70 @@ const QuizResults = ({ results, onRetake, onExit, xpGained, levelUp }) => {
                     Review Your Mistakes
                   </h3>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {results.mistakes.map((mistake, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-800/50 border border-gray-700 rounded-xl p-4"
-                      >
-                        <p className="text-white font-medium mb-3">
-                          Q{mistake.questionIndex + 1}: {mistake.question}
-                        </p>
-                        <div className="space-y-2">
-                          <div className="flex items-start gap-2">
-                            <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <span className="text-gray-400 text-sm">
-                                Your answer:
-                              </span>
-                              <p className="text-red-400 text-sm font-medium">
-                                {mistake.userAnswer}
-                              </p>
+                    {results.mistakes.map((mistake, index) => {
+                      console.log(`Mistake ${index}:`, mistake); // Debug log
+                      return (
+                        <div
+                          key={index}
+                          className="bg-gray-800/50 border border-gray-700 rounded-xl p-4"
+                        >
+                          <p className="text-white font-medium mb-3">
+                            Q{mistake.questionIndex + 1}: {mistake.question}
+                          </p>
+                          <div className="space-y-2">
+                            <div className="flex items-start gap-2">
+                              <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <span className="text-gray-400 text-sm">
+                                  Your answer:
+                                </span>
+                                <p className="text-red-400 text-sm font-medium">
+                                  {mistake.userAnswer}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <span className="text-gray-400 text-sm">
-                                Correct answer:
-                              </span>
-                              <p className="text-green-400 text-sm font-medium">
-                                {mistake.correctAnswer}
-                              </p>
+                            <div className="flex items-start gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <span className="text-gray-400 text-sm">
+                                  Correct answer:
+                                </span>
+                                <p className="text-green-400 text-sm font-medium">
+                                  {mistake.correctAnswer}
+                                </p>
+                              </div>
+                            </div>
+                            {/* Always show explanation section */}
+                            <div className="flex items-start gap-2 mt-3 pt-3 border-t border-gray-700">
+                              <div className="w-4 h-4 flex-shrink-0 mt-0.5">
+                                <svg
+                                  className="w-4 h-4 text-blue-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <span className="text-gray-400 text-sm block mb-1">
+                                  Explanation:
+                                </span>
+                                <p className="text-blue-300 text-sm leading-relaxed">
+                                  {mistake.explanation ||
+                                    "No explanation available for this question."}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </motion.div>
               )}

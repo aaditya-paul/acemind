@@ -90,6 +90,7 @@ const QuizInterface = ({ quiz, onComplete, onExit }) => {
               ? question.options[userAnswer]
               : "Not answered",
           correctAnswer: question.options[question.correctAnswer],
+          explanation: question.explanation || "",
         });
       }
     });
