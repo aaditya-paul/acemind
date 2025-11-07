@@ -70,13 +70,20 @@ const QuizCard = ({ quiz, onClick, onViewResults, isLocked, index }) => {
 
       {/* Difficulty Badge */}
       <div className="flex items-center justify-between mb-3">
-        <div
-          className={`px-3 py-1 rounded-full bg-gradient-to-r ${getDifficultyColor(
-            quiz.difficulty
-          )} text-white text-xs font-bold flex items-center gap-1.5 shadow-lg`}
-        >
-          {getDifficultyIcon(quiz.difficulty)}
-          {quiz.difficulty.toUpperCase()}
+        <div className="flex items-center gap-2">
+          <div
+            className={`px-3 py-1 rounded-full bg-gradient-to-r ${getDifficultyColor(
+              quiz.difficulty
+            )} text-white text-xs font-bold flex items-center gap-1.5 shadow-lg`}
+          >
+            {getDifficultyIcon(quiz.difficulty)}
+            {quiz.difficulty.toUpperCase()}
+          </div>
+          {quiz.isRevision && (
+            <div className="px-2 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-bold">
+              📚 REVISION
+            </div>
+          )}
         </div>
         {quiz.xpReward && !isLocked && (
           <div className="flex items-center gap-1 text-yellow-400 text-xs font-bold">

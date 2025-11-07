@@ -99,7 +99,21 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
     const quizList = [];
     const courseTitle = chatData?.aiResponse?.courseTitle || "Untitled Course";
     const units = chatData?.aiResponse?.units || [];
+    const subtopics = chatData?.subtopics || [];
+
+    // Calculate study depth based on subtopics
     const studyDepth = calculateStudyDepth(chatData);
+
+    // Determine studied units based on viewed subtopics
+    const studiedUnits = getStudiedUnits(units, subtopics);
+    const hasSubtopicData =
+      subtopics.length > 0 && subtopics.some((s) => s.viewed);
+
+    console.log("📚 QUIZ GENERATION:");
+    console.log("   Total Units:", units.length);
+    console.log("   Studied Units:", studiedUnits.length);
+    console.log("   Has Subtopic Data:", hasSubtopicData);
+    console.log("   Study Depth:", studyDepth);
 
     // Skip if no units available
     if (units.length === 0) {
@@ -107,7 +121,9 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       return quizList;
     }
 
-    // Beginner Quizzes - Always available (questions generated on-demand)
+    // 1. BEGINNER QUIZ - Always available, covers all studied content
+    const beginnerUnits =
+      hasSubtopicData && studiedUnits.length > 0 ? studiedUnits : units;
     quizList.push({
       id: `quiz-beginner-overview`,
       title: `${courseTitle} - Quick Overview`,
@@ -116,112 +132,135 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       timeLimit: 10,
       xpReward: 50,
       isNew: previousResults.length === 0,
-      questions: null, // Will be generated when quiz is started
-      units: units,
+      questions: null,
+      units: beginnerUnits,
       courseTitle: courseTitle,
       bestScore: getBestScore(previousResults, `quiz-beginner-overview`),
+      locked: false,
     });
 
-    // Intermediate Quizzes - Progressive unlock based on completion
-    if (studyDepth >= 1 || previousResults.length > 0) {
-      // Determine how many intermediate quizzes to create based on completion
-      let intermediatesToCreate = 1; // Always create at least first intermediate
+    // 2. INTERMEDIATE QUIZZES - One per unit studied
+    const unitsToQuiz =
+      hasSubtopicData && studiedUnits.length > 0 ? studiedUnits : units;
 
-      // Check completion of intermediate quizzes to unlock more
-      for (let i = 0; i < Math.min(units.length, 3); i++) {
-        const quizId = `quiz-intermediate-unit-${i}`;
-        const result = previousResults.find((r) => r.quizId === quizId);
+    for (let index = 0; index < unitsToQuiz.length; index++) {
+      const unit = unitsToQuiz[index];
+      const unitTitle = unit.unit_title || `Unit ${index + 1}`;
+      const quizId = `quiz-intermediate-unit-${index}`;
 
-        if (result && result.score >= 50) {
-          // If this intermediate is completed with 50%+, unlock next one
-          intermediatesToCreate = Math.min(i + 2, units.length, 3);
-        }
-      }
+      // Check if this quiz should be locked
+      const isLocked =
+        index > 0 &&
+        !hasCompletedQuiz(
+          previousResults,
+          `quiz-intermediate-unit-${index - 1}`,
+          50
+        );
 
-      // Create the unlocked intermediate quizzes
-      for (let index = 0; index < intermediatesToCreate; index++) {
-        const unit = units[index];
-        const unitTitle = unit.unit_title || `Unit ${index + 1}`;
+      quizList.push({
+        id: quizId,
+        title: `${unitTitle} - Deep Dive`,
+        difficulty: "intermediate",
+        questionCount: 15,
+        timeLimit: 15,
+        xpReward: 100,
+        isNew: isNewQuiz(previousResults, quizId),
+        questions: null,
+        units: [unit],
+        courseTitle: courseTitle,
+        bestScore: getBestScore(previousResults, quizId),
+        locked: isLocked,
+      });
+
+      // 3. REVISION QUIZ - Every 3 intermediate quizzes
+      if ((index + 1) % 3 === 0) {
+        const revisionQuizId = `quiz-revision-${Math.floor(index / 3)}`;
+        const revisionUnits = unitsToQuiz.slice(0, index + 1); // All units up to this point
+        const isRevisionLocked = !hasCompletedQuiz(previousResults, quizId, 50);
 
         quizList.push({
-          id: `quiz-intermediate-unit-${index}`,
-          title: `${unitTitle} - Deep Dive`,
+          id: revisionQuizId,
+          title: `Units 1-${index + 1} - Revision Challenge`,
           difficulty: "intermediate",
-          questionCount: 15,
-          timeLimit: 15,
-          xpReward: 100,
-          isNew: isNewQuiz(previousResults, `quiz-intermediate-unit-${index}`),
-          questions: null, // Will be generated when quiz is started
-          units: [unit],
+          questionCount: 20,
+          timeLimit: 20,
+          xpReward: 150,
+          isNew: isNewQuiz(previousResults, revisionQuizId),
+          questions: null,
+          units: revisionUnits,
           courseTitle: courseTitle,
-          bestScore: getBestScore(
-            previousResults,
-            `quiz-intermediate-unit-${index}`
-          ),
+          bestScore: getBestScore(previousResults, revisionQuizId),
+          locked: isRevisionLocked,
+          isRevision: true,
         });
       }
     }
 
-    // Advanced Quizzes - Unlocked after completing intermediate
-    if (
-      studyDepth >= 2 ||
-      hasCompletedDifficulty(previousResults, "intermediate")
-    ) {
-      console.log("🎯 ADVANCED QUIZ CHECK:");
-      console.log("   Study Depth:", studyDepth);
-      console.log(
-        "   Has Completed Intermediate:",
-        hasCompletedDifficulty(previousResults, "intermediate")
-      );
-      console.log("   Previous Results:", previousResults);
+    // 4. ADVANCED QUIZ - Covers ALL studied content
+    const advancedUnlocked = hasCompletedDifficulty(
+      previousResults,
+      "intermediate",
+      60
+    );
+    const advancedUnits =
+      hasSubtopicData && studiedUnits.length > 0 ? studiedUnits : units;
 
-      quizList.push({
-        id: `quiz-advanced-comprehensive`,
-        title: `${courseTitle} - Comprehensive Challenge`,
-        difficulty: "advanced",
-        questionCount: 20,
-        timeLimit: 25,
-        xpReward: 200,
-        isNew: isNewQuiz(previousResults, `quiz-advanced-comprehensive`),
-        questions: null, // Will be generated when quiz is started
-        units: units,
-        courseTitle: courseTitle,
-        bestScore: getBestScore(previousResults, `quiz-advanced-comprehensive`),
-      });
+    quizList.push({
+      id: `quiz-advanced-comprehensive`,
+      title: `${courseTitle} - Comprehensive Challenge`,
+      difficulty: "advanced",
+      questionCount: 20,
+      timeLimit: 25,
+      xpReward: 200,
+      isNew: isNewQuiz(previousResults, `quiz-advanced-comprehensive`),
+      questions: null,
+      units: advancedUnits,
+      courseTitle: courseTitle,
+      bestScore: getBestScore(previousResults, `quiz-advanced-comprehensive`),
+      locked: !advancedUnlocked,
+    });
 
-      console.log("✅ Advanced quiz created!");
-    } else {
-      console.log("❌ ADVANCED QUIZ NOT CREATED:");
-      console.log("   Study Depth:", studyDepth, "(needs ≥2)");
-      console.log(
-        "   Has Completed Intermediate:",
-        hasCompletedDifficulty(previousResults, "intermediate"),
-        "(needs true)"
-      );
-      console.log("   Previous Results:", previousResults);
-    }
+    // 5. EXPERT QUIZ - Covers ALL studied content
+    const expertUnlocked = hasHighPerformance(previousResults, "advanced", 80);
+    const expertUnits =
+      hasSubtopicData && studiedUnits.length > 0 ? studiedUnits : units;
 
-    // Expert Quizzes - Unlocked after high performance in advanced
-    if (
-      studyDepth >= 3 ||
-      hasHighPerformance(previousResults, "advanced", 80)
-    ) {
-      quizList.push({
-        id: `quiz-expert-mastery`,
-        title: `${courseTitle} - Master's Challenge`,
-        difficulty: "expert",
-        questionCount: 30,
-        timeLimit: 40,
-        xpReward: 500,
-        isNew: isNewQuiz(previousResults, `quiz-expert-mastery`),
-        questions: null, // Will be generated when quiz is started
-        units: units,
-        courseTitle: courseTitle,
-        bestScore: getBestScore(previousResults, `quiz-expert-mastery`),
-      });
-    }
+    quizList.push({
+      id: `quiz-expert-mastery`,
+      title: `${courseTitle} - Master's Challenge`,
+      difficulty: "expert",
+      questionCount: 30,
+      timeLimit: 40,
+      xpReward: 500,
+      isNew: isNewQuiz(previousResults, `quiz-expert-mastery`),
+      questions: null,
+      units: expertUnits,
+      courseTitle: courseTitle,
+      bestScore: getBestScore(previousResults, `quiz-expert-mastery`),
+      locked: !expertUnlocked,
+    });
 
-    return quizList;
+    // Sort: Unlocked first, then locked
+    return quizList.sort((a, b) => {
+      if (a.locked === b.locked) return 0;
+      return a.locked ? 1 : -1;
+    });
+  };
+
+  const getStudiedUnits = (units, subtopics) => {
+    // Get units that have at least one viewed subtopic
+    const studiedUnitIndices = new Set();
+
+    subtopics.forEach((subtopic) => {
+      if (subtopic.viewed && subtopic.unitIndex !== undefined) {
+        studiedUnitIndices.add(subtopic.unitIndex);
+      }
+    });
+
+    return Array.from(studiedUnitIndices)
+      .sort((a, b) => a - b)
+      .map((index) => units[index])
+      .filter((unit) => unit !== undefined);
   };
 
   const calculateStudyDepth = (chatData) => {
@@ -359,8 +398,14 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
     return !results.some((r) => r.quizId === quizId);
   };
 
-  const hasCompletedDifficulty = (results, difficulty) => {
-    return results.some((r) => r.difficulty === difficulty && r.score >= 60);
+  const hasCompletedQuiz = (results, quizId, minScore = 50) => {
+    return results.some((r) => r.quizId === quizId && r.score >= minScore);
+  };
+
+  const hasCompletedDifficulty = (results, difficulty, minScore = 60) => {
+    return results.some(
+      (r) => r.difficulty === difficulty && r.score >= minScore
+    );
   };
 
   const hasHighPerformance = (results, difficulty, minScore) => {
@@ -423,62 +468,11 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
   };
 
   const isQuizLocked = (quizIndex) => {
-    if (quizIndex === 0) return false; // First quiz always unlocked
+    const quiz = quizzes[quizIndex];
+    if (!quiz) return false;
 
-    const currentQuiz = quizzes[quizIndex];
-    if (!currentQuiz) return false;
-
-    // Get the difficulty hierarchy
-    const difficultyOrder = {
-      beginner: 0,
-      intermediate: 1,
-      advanced: 2,
-      expert: 3,
-    };
-
-    const currentDifficulty = difficultyOrder[currentQuiz.difficulty] || 0;
-
-    // For intermediate quizzes, require sequential completion
-    if (currentQuiz.difficulty === "intermediate" && quizIndex > 1) {
-      const previousQuiz = quizzes[quizIndex - 1];
-      if (previousQuiz && previousQuiz.difficulty === "intermediate") {
-        // Must complete previous intermediate quiz with 50%+ to unlock next
-        return (
-          previousQuiz.bestScore === undefined || previousQuiz.bestScore < 50
-        );
-      }
-    }
-
-    // Check difficulty-based unlock requirements
-    if (currentDifficulty === 0) {
-      return false; // Beginner always unlocked
-    } else if (currentDifficulty === 1) {
-      // Intermediate: Check if beginner completed with 50%+
-      return !quizzes.some(
-        (q) =>
-          difficultyOrder[q.difficulty] === 0 &&
-          q.bestScore !== undefined &&
-          q.bestScore >= 50
-      );
-    } else if (currentDifficulty === 2) {
-      // Advanced: Check if any intermediate completed with 60%+
-      return !quizzes.some(
-        (q) =>
-          difficultyOrder[q.difficulty] === 1 &&
-          q.bestScore !== undefined &&
-          q.bestScore >= 60
-      );
-    } else if (currentDifficulty === 3) {
-      // Expert: Check if advanced completed with 80%+
-      return !quizzes.some(
-        (q) =>
-          difficultyOrder[q.difficulty] === 2 &&
-          q.bestScore !== undefined &&
-          q.bestScore >= 80
-      );
-    }
-
-    return false;
+    // Use the locked property from the quiz object
+    return quiz.locked || false;
   };
 
   const handleStartQuiz = async (quiz) => {
@@ -686,35 +680,89 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         </div>
 
         {/* Compact Tips */}
-        <div className="mt-6 bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+        <div className="mt-6 bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
           <div className="flex items-start gap-2">
-            <Star className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-purple-400 font-medium text-xs mb-1">
-                Unlock Requirements
+            <Star className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-purple-400 font-medium text-sm mb-2">
+                Quiz System Guide
               </h4>
-              <ul className="text-gray-400 text-xs space-y-0.5">
-                <li>
-                  🟢 <span className="text-green-400">Beginner</span> → Always
-                  available
-                </li>
-                <li>
-                  🟡 <span className="text-yellow-400">Intermediate</span> →
-                  Score ≥50% on Beginner
-                </li>
-                <li>
-                  🟠 <span className="text-orange-400">Advanced</span> → Score
-                  ≥60% on any Intermediate
-                </li>
-                <li>
-                  🔴 <span className="text-red-400">Expert</span> → Score ≥80%
-                  on Advanced
-                </li>
-              </ul>
-              <p className="text-gray-500 text-xs mt-2">
-                Harder quizzes give more XP • Maintain daily streak for bonus
-                rewards
-              </p>
+
+              <div className="space-y-3 text-xs text-gray-400">
+                <div>
+                  <p className="text-white font-medium mb-1">📚 Quiz Types:</p>
+                  <ul className="space-y-1 ml-4">
+                    <li>
+                      • <span className="text-green-400">Beginner</span> - Quick
+                      overview of studied content (10 questions)
+                    </li>
+                    <li>
+                      • <span className="text-yellow-400">Intermediate</span> -
+                      Deep dive into each unit you've studied (15 questions)
+                    </li>
+                    <li>
+                      • <span className="text-blue-400">Revision</span> -
+                      Combined review every 3 units (20 questions)
+                    </li>
+                    <li>
+                      • <span className="text-orange-400">Advanced</span> -
+                      Comprehensive challenge on all studied content (20
+                      questions)
+                    </li>
+                    <li>
+                      • <span className="text-red-400">Expert</span> - Master's
+                      challenge on all studied content (30 questions)
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-white font-medium mb-1">
+                    🔓 Unlock Requirements:
+                  </p>
+                  <ul className="space-y-1 ml-4">
+                    <li>• Beginner → Always available</li>
+                    <li>
+                      • Intermediate → Unlock sequentially with 50%+ score on
+                      previous
+                    </li>
+                    <li>
+                      • Revision → Auto-created every 3 intermediate quizzes
+                      completed
+                    </li>
+                    <li>• Advanced → Score ≥60% on any Intermediate quiz</li>
+                    <li>• Expert → Score ≥80% on Advanced quiz</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-white font-medium mb-1">
+                    📖 Content Based on Study:
+                  </p>
+                  <ul className="space-y-1 ml-4">
+                    <li>
+                      • If you've viewed subtopics, quizzes are created only for
+                      studied units
+                    </li>
+                    <li>• Otherwise, all course units are included</li>
+                    <li>
+                      • Advanced & Expert quizzes always cover ALL your studied
+                      material
+                    </li>
+                    <li>
+                      • More units studied = more intermediate quizzes available
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="pt-2 border-t border-purple-500/20">
+                  <p className="text-gray-500">
+                    💡 <span className="text-purple-400">Tip:</span> Locked
+                    quizzes appear at the end. Complete earlier quizzes to
+                    unlock them!
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
