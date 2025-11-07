@@ -210,8 +210,8 @@ const QuizInterface = ({ quiz, onComplete, onExit }) => {
               {/* Question Header */}
               <div className="flex items-start justify-between mb-6">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center text-gray-900 font-bold">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center text-gray-900 font-bold">
                       {currentQuestion + 1}
                     </div>
                     <h3 className="text-white text-xl font-semibold">
@@ -221,7 +221,7 @@ const QuizInterface = ({ quiz, onComplete, onExit }) => {
                 </div>
                 <button
                   onClick={() => toggleFlag(currentQuestion)}
-                  className={`p-2 rounded-lg transition-all ${
+                  className={`p-2 rounded-lg transition-all flex-shrink-0 ${
                     flaggedQuestions.has(currentQuestion)
                       ? "bg-yellow-500/20 border border-yellow-500"
                       : "bg-gray-700/50 border border-gray-600 hover:border-yellow-500/50"

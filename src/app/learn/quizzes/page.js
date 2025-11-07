@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getChats, getUserQuizStats } from "@/lib/db";
 import Sidebar from "@/components/Sidebar";
 import QuizDashboard from "@/components/QuizDashboard";
@@ -12,10 +12,21 @@ import { motion } from "framer-motion";
 export default function QuizzesPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [userStats, setUserStats] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Update URL when course is selected
+  const handleCourseSelect = (chat) => {
+    setSelectedChat(chat);
+
+    // Update URL with course ID
+    const params = new URLSearchParams(window.location.search);
+    params.set("course", chat.chatId);
+    window.history.replaceState({}, "", `/learn/quizzes?${params.toString()}`);
+  };
 
   useEffect(() => {
     // Don't redirect while auth is still loading
@@ -39,9 +50,42 @@ export default function QuizzesPage() {
         if (chatsResult.success) {
           setChats(chatsResult.chats);
 
-          // Auto-select first chat if available
-          if (chatsResult.chats.length > 0 && !selectedChat) {
-            setSelectedChat(chatsResult.chats[0]);
+          // Get course ID from URL
+          const courseIdFromUrl = searchParams.get("course");
+
+          if (courseIdFromUrl) {
+            // Try to find the chat from URL parameter
+            const chatFromUrl = chatsResult.chats.find(
+              (chat) => chat.chatId === courseIdFromUrl
+            );
+
+            if (chatFromUrl) {
+              setSelectedChat(chatFromUrl);
+            } else if (chatsResult.chats.length > 0) {
+              // Fallback to first chat if URL course not found
+              const firstChat = chatsResult.chats[0];
+              setSelectedChat(firstChat);
+              // Update URL with first chat
+              const params = new URLSearchParams();
+              params.set("course", firstChat.chatId);
+              window.history.replaceState(
+                {},
+                "",
+                `/learn/quizzes?${params.toString()}`
+              );
+            }
+          } else if (chatsResult.chats.length > 0) {
+            // Auto-select first chat if no URL parameter
+            const firstChat = chatsResult.chats[0];
+            setSelectedChat(firstChat);
+            // Update URL with first chat
+            const params = new URLSearchParams();
+            params.set("course", firstChat.chatId);
+            window.history.replaceState(
+              {},
+              "",
+              `/learn/quizzes?${params.toString()}`
+            );
           }
         }
       } catch (error) {
@@ -52,7 +96,7 @@ export default function QuizzesPage() {
     };
 
     loadData();
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, searchParams]);
 
   if (loading || authLoading) {
     return (
@@ -139,7 +183,7 @@ export default function QuizzesPage() {
                     {chats.map((chat) => (
                       <button
                         key={chat.chatId}
-                        onClick={() => setSelectedChat(chat)}
+                        onClick={() => handleCourseSelect(chat)}
                         className={`w-full text-left p-2.5 rounded-lg transition-all ${
                           selectedChat?.chatId === chat.chatId
                             ? "bg-purple-500/20 border border-purple-500/50"

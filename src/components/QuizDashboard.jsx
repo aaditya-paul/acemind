@@ -86,9 +86,24 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       bestScore: getBestScore(previousResults, `quiz-beginner-overview`),
     });
 
-    // Intermediate Quizzes - Unlocked after beginner
+    // Intermediate Quizzes - Progressive unlock based on completion
     if (studyDepth >= 1 || previousResults.length > 0) {
-      for (let index = 0; index < Math.min(units.length, 3); index++) {
+      // Determine how many intermediate quizzes to create based on completion
+      let intermediatesToCreate = 1; // Always create at least first intermediate
+
+      // Check completion of intermediate quizzes to unlock more
+      for (let i = 0; i < Math.min(units.length, 3); i++) {
+        const quizId = `quiz-intermediate-unit-${i}`;
+        const result = previousResults.find((r) => r.quizId === quizId);
+
+        if (result && result.score >= 50) {
+          // If this intermediate is completed with 50%+, unlock next one
+          intermediatesToCreate = Math.min(i + 2, units.length, 3);
+        }
+      }
+
+      // Create the unlocked intermediate quizzes
+      for (let index = 0; index < intermediatesToCreate; index++) {
         const unit = units[index];
         const unitTitle = unit.unit_title || `Unit ${index + 1}`;
 
@@ -116,6 +131,14 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       studyDepth >= 2 ||
       hasCompletedDifficulty(previousResults, "intermediate")
     ) {
+      console.log("🎯 ADVANCED QUIZ CHECK:");
+      console.log("   Study Depth:", studyDepth);
+      console.log(
+        "   Has Completed Intermediate:",
+        hasCompletedDifficulty(previousResults, "intermediate")
+      );
+      console.log("   Previous Results:", previousResults);
+
       quizList.push({
         id: `quiz-advanced-comprehensive`,
         title: `${courseTitle} - Comprehensive Challenge`,
@@ -129,6 +152,17 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         courseTitle: courseTitle,
         bestScore: getBestScore(previousResults, `quiz-advanced-comprehensive`),
       });
+
+      console.log("✅ Advanced quiz created!");
+    } else {
+      console.log("❌ ADVANCED QUIZ NOT CREATED:");
+      console.log("   Study Depth:", studyDepth, "(needs ≥2)");
+      console.log(
+        "   Has Completed Intermediate:",
+        hasCompletedDifficulty(previousResults, "intermediate"),
+        "(needs true)"
+      );
+      console.log("   Previous Results:", previousResults);
     }
 
     // Expert Quizzes - Unlocked after high performance in advanced
@@ -328,12 +362,60 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
   const isQuizLocked = (quizIndex) => {
     if (quizIndex === 0) return false; // First quiz always unlocked
 
-    // Check if previous quiz has been attempted with at least 50% score
-    const previousQuiz = quizzes[quizIndex - 1];
-    if (!previousQuiz) return false;
+    const currentQuiz = quizzes[quizIndex];
+    if (!currentQuiz) return false;
 
-    const previousBestScore = previousQuiz.bestScore;
-    return previousBestScore === undefined || previousBestScore < 50;
+    // Get the difficulty hierarchy
+    const difficultyOrder = {
+      beginner: 0,
+      intermediate: 1,
+      advanced: 2,
+      expert: 3,
+    };
+
+    const currentDifficulty = difficultyOrder[currentQuiz.difficulty] || 0;
+
+    // For intermediate quizzes, require sequential completion
+    if (currentQuiz.difficulty === "intermediate" && quizIndex > 1) {
+      const previousQuiz = quizzes[quizIndex - 1];
+      if (previousQuiz && previousQuiz.difficulty === "intermediate") {
+        // Must complete previous intermediate quiz with 50%+ to unlock next
+        return (
+          previousQuiz.bestScore === undefined || previousQuiz.bestScore < 50
+        );
+      }
+    }
+
+    // Check difficulty-based unlock requirements
+    if (currentDifficulty === 0) {
+      return false; // Beginner always unlocked
+    } else if (currentDifficulty === 1) {
+      // Intermediate: Check if beginner completed with 50%+
+      return !quizzes.some(
+        (q) =>
+          difficultyOrder[q.difficulty] === 0 &&
+          q.bestScore !== undefined &&
+          q.bestScore >= 50
+      );
+    } else if (currentDifficulty === 2) {
+      // Advanced: Check if any intermediate completed with 60%+
+      return !quizzes.some(
+        (q) =>
+          difficultyOrder[q.difficulty] === 1 &&
+          q.bestScore !== undefined &&
+          q.bestScore >= 60
+      );
+    } else if (currentDifficulty === 3) {
+      // Expert: Check if advanced completed with 80%+
+      return !quizzes.some(
+        (q) =>
+          difficultyOrder[q.difficulty] === 2 &&
+          q.bestScore !== undefined &&
+          q.bestScore >= 80
+      );
+    }
+
+    return false;
   };
 
   const handleStartQuiz = async (quiz) => {
@@ -525,11 +607,29 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
             <Star className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="text-purple-400 font-medium text-xs mb-1">
-                Quick Tips
+                Unlock Requirements
               </h4>
-              <p className="text-gray-400 text-xs">
-                Score 50%+ to unlock next quiz • Maintain daily streak for bonus
-                XP • Harder quizzes give more rewards
+              <ul className="text-gray-400 text-xs space-y-0.5">
+                <li>
+                  🟢 <span className="text-green-400">Beginner</span> → Always
+                  available
+                </li>
+                <li>
+                  🟡 <span className="text-yellow-400">Intermediate</span> →
+                  Score ≥50% on Beginner
+                </li>
+                <li>
+                  🟠 <span className="text-orange-400">Advanced</span> → Score
+                  ≥60% on any Intermediate
+                </li>
+                <li>
+                  🔴 <span className="text-red-400">Expert</span> → Score ≥80%
+                  on Advanced
+                </li>
+              </ul>
+              <p className="text-gray-500 text-xs mt-2">
+                Harder quizzes give more XP • Maintain daily streak for bonus
+                rewards
               </p>
             </div>
           </div>
