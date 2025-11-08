@@ -1293,12 +1293,22 @@ async function updateUserQuizStats(uid, quizResult) {
       lastQuizDate: new Date().toISOString(),
     };
 
-    // Calculate XP and level
+    // Calculate XP and level (more balanced formula)
+    // Base XP from score + bonus per correct answer
     const xpGained = Math.floor(
-      quizResult.score * 10 + quizResult.correctAnswers * 5
+      quizResult.score * 0.5 + quizResult.correctAnswers * 2
     );
     newStats.xp = currentStats.xp + xpGained;
-    newStats.level = Math.floor(newStats.xp / 100) + 1;
+
+    // Exponential level progression: each level requires more XP
+    // Level 1: 0-200 XP, Level 2: 200-450 XP, Level 3: 450-750 XP, etc.
+    let level = 1;
+    let totalXpNeeded = 0;
+    while (totalXpNeeded <= newStats.xp) {
+      totalXpNeeded += 200 + (level - 1) * 50; // Each level needs 50 more XP than previous
+      if (totalXpNeeded <= newStats.xp) level++;
+    }
+    newStats.level = level;
 
     // Calculate streak
     const lastQuizDate = currentStats.lastQuizDate
@@ -1361,6 +1371,103 @@ export async function getUserQuizStats(uid) {
     return {
       success: false,
       message: "Failed to fetch quiz stats",
+      code: 500,
+    };
+  }
+}
+
+// Get user profile by UID (for viewing other user profiles)
+export async function getUserProfile(uid) {
+  try {
+    const userRef = doc(db, "users", uid);
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists()) {
+      return {
+        success: false,
+        message: "User not found",
+        code: 404,
+      };
+    }
+
+    const userData = userDoc.data();
+
+    // Return public profile data only
+    return {
+      success: true,
+      data: {
+        uid: uid,
+        displayName: userData.displayName || "Anonymous User",
+        firstName: userData.firstName || "",
+        lastName: userData.lastName || "",
+        bio: userData.profile?.bio || "",
+        interests: userData.profile?.interests || [],
+        quizStats: userData.quizStats || {
+          totalQuizzes: 0,
+          averageScore: 0,
+          highestScore: 0,
+          level: 1,
+          xp: 0,
+        },
+        joinedDate: userData.createdAt || null,
+      },
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return {
+      success: false,
+      message: "Failed to fetch user profile",
+      code: 500,
+    };
+  }
+}
+
+// Get leaderboard data (all users sorted by XP/level)
+export async function getLeaderboard(limit = 100) {
+  try {
+    const usersRef = collection(db, "users");
+    const snapshot = await getDocs(usersRef);
+
+    const users = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      users.push({
+        uid: doc.id,
+        displayName: data.displayName || "Anonymous User",
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
+        quizStats: data.quizStats || {
+          totalQuizzes: 0,
+          averageScore: 0,
+          highestScore: 0,
+          level: 1,
+          xp: 0,
+        },
+      });
+    });
+
+    // Sort by level (descending), then by XP (descending)
+    users.sort((a, b) => {
+      if (b.quizStats.level !== a.quizStats.level) {
+        return b.quizStats.level - a.quizStats.level;
+      }
+      return b.quizStats.xp - a.quizStats.xp;
+    });
+
+    // Limit results
+    const limitedUsers = users.slice(0, limit);
+
+    return {
+      success: true,
+      data: limitedUsers,
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error fetching leaderboard:", error);
+    return {
+      success: false,
+      message: "Failed to fetch leaderboard",
       code: 500,
     };
   }

@@ -179,7 +179,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       difficulty: "beginner",
       questionCount: 10,
       timeLimit: 5,
-      xpReward: 50,
+      xpReward: 30, // Max ~70 XP (10 correct * 2 + 50 score * 0.5)
       isNew: previousResults.length === 0,
       questions: null,
       units: units, // All units for general questions
@@ -207,7 +207,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         difficulty: "intermediate",
         questionCount: 15,
         timeLimit: 10,
-        xpReward: 100,
+        xpReward: 60, // Max ~80 XP (15 correct * 2 + 100 score * 0.5)
         isNew: isNewQuiz(previousResults, quizId),
         questions: null,
         units: [unit],
@@ -234,7 +234,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
           difficulty: "intermediate",
           questionCount: 20,
           timeLimit: 20,
-          xpReward: 150,
+          xpReward: 90, // Max ~90 XP (20 correct * 2 + 100 score * 0.5)
           isNew: isNewQuiz(previousResults, revisionQuizId),
           questions: null,
           units: revisionUnits,
@@ -264,7 +264,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
             difficulty: "intermediate",
             questionCount: 20,
             timeLimit: 20,
-            xpReward: 250,
+            xpReward: 100, // Max ~90 XP but shows higher reward for prestige
             isNew: isNewQuiz(previousResults, superRevisionQuizId),
             questions: null,
             units: superRevisionUnits,
@@ -295,7 +295,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       difficulty: "advanced",
       questionCount: 20,
       timeLimit: 25,
-      xpReward: 200,
+      xpReward: 120, // Max ~90 XP but shows higher for difficulty
       isNew: isNewQuiz(previousResults, `quiz-advanced-comprehensive`),
       questions: null,
       units: advancedUnits,
@@ -319,7 +319,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       difficulty: "expert",
       questionCount: 20,
       timeLimit: 25,
-      xpReward: 500,
+      xpReward: 150, // Max ~90 XP but shows highest reward for prestige
       isNew: isNewQuiz(previousResults, `quiz-expert-mastery`),
       questions: null,
       units: expertUnits,
@@ -638,19 +638,25 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
   };
 
   const getXPForNextLevel = () => {
-    if (!userStats) return 100;
-    return (userStats.level + 1) * 100;
+    if (!userStats) return 200;
+    // Exponential progression: each level needs more XP
+    return 200 + (userStats.level - 1) * 50;
   };
 
   const getXPProgress = () => {
     if (!userStats) return 0;
 
-    // Simply calculate percentage of current XP vs next level XP
-    // This matches the display: {userStats.xp} / {getXPForNextLevel()}
-    const nextLevelXP = getXPForNextLevel();
+    // Calculate XP accumulated for current level
+    let totalXpForPreviousLevels = 0;
+    for (let i = 1; i < userStats.level; i++) {
+      totalXpForPreviousLevels += 200 + (i - 1) * 50;
+    }
+
+    const xpInCurrentLevel = userStats.xp - totalXpForPreviousLevels;
+    const xpNeededForCurrentLevel = getXPForNextLevel();
     const progress = Math.max(
       0,
-      Math.min(100, (userStats.xp / nextLevelXP) * 100)
+      Math.min(100, (xpInCurrentLevel / xpNeededForCurrentLevel) * 100)
     );
 
     return progress;
@@ -700,8 +706,9 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
 
   // Show results
   if (quizResults) {
+    // More balanced XP calculation: base XP from score + bonus per correct answer
     const xpGained = Math.floor(
-      quizResults.score * 10 + quizResults.correctAnswers * 5
+      quizResults.score * 0.5 + quizResults.correctAnswers * 2
     );
     const levelUp =
       userStats && previousLevel && userStats.level > previousLevel
