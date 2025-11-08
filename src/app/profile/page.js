@@ -285,7 +285,7 @@ const ProfilePageContent = () => {
                               }
                               alt="Profile"
                               className="w-full h-full object-cover"
-                              unoptimized
+                              loading="lazy"
                             />
                           ) : (
                             <span className="text-2xl font-bold text-gray-900">
