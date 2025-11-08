@@ -62,11 +62,14 @@ const QuizCard = ({ quiz, onClick, onViewResults, isLocked, index }) => {
           <div className="text-center px-4">
             <Lock className="w-8 h-8 text-gray-500 mx-auto mb-2" />
             <p className="text-gray-400 text-xs font-medium">
-              {quiz.description?.includes("Unlock by") 
-                ? quiz.description.split('.').find(s => s.includes("Unlock by"))?.trim() || "Complete previous quizzes"
-                : quiz.description?.includes("Study required") 
-                  ? "Study required before retry"
-                  : "Complete previous quizzes"}
+              {quiz.description?.includes("Unlock by")
+                ? quiz.description
+                    .split(".")
+                    .find((s) => s.includes("Unlock by"))
+                    ?.trim() || "Complete previous quizzes"
+                : quiz.description?.includes("Study required")
+                ? "Study required before retry"
+                : "Complete previous quizzes"}
             </p>
           </div>
         </div>

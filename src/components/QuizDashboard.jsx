@@ -117,7 +117,8 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
 
     // Determine studied units (units that were opened in mindmap)
     const studiedUnits = getStudiedUnits(units, subtopics);
-    const hasSubtopicData = subtopics.length > 0 && subtopics.some((s) => s.viewed);
+    const hasSubtopicData =
+      subtopics.length > 0 && subtopics.some((s) => s.viewed);
 
     console.log("📚 QUIZ GENERATION:");
     console.log("   Total Units:", units.length);
@@ -153,7 +154,10 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
 
     const getCompletedIntermediateUnits = () => {
       return previousResults
-        .filter((r) => r.quizId?.startsWith("quiz-intermediate-unit-") && r.score >= 50)
+        .filter(
+          (r) =>
+            r.quizId?.startsWith("quiz-intermediate-unit-") && r.score >= 50
+        )
         .map((r) => {
           const match = r.quizId.match(/quiz-intermediate-unit-(\d+)/);
           return match ? parseInt(match[1]) : -1;
@@ -175,7 +179,8 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
     quizList.push({
       id: `quiz-beginner-overview`,
       title: `${courseTitle} - Quick Overview`,
-      description: "General overview based on course syllabus. Test your prior knowledge!",
+      description:
+        "General overview based on course syllabus. Test your prior knowledge!",
       difficulty: "beginner",
       questionCount: 10,
       timeLimit: 5,
@@ -197,15 +202,18 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
 
       // Sequential unlocking: Unit N requires Unit N-1 with >= 50%
       const isLocked =
-        index > 0 && !hasCompletedQuiz(`quiz-intermediate-unit-${index - 1}`, 50);
-      
+        index > 0 &&
+        !hasCompletedQuiz(`quiz-intermediate-unit-${index - 1}`, 50);
+
       // Check if user failed this quiz (must study before retry)
       const hasFailed = hasFailedQuiz(quizId);
 
       quizList.push({
         id: quizId,
         title: `${unitTitle} - Deep Dive`,
-        description: `Unit ${index + 1}: ${unitTitle}. ${hasFailed ? 'Study required before retry.' : ''}`,
+        description: `Unit ${index + 1}: ${unitTitle}. ${
+          hasFailed ? "Study required before retry." : ""
+        }`,
         difficulty: "intermediate",
         questionCount: 15,
         timeLimit: 10,
@@ -223,7 +231,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         const revisionNumber = revisionCount + 1;
         const revisionQuizId = `quiz-revision-${revisionNumber}`;
         const revisionUnits = units.slice(0, index + 1); // Units 1 to current
-        
+
         // Unlocks when Unit 3/6/9 completed with >= 50%
         const isRevisionLocked = !hasCompletedQuiz(quizId, 50);
         const hasFailedRevision = hasFailedQuiz(revisionQuizId);
@@ -231,7 +239,9 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         quizList.push({
           id: revisionQuizId,
           title: `Units 1-${index + 1} - Revision Challenge`,
-          description: `Revision of Units 1-${index + 1}. ${hasFailedRevision ? 'Study required before retry.' : ''}`,
+          description: `Revision of Units 1-${index + 1}. ${
+            hasFailedRevision ? "Study required before retry." : ""
+          }`,
           difficulty: "intermediate",
           questionCount: 20,
           timeLimit: 20,
@@ -252,7 +262,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
           const superRevisionNumber = Math.floor(revisionNumber / 3);
           const superRevisionQuizId = `quiz-super-revision-${superRevisionNumber}`;
           const superRevisionUnits = units.slice(0, index + 1); // All units up to this point
-          
+
           // Unlocks automatically after Revision 3/6/9 (no score requirement)
           const isSuperRevisionLocked = !hasCompletedQuiz(revisionQuizId, 0); // Just needs completion
           const hasFailedSuperRevision = hasFailedQuiz(superRevisionQuizId);
@@ -260,7 +270,9 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
           quizList.push({
             id: superRevisionQuizId,
             title: `Units 1-${index + 1} - Super Revision`,
-            description: `Comprehensive revision of Units 1-${index + 1}. ${hasFailedSuperRevision ? 'Study required before retry.' : ''}`,
+            description: `Comprehensive revision of Units 1-${index + 1}. ${
+              hasFailedSuperRevision ? "Study required before retry." : ""
+            }`,
             difficulty: "intermediate",
             questionCount: 30,
             timeLimit: 30,
@@ -280,14 +292,18 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
     // 5. ADVANCED QUIZ - Frozen scope (units 1-N where N is first >= 70% intermediate)
     const advancedUnlockPoint = getAdvancedUnlockPoint();
     const advancedUnlocked = advancedUnlockPoint !== null;
-    const advancedUnits = advancedUnlocked ? units.slice(0, advancedUnlockPoint) : [];
-    const hasFailedAdvanced = hasFailedQuiz('quiz-advanced-comprehensive');
+    const advancedUnits = advancedUnlocked
+      ? units.slice(0, advancedUnlockPoint)
+      : [];
+    const hasFailedAdvanced = hasFailedQuiz("quiz-advanced-comprehensive");
 
     quizList.push({
       id: `quiz-advanced-comprehensive`,
       title: `${courseTitle} - Advanced Challenge`,
-      description: advancedUnlocked 
-        ? `Covers Units 1-${advancedUnlockPoint} (frozen at unlock). ${hasFailedAdvanced ? 'Study required before retry.' : ''}`
+      description: advancedUnlocked
+        ? `Covers Units 1-${advancedUnlockPoint} (frozen at unlock). ${
+            hasFailedAdvanced ? "Study required before retry." : ""
+          }`
         : `Unlock by scoring >= 70% on any intermediate quiz.`,
       difficulty: "advanced",
       questionCount: 20,
@@ -302,15 +318,17 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
     });
 
     // 6. EXPERT QUIZ - Same frozen scope as Advanced (requires >= 80% on Advanced)
-    const expertUnlocked = hasCompletedQuiz('quiz-advanced-comprehensive', 80);
+    const expertUnlocked = hasCompletedQuiz("quiz-advanced-comprehensive", 80);
     const expertUnits = advancedUnits; // Same scope as Advanced
-    const hasFailedExpert = hasFailedQuiz('quiz-expert-mastery');
+    const hasFailedExpert = hasFailedQuiz("quiz-expert-mastery");
 
     quizList.push({
       id: `quiz-expert-mastery`,
       title: `${courseTitle} - Expert Mastery`,
       description: expertUnlocked
-        ? `Covers Units 1-${advancedUnlockPoint} (frozen at unlock). ${hasFailedExpert ? 'Study required before retry.' : ''}`
+        ? `Covers Units 1-${advancedUnlockPoint} (frozen at unlock). ${
+            hasFailedExpert ? "Study required before retry." : ""
+          }`
         : `Unlock by scoring >= 80% on Advanced quiz.`,
       difficulty: "expert",
       questionCount: 30,
