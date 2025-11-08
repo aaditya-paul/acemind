@@ -21,7 +21,11 @@ const QuizInterface = ({ quiz, onComplete, onExit }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const timerRef = useRef(null);
+  const startTimeRef = useRef(quiz.startTime || Date.now()); // Store quiz start time
+  const sessionIdRef = useRef(quiz.sessionId); // Store session ID
+  const sessionHashRef = useRef(quiz.sessionHash); // Store session hash
 
   useEffect(() => {
     if (!isPaused && !showResults && timeLeft > 0) {
@@ -68,52 +72,72 @@ const QuizInterface = ({ quiz, onComplete, onExit }) => {
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmitting) return; // Prevent double submission
+    setIsSubmitting(true);
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
 
-    const timeTaken = quiz.timeLimit * 60 - timeLeft;
-    let correctCount = 0;
-    const mistakes = [];
+    try {
+      const submitTime = Date.now();
+      
+      // Convert answers object to array format (null for unanswered)
+      const userAnswers = quiz.questions.map((_, index) => 
+        answers[index] !== undefined ? answers[index] : null
+      );
 
-    quiz.questions.forEach((question, index) => {
-      const userAnswer = answers[index];
-      if (userAnswer === question.correctAnswer) {
-        correctCount++;
-      } else {
-        mistakes.push({
-          questionIndex: index,
-          question: question.question,
-          userAnswer:
-            userAnswer !== undefined
-              ? question.options[userAnswer]
-              : "Not answered",
-          correctAnswer: question.options[question.correctAnswer],
-          explanation: question.explanation || "",
-        });
+      // Submit to server for validation and scoring
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API_ENDPOINT + "/api/submit-quiz",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: sessionIdRef.current,
+            sessionHash: sessionHashRef.current,
+            userAnswers,
+            submitTime,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!data.success) {
+        console.error("Quiz submission failed:", data.message);
+        alert(
+          "Quiz submission failed: " +
+            (data.message || "Please try again")
+        );
+        setIsSubmitting(false);
+        return;
       }
-    });
 
-    const score = Math.round((correctCount / quiz.questions.length) * 100);
+      // Use server-validated results
+      const results = {
+        quizId: quiz.id,
+        quizTitle: quiz.title,
+        difficulty: quiz.difficulty,
+        totalQuestions: data.results.totalQuestions,
+        correctAnswers: data.results.correctAnswers,
+        wrongAnswers: data.results.wrongAnswers,
+        score: data.results.score,
+        timeTaken: data.results.timeTaken,
+        timeLimit: data.results.timeLimit,
+        mistakes: data.results.detailedMistakes,
+        answers,
+        flaggedQuestions: Array.from(flaggedQuestions),
+      };
 
-    const results = {
-      quizId: quiz.id,
-      quizTitle: quiz.title,
-      difficulty: quiz.difficulty,
-      totalQuestions: quiz.questions.length,
-      correctAnswers: correctCount,
-      wrongAnswers: quiz.questions.length - correctCount,
-      score,
-      timeTaken,
-      timeLimit: quiz.timeLimit * 60,
-      mistakes,
-      answers,
-      flaggedQuestions: Array.from(flaggedQuestions),
-    };
-
-    setShowResults(true);
-    onComplete(results);
+      setShowResults(true);
+      onComplete(results);
+    } catch (error) {
+      console.error("Error submitting quiz:", error);
+      alert("Failed to submit quiz. Please check your connection and try again.");
+      setIsSubmitting(false);
+    }
   };
 
   const getTimeColor = () => {

@@ -19,6 +19,19 @@ import QuizResults from "./QuizResults";
 import { useAuth } from "@/contexts/AuthContext";
 import { saveQuizResult, getQuizResults, getUserQuizStats } from "@/lib/db";
 
+// Helper function to get time limit based on difficulty and question count
+const getTimeLimit = (difficulty, questionCount) => {
+  const timePerQuestion = {
+    beginner: 30, // 30 seconds per question
+    intermediate: 40, // 40 seconds per question
+    advanced: 75, // 75 seconds per question
+    expert: 80, // 80 seconds per question
+  };
+  
+  const secondsPerQ = timePerQuestion[difficulty] || 60;
+  return Math.ceil((questionCount * secondsPerQ) / 60); // Return in minutes
+};
+
 const QuizDashboard = ({ chatId, chatData, onClose }) => {
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -130,7 +143,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       title: `${courseTitle} - Quick Overview`,
       difficulty: "beginner",
       questionCount: 10,
-      timeLimit: 10,
+      timeLimit: 5,
       xpReward: 50,
       isNew: previousResults.length === 0,
       questions: null,
@@ -163,7 +176,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         title: `${unitTitle} - Deep Dive`,
         difficulty: "intermediate",
         questionCount: 15,
-        timeLimit: 15,
+        timeLimit: 10,
         xpReward: 100,
         isNew: isNewQuiz(previousResults, quizId),
         questions: null,
@@ -346,6 +359,8 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
             difficulty,
             questionCount: count,
             courseContext,
+            timeLimit: getTimeLimit(difficulty, count), // Send time limit for security
+            userId: "user-id-placeholder", // TODO: Replace with actual user ID from auth
           }),
         }
       );
@@ -362,9 +377,17 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       const data = await response.json();
       if (data.success && data.questions && data.questions.length > 0) {
         console.log(
-          `✅ Generated ${data.questions.length} questions from backend`
+          `✅ Generated ${data.questions.length} questions from backend (secure)`
         );
-        return data.questions;
+        
+        // Return questions with security metadata
+        return {
+          questions: data.questions,
+          sessionId: data.sessionId,
+          sessionHash: data.sessionHash,
+          startTime: data.startTime,
+          timeLimit: data.timeLimit,
+        };
       } else {
         console.error("❌ Backend returned no questions:", data);
         throw new Error("No questions generated");
@@ -375,7 +398,13 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         error.message
       );
       console.log("⚠️ Using fallback placeholder questions");
-      return getFallbackQuestions(count, difficulty, courseTitle);
+      return {
+        questions: getFallbackQuestions(count, difficulty, courseTitle),
+        sessionId: null,
+        sessionHash: null,
+        startTime: Date.now(),
+        timeLimit: getTimeLimit(difficulty, count),
+      };
     }
   };
 
@@ -494,26 +523,33 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
   };
 
   const handleStartQuiz = async (quiz) => {
-    // If questions already generated, use them
-    if (quiz.questions && quiz.questions.length > 0) {
+    // If questions already generated with security data, use them
+    if (quiz.questions && quiz.questions.length > 0 && quiz.sessionId) {
       setActiveQuiz(quiz);
       return;
     }
 
-    // Otherwise, generate questions now
-    console.log(`📝 Generating questions for quiz: ${quiz.title}`);
+    // Otherwise, generate questions now with security
+    console.log(`📝 Generating secure quiz: ${quiz.title}`);
     setLoading(true);
 
     try {
-      const questions = await generateQuestionsFromUnits(
+      const quizData = await generateQuestionsFromUnits(
         quiz.units,
         quiz.questionCount,
         quiz.difficulty,
         quiz.courseTitle
       );
 
-      // Update quiz with generated questions
-      const updatedQuiz = { ...quiz, questions };
+      // Update quiz with generated questions and security metadata
+      const updatedQuiz = { 
+        ...quiz, 
+        questions: quizData.questions,
+        sessionId: quizData.sessionId,
+        sessionHash: quizData.sessionHash,
+        startTime: quizData.startTime,
+        timeLimit: Math.floor(quizData.timeLimit / 60), // Convert seconds to minutes for display
+      };
       setActiveQuiz(updatedQuiz);
 
       // Update quizzes array to cache the questions
