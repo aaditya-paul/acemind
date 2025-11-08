@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getChats, getUserQuizStats } from "@/lib/db";
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function QuizzesPage() {
+function QuizzesPageContent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -347,5 +347,28 @@ export default function QuizzesPage() {
         </div>
       </div>
     </Sidebar>
+  );
+}
+
+export default function QuizzesPage() {
+  return (
+    <Suspense
+      fallback={
+        <Sidebar>
+          <div className="min-h-screen bg-gray-900 p-8">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                  <p className="text-gray-400">Loading quizzes...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Sidebar>
+      }
+    >
+      <QuizzesPageContent />
+    </Suspense>
   );
 }

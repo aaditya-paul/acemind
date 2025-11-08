@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { logout, updateUserProfile } from "@/lib/auth";
@@ -20,7 +20,7 @@ import {
 import BackBtn from "@/components/backBtn";
 import { getUserProfile, getUserQuizStats } from "@/lib/db";
 
-const ProfilePage = () => {
+const ProfilePageContent = () => {
   const { user, userData, setUserData } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -554,6 +554,34 @@ const ProfilePage = () => {
         </motion.div>
       </Sidebar>
     </ProtectedRoute>
+  );
+};
+
+const ProfilePage = () => {
+  return (
+    <Suspense
+      fallback={
+        <ProtectedRoute requireAuth={true}>
+          <Sidebar>
+            <div className="min-h-screen bg-gray-900 p-4 md:pt-12">
+              <div className="max-w-4xl mx-auto">
+                <div className="pb-2 md:py-5">
+                  <BackBtn />
+                </div>
+                <div className="flex items-center justify-center py-16">
+                  <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-gray-400">Loading profile...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Sidebar>
+        </ProtectedRoute>
+      }
+    >
+      <ProfilePageContent />
+    </Suspense>
   );
 };
 
