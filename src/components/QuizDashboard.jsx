@@ -646,17 +646,11 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
   const getXPProgress = () => {
     if (!userStats) return 0;
 
-    // Calculate XP accumulated for current level
-    let totalXpForPreviousLevels = 0;
-    for (let i = 1; i < userStats.level; i++) {
-      totalXpForPreviousLevels += 200 + (i - 1) * 50;
-    }
-
-    const xpInCurrentLevel = userStats.xp - totalXpForPreviousLevels;
-    const xpNeededForCurrentLevel = getXPForNextLevel();
+    // Simple: just show progress within current level
+    const xpNeeded = getXPForNextLevel();
     const progress = Math.max(
       0,
-      Math.min(100, (xpInCurrentLevel / xpNeededForCurrentLevel) * 100)
+      Math.min(100, (userStats.xp / xpNeeded) * 100)
     );
 
     return progress;
