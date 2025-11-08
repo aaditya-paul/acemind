@@ -258,12 +258,12 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
           quizList.push({
             id: superRevisionQuizId,
             title: `Units 1-${index + 1} - Super Revision`,
-            description: `Ultimate mastery test covering all ${
+            description: `Comprehensive review covering all ${
               index + 1
-            } units with advanced questions.`,
+            } units with intermediate-level questions.`,
             difficulty: "intermediate",
-            questionCount: 30,
-            timeLimit: 30,
+            questionCount: 20,
+            timeLimit: 20,
             xpReward: 250,
             isNew: isNewQuiz(previousResults, superRevisionQuizId),
             questions: null,
@@ -317,8 +317,8 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
           : `Most challenging questions across the first ${advancedUnlockPoint} units. Prove your expertise!`
         : `Score 80%+ on Advanced Challenge to unlock the ultimate test.`,
       difficulty: "expert",
-      questionCount: 30,
-      timeLimit: 40,
+      questionCount: 20,
+      timeLimit: 25,
       xpReward: 500,
       isNew: isNewQuiz(previousResults, `quiz-expert-mastery`),
       questions: null,
@@ -851,73 +851,115 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
                   <p className="text-white font-medium mb-1">📚 Quiz Types:</p>
                   <ul className="space-y-1 ml-4">
                     <li>
-                      • <span className="text-green-400">Beginner</span> - Quick
-                      overview of studied content (10 questions)
+                      • <span className="text-green-400">Beginner</span> -
+                      General overview of the entire course to test your prior
+                      knowledge (10 questions, 5 min)
                     </li>
                     <li>
                       • <span className="text-yellow-400">Intermediate</span> -
-                      Deep dive into each unit you've studied (15 questions)
+                      Deep dive into a specific unit's concepts and applications
+                      (15 questions, 10 min)
                     </li>
                     <li>
                       • <span className="text-blue-400">Revision</span> -
-                      Combined review every 3 units (20 questions)
+                      Comprehensive review combining all concepts from multiple
+                      units (20 questions, 20 min)
+                    </li>
+                    <li>
+                      • <span className="text-purple-400">Super Revision</span>{" "}
+                      - Comprehensive review covering 9+ units with
+                      intermediate-level questions (20 questions, 20 min)
                     </li>
                     <li>
                       • <span className="text-orange-400">Advanced</span> -
-                      Comprehensive challenge on all studied content (20
-                      questions)
+                      Harder questions testing mastery of the units you studied
+                      (20 questions, 25 min)
                     </li>
                     <li>
-                      • <span className="text-red-400">Expert</span> - Master's
-                      challenge on all studied content (30 questions)
+                      • <span className="text-red-400">Expert</span> - Most
+                      challenging questions proving complete expertise (20
+                      questions, 25 min)
                     </li>
                   </ul>
                 </div>
 
                 <div>
                   <p className="text-white font-medium mb-1">
-                    🔓 Unlock Requirements:
+                    🔓 How to Unlock Quizzes:
                   </p>
                   <ul className="space-y-1 ml-4">
-                    <li>• Beginner → Always available</li>
                     <li>
-                      • Intermediate → Unlock sequentially with 50%+ score on
-                      previous
+                      • <span className="text-green-400">Beginner</span> →
+                      Always available, no requirements
                     </li>
                     <li>
-                      • Revision → Auto-created every 3 intermediate quizzes
-                      completed
+                      •{" "}
+                      <span className="text-yellow-400">
+                        Intermediate Unit 1
+                      </span>{" "}
+                      → Always available
                     </li>
-                    <li>• Advanced → Score ≥60% on any Intermediate quiz</li>
-                    <li>• Expert → Score ≥80% on Advanced quiz</li>
+                    <li>
+                      •{" "}
+                      <span className="text-yellow-400">
+                        Intermediate Unit 2+
+                      </span>{" "}
+                      → Score 50%+ on the previous unit (e.g., Unit 2 needs Unit
+                      1 ≥50%)
+                    </li>
+                    <li>
+                      • <span className="text-blue-400">Revision Quiz</span> →
+                      Unlocks every 3 units (after Units 3, 6, 9...) when you
+                      complete that unit with 50%+
+                    </li>
+                    <li>
+                      • <span className="text-purple-400">Super Revision</span>{" "}
+                      → Unlocks every 3 revision quizzes (after Revision 3, 6,
+                      9...) automatically
+                    </li>
+                    <li>
+                      • <span className="text-orange-400">Advanced</span> →
+                      Score 70%+ on ANY intermediate unit quiz
+                    </li>
+                    <li>
+                      • <span className="text-red-400">Expert</span> → Score
+                      80%+ on the Advanced Challenge
+                    </li>
                   </ul>
                 </div>
 
                 <div>
                   <p className="text-white font-medium mb-1">
-                    📖 Content Based on Study:
+                    📖 What Are Revision & Super Revision?
                   </p>
                   <ul className="space-y-1 ml-4">
                     <li>
-                      • If you've viewed subtopics, quizzes are created only for
-                      studied units
-                    </li>
-                    <li>• Otherwise, all course units are included</li>
-                    <li>
-                      • Advanced & Expert quizzes always cover ALL your studied
-                      material
+                      • <span className="text-blue-400">Revision Quizzes</span>{" "}
+                      help you review everything you've learned. They appear
+                      after every 3 units (e.g., Revision 1 covers Units 1-3,
+                      Revision 2 covers Units 1-6)
                     </li>
                     <li>
-                      • More units studied = more intermediate quizzes available
+                      •{" "}
+                      <span className="text-purple-400">
+                        Super Revision Quizzes
+                      </span>{" "}
+                      are comprehensive reviews that unlock after 3 revision
+                      quizzes. They test 9+ units with intermediate-level
+                      questions to reinforce learning
+                    </li>
+                    <li>
+                      • Both help reinforce your learning by combining concepts
+                      across multiple topics
                     </li>
                   </ul>
                 </div>
 
                 <div className="pt-2 border-t border-purple-500/20">
                   <p className="text-gray-500">
-                    💡 <span className="text-purple-400">Tip:</span> Locked
-                    quizzes appear at the end. Complete earlier quizzes to
-                    unlock them!
+                    💡 <span className="text-purple-400">Tip:</span> You can
+                    retry any quiz as many times as you want. Your best score is
+                    always saved!
                   </p>
                 </div>
               </div>
