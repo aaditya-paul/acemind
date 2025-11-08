@@ -115,19 +115,14 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
     const units = chatData?.aiResponse?.units || [];
     const subtopics = chatData?.subtopics || [];
 
-    // Calculate study depth based on subtopics
-    const studyDepth = calculateStudyDepth(chatData);
-
-    // Determine studied units based on viewed subtopics
+    // Determine studied units (units that were opened in mindmap)
     const studiedUnits = getStudiedUnits(units, subtopics);
-    const hasSubtopicData =
-      subtopics.length > 0 && subtopics.some((s) => s.viewed);
+    const hasSubtopicData = subtopics.length > 0 && subtopics.some((s) => s.viewed);
 
     console.log("📚 QUIZ GENERATION:");
     console.log("   Total Units:", units.length);
     console.log("   Studied Units:", studiedUnits.length);
     console.log("   Has Subtopic Data:", hasSubtopicData);
-    console.log("   Study Depth:", studyDepth);
 
     // Skip if no units available
     if (units.length === 0) {
@@ -135,45 +130,82 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       return quizList;
     }
 
-    // 1. BEGINNER QUIZ - Always available, covers all studied content
-    const beginnerUnits =
-      hasSubtopicData && studiedUnits.length > 0 ? studiedUnits : units;
+    // Helper functions for unlock logic
+    const hasCompletedQuiz = (quizId, minScore) => {
+      const quizResults = previousResults.filter((r) => r.quizId === quizId);
+      return quizResults.some((r) => r.score >= minScore);
+    };
+
+    const getBestScore = (results, quizId) => {
+      const quizResults = results.filter((r) => r.quizId === quizId);
+      if (quizResults.length === 0) return null;
+      return Math.max(...quizResults.map((r) => r.score));
+    };
+
+    const hasFailedQuiz = (quizId) => {
+      const quizResults = previousResults.filter((r) => r.quizId === quizId);
+      return quizResults.length > 0 && quizResults.every((r) => r.score < 50);
+    };
+
+    const isNewQuiz = (results, quizId) => {
+      return !results.some((r) => r.quizId === quizId);
+    };
+
+    const getCompletedIntermediateUnits = () => {
+      return previousResults
+        .filter((r) => r.quizId?.startsWith("quiz-intermediate-unit-") && r.score >= 50)
+        .map((r) => {
+          const match = r.quizId.match(/quiz-intermediate-unit-(\d+)/);
+          return match ? parseInt(match[1]) : -1;
+        })
+        .filter((index) => index >= 0);
+    };
+
+    const getAdvancedUnlockPoint = () => {
+      // Find the first intermediate quiz that scored >= 70%
+      for (let i = 0; i < units.length; i++) {
+        if (hasCompletedQuiz(`quiz-intermediate-unit-${i}`, 70)) {
+          return i + 1; // Return number of units to include (1-indexed)
+        }
+      }
+      return null;
+    };
+
+    // 1. BEGINNER QUIZ - Always available
     quizList.push({
       id: `quiz-beginner-overview`,
       title: `${courseTitle} - Quick Overview`,
+      description: "General overview based on course syllabus. Test your prior knowledge!",
       difficulty: "beginner",
       questionCount: 10,
       timeLimit: 5,
       xpReward: 50,
       isNew: previousResults.length === 0,
       questions: null,
-      units: beginnerUnits,
+      units: units, // All units for general questions
       courseTitle: courseTitle,
       bestScore: getBestScore(previousResults, `quiz-beginner-overview`),
       locked: false,
     });
 
-    // 2. INTERMEDIATE QUIZZES - One per unit studied
-    const unitsToQuiz =
-      hasSubtopicData && studiedUnits.length > 0 ? studiedUnits : units;
-
-    for (let index = 0; index < unitsToQuiz.length; index++) {
-      const unit = unitsToQuiz[index];
+    // 2. INTERMEDIATE QUIZZES - One per unit, sequential unlocking
+    let revisionCount = 0;
+    for (let index = 0; index < units.length; index++) {
+      const unit = units[index];
       const unitTitle = unit.unit_title || `Unit ${index + 1}`;
       const quizId = `quiz-intermediate-unit-${index}`;
 
-      // Check if this quiz should be locked
+      // Sequential unlocking: Unit N requires Unit N-1 with >= 50%
       const isLocked =
-        index > 0 &&
-        !hasCompletedQuiz(
-          previousResults,
-          `quiz-intermediate-unit-${index - 1}`,
-          50
-        );
+        index > 0 && !hasCompletedQuiz(`quiz-intermediate-unit-${index - 1}`, 50);
+      
+      // Check if user failed this quiz (must study before retry)
+      const hasFailed = hasFailedQuiz(quizId);
 
       quizList.push({
         id: quizId,
         title: `${unitTitle} - Deep Dive`,
+        description: `Unit ${index + 1}: ${unitTitle}. ${hasFailed ? 'Study required before retry.' : ''}`,
         difficulty: "intermediate",
         questionCount: 15,
         timeLimit: 10,
@@ -183,18 +215,23 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         units: [unit],
         courseTitle: courseTitle,
         bestScore: getBestScore(previousResults, quizId),
-        locked: isLocked,
+        locked: isLocked || hasFailed,
       });
 
-      // 3. REVISION QUIZ - Every 3 intermediate quizzes
+      // 3. REVISION QUIZ - Every 3 intermediate units (Units 3, 6, 9, etc.)
       if ((index + 1) % 3 === 0) {
-        const revisionQuizId = `quiz-revision-${Math.floor(index / 3)}`;
-        const revisionUnits = unitsToQuiz.slice(0, index + 1); // All units up to this point
-        const isRevisionLocked = !hasCompletedQuiz(previousResults, quizId, 50);
+        const revisionNumber = revisionCount + 1;
+        const revisionQuizId = `quiz-revision-${revisionNumber}`;
+        const revisionUnits = units.slice(0, index + 1); // Units 1 to current
+        
+        // Unlocks when Unit 3/6/9 completed with >= 50%
+        const isRevisionLocked = !hasCompletedQuiz(quizId, 50);
+        const hasFailedRevision = hasFailedQuiz(revisionQuizId);
 
         quizList.push({
           id: revisionQuizId,
           title: `Units 1-${index + 1} - Revision Challenge`,
+          description: `Revision of Units 1-${index + 1}. ${hasFailedRevision ? 'Study required before retry.' : ''}`,
           difficulty: "intermediate",
           questionCount: 20,
           timeLimit: 20,
@@ -204,24 +241,54 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
           units: revisionUnits,
           courseTitle: courseTitle,
           bestScore: getBestScore(previousResults, revisionQuizId),
-          locked: isRevisionLocked,
+          locked: isRevisionLocked || hasFailedRevision,
           isRevision: true,
         });
+
+        revisionCount++;
+
+        // 4. SUPER REVISION QUIZ - Every 3 revision quizzes (after Revision 3, 6, 9, etc.)
+        if (revisionNumber % 3 === 0) {
+          const superRevisionNumber = Math.floor(revisionNumber / 3);
+          const superRevisionQuizId = `quiz-super-revision-${superRevisionNumber}`;
+          const superRevisionUnits = units.slice(0, index + 1); // All units up to this point
+          
+          // Unlocks automatically after Revision 3/6/9 (no score requirement)
+          const isSuperRevisionLocked = !hasCompletedQuiz(revisionQuizId, 0); // Just needs completion
+          const hasFailedSuperRevision = hasFailedQuiz(superRevisionQuizId);
+
+          quizList.push({
+            id: superRevisionQuizId,
+            title: `Units 1-${index + 1} - Super Revision`,
+            description: `Comprehensive revision of Units 1-${index + 1}. ${hasFailedSuperRevision ? 'Study required before retry.' : ''}`,
+            difficulty: "intermediate",
+            questionCount: 30,
+            timeLimit: 30,
+            xpReward: 250,
+            isNew: isNewQuiz(previousResults, superRevisionQuizId),
+            questions: null,
+            units: superRevisionUnits,
+            courseTitle: courseTitle,
+            bestScore: getBestScore(previousResults, superRevisionQuizId),
+            locked: isSuperRevisionLocked || hasFailedSuperRevision,
+            isSuperRevision: true,
+          });
+        }
       }
     }
 
-    // 4. ADVANCED QUIZ - Covers ALL studied content
-    const advancedUnlocked = hasCompletedDifficulty(
-      previousResults,
-      "intermediate",
-      60
-    );
-    const advancedUnits =
-      hasSubtopicData && studiedUnits.length > 0 ? studiedUnits : units;
+    // 5. ADVANCED QUIZ - Frozen scope (units 1-N where N is first >= 70% intermediate)
+    const advancedUnlockPoint = getAdvancedUnlockPoint();
+    const advancedUnlocked = advancedUnlockPoint !== null;
+    const advancedUnits = advancedUnlocked ? units.slice(0, advancedUnlockPoint) : [];
+    const hasFailedAdvanced = hasFailedQuiz('quiz-advanced-comprehensive');
 
     quizList.push({
       id: `quiz-advanced-comprehensive`,
-      title: `${courseTitle} - Comprehensive Challenge`,
+      title: `${courseTitle} - Advanced Challenge`,
+      description: advancedUnlocked 
+        ? `Covers Units 1-${advancedUnlockPoint} (frozen at unlock). ${hasFailedAdvanced ? 'Study required before retry.' : ''}`
+        : `Unlock by scoring >= 70% on any intermediate quiz.`,
       difficulty: "advanced",
       questionCount: 20,
       timeLimit: 25,
@@ -231,17 +298,20 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       units: advancedUnits,
       courseTitle: courseTitle,
       bestScore: getBestScore(previousResults, `quiz-advanced-comprehensive`),
-      locked: !advancedUnlocked,
+      locked: !advancedUnlocked || hasFailedAdvanced,
     });
 
-    // 5. EXPERT QUIZ - Covers ALL studied content
-    const expertUnlocked = hasHighPerformance(previousResults, "advanced", 80);
-    const expertUnits =
-      hasSubtopicData && studiedUnits.length > 0 ? studiedUnits : units;
+    // 6. EXPERT QUIZ - Same frozen scope as Advanced (requires >= 80% on Advanced)
+    const expertUnlocked = hasCompletedQuiz('quiz-advanced-comprehensive', 80);
+    const expertUnits = advancedUnits; // Same scope as Advanced
+    const hasFailedExpert = hasFailedQuiz('quiz-expert-mastery');
 
     quizList.push({
       id: `quiz-expert-mastery`,
-      title: `${courseTitle} - Master's Challenge`,
+      title: `${courseTitle} - Expert Mastery`,
+      description: expertUnlocked
+        ? `Covers Units 1-${advancedUnlockPoint} (frozen at unlock). ${hasFailedExpert ? 'Study required before retry.' : ''}`
+        : `Unlock by scoring >= 80% on Advanced quiz.`,
       difficulty: "expert",
       questionCount: 30,
       timeLimit: 40,
@@ -251,7 +321,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       units: expertUnits,
       courseTitle: courseTitle,
       bestScore: getBestScore(previousResults, `quiz-expert-mastery`),
-      locked: !expertUnlocked,
+      locked: !expertUnlocked || hasFailedExpert,
     });
 
     // Sort: Unlocked first, then locked

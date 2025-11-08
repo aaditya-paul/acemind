@@ -59,10 +59,14 @@ const QuizCard = ({ quiz, onClick, onViewResults, isLocked, index }) => {
       {/* Lock Overlay */}
       {isLocked && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 rounded-xl backdrop-blur-sm z-10">
-          <div className="text-center">
+          <div className="text-center px-4">
             <Lock className="w-8 h-8 text-gray-500 mx-auto mb-2" />
             <p className="text-gray-400 text-xs font-medium">
-              Complete previous quizzes
+              {quiz.description?.includes("Unlock by") 
+                ? quiz.description.split('.').find(s => s.includes("Unlock by"))?.trim() || "Complete previous quizzes"
+                : quiz.description?.includes("Study required") 
+                  ? "Study required before retry"
+                  : "Complete previous quizzes"}
             </p>
           </div>
         </div>
@@ -84,6 +88,11 @@ const QuizCard = ({ quiz, onClick, onViewResults, isLocked, index }) => {
               📚 REVISION
             </div>
           )}
+          {quiz.isSuperRevision && (
+            <div className="px-2 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs font-bold">
+              ⭐ SUPER REVISION
+            </div>
+          )}
         </div>
         {quiz.xpReward && !isLocked && (
           <div className="flex items-center gap-1 text-yellow-400 text-xs font-bold">
@@ -96,6 +105,13 @@ const QuizCard = ({ quiz, onClick, onViewResults, isLocked, index }) => {
       <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">
         {quiz.title}
       </h3>
+
+      {/* Quiz Description */}
+      {quiz.description && (
+        <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+          {quiz.description}
+        </p>
+      )}
 
       {/* Quiz Info */}
       <div className="flex items-center gap-3 text-gray-400 text-xs mb-3">
