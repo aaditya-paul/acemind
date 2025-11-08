@@ -1400,6 +1400,7 @@ export async function getUserProfile(uid) {
         displayName: userData.displayName || "Anonymous User",
         firstName: userData.firstName || "",
         lastName: userData.lastName || "",
+        photoURL: userData.photoURL || null,
         bio: userData.profile?.bio || "",
         interests: userData.profile?.interests || [],
         quizStats: userData.quizStats || {
@@ -1437,6 +1438,7 @@ export async function getLeaderboard(limit = 100) {
         displayName: data.displayName || "Anonymous User",
         firstName: data.firstName || "",
         lastName: data.lastName || "",
+        photoURL: data.photoURL || null,
         quizStats: data.quizStats || {
           totalQuizzes: 0,
           averageScore: 0,

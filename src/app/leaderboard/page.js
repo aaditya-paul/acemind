@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Sidebar from "@/components/Sidebar";
 import BackBtn from "@/components/backBtn";
+import Image from "next/image";
 import {
   Trophy,
   Medal,
@@ -33,6 +34,7 @@ const LeaderboardPage = () => {
     setLoading(true);
     try {
       const result = await getLeaderboard(100);
+
       if (result.success) {
         setLeaderboardData(result.data);
 
@@ -316,11 +318,22 @@ const LeaderboardPage = () => {
 
                             {/* User Avatar & Name */}
                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                <span className="text-lg font-bold text-gray-900">
-                                  {userData.firstName?.[0] || "?"}
-                                  {userData.lastName?.[0] || ""}
-                                </span>
+                              <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                {userData.photoURL ? (
+                                  <Image
+                                    src={userData.photoURL}
+                                    alt={userData.displayName}
+                                    width={48}
+                                    height={48}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <span className="text-lg font-bold text-gray-900">
+                                    {userData.firstName?.[0] || "?"}
+                                    {userData.lastName?.[0] || ""}
+                                  </span>
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-white font-semibold truncate">

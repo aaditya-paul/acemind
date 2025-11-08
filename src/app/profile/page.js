@@ -270,16 +270,22 @@ const ProfilePageContent = () => {
                     <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
                       <div className="text-center">
                         <motion.div
-                          className="w-24 h-24 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center"
+                          className="w-24 h-24 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden"
                           whileHover={{ scale: 1.1 }}
                         >
-                          {isOwnProfile && user?.photoURL ? (
+                          {(isOwnProfile && user?.photoURL) ||
+                          (!isOwnProfile && displayData?.photoURL) ? (
                             <Image
                               width={96}
                               height={96}
-                              src={user.photoURL}
+                              src={
+                                isOwnProfile
+                                  ? user.photoURL
+                                  : displayData.photoURL
+                              }
                               alt="Profile"
-                              className="w-full h-full rounded-full object-cover"
+                              className="w-full h-full object-cover"
+                              unoptimized
                             />
                           ) : (
                             <span className="text-2xl font-bold text-gray-900">
