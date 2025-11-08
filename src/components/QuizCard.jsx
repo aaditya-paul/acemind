@@ -49,14 +49,13 @@ const QuizCard = ({ quiz, onClick, onViewResults, isLocked, index }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
       whileHover={!isLocked ? { scale: 1.02, y: -5 } : {}}
-      onClick={!isLocked ? onClick : null}
-      className={`relative p-4 rounded-xl border transition-all duration-300 ${
+      className={`relative p-4 rounded-xl border transition-all duration-300 flex flex-col min-h-[280px] ${
         isLocked
-          ? "bg-gray-800/50 border-gray-700/50 cursor-not-allowed opacity-60"
-          : "bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700/50 hover:border-yellow-500/50 cursor-pointer shadow-lg hover:shadow-yellow-500/20"
+          ? "bg-gray-800/50 border-gray-700/50 opacity-60"
+          : "bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700/50 hover:border-yellow-500/50 shadow-lg hover:shadow-yellow-500/20"
       }`}
     >
-      {/* Lock Overlay */}
+      {/* Lock Overlay - Only for truly locked quizzes */}
       {isLocked && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 rounded-xl backdrop-blur-sm z-10">
           <div className="text-center px-4">
@@ -67,8 +66,6 @@ const QuizCard = ({ quiz, onClick, onViewResults, isLocked, index }) => {
                     .split(".")
                     .find((s) => s.includes("Unlock by"))
                     ?.trim() || "Complete previous quizzes"
-                : quiz.description?.includes("Study required")
-                ? "Study required before retry"
                 : "Complete previous quizzes"}
             </p>
           </div>
@@ -109,12 +106,14 @@ const QuizCard = ({ quiz, onClick, onViewResults, isLocked, index }) => {
         {quiz.title}
       </h3>
 
-      {/* Quiz Description */}
-      {quiz.description && (
-        <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-          {quiz.description}
-        </p>
-      )}
+      {/* Quiz Description - Fixed height container */}
+      <div className="min-h-[40px] mb-3">
+        {quiz.description && (
+          <p className="text-gray-400 text-sm line-clamp-2">
+            {quiz.description}
+          </p>
+        )}
+      </div>
 
       {/* Quiz Info */}
       <div className="flex items-center gap-3 text-gray-400 text-xs mb-3">
@@ -129,31 +128,48 @@ const QuizCard = ({ quiz, onClick, onViewResults, isLocked, index }) => {
       </div>
 
       {/* Best Score */}
-      {quiz.bestScore !== undefined && !isLocked && (
-        <div className="mt-3 pt-3 border-t border-gray-700/50">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-sm text-gray-300">Best Score:</span>
-              <span className="text-sm font-bold text-green-400">
-                {quiz.bestScore}%
-              </span>
-            </div>
-          </div>
-
-          {/* View Results Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent triggering quiz start
-              onViewResults?.();
-            }}
-            className="w-full mt-2 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 rounded-lg text-blue-400 text-xs font-medium transition-all flex items-center justify-center gap-1.5"
-          >
-            <History className="w-3.5 h-3.5" />
-            View Results History
-          </button>
+      {quiz.bestScore !== undefined && quiz.bestScore !== null && !isLocked && (
+        <div className="flex items-center gap-2 mb-3">
+          <TrendingUp className="w-4 h-4 text-green-400" />
+          <span className="text-sm text-gray-300">Best Score:</span>
+          <span className="text-sm font-bold text-green-400">
+            {quiz.bestScore}%
+          </span>
         </div>
       )}
+
+      {/* Action Buttons - Fixed height container */}
+      <div className="mt-auto pt-3 border-t border-gray-700/50 space-y-2">
+        {/* Attempt Quiz Button - Always enabled when not locked */}
+        <button
+          onClick={isLocked ? undefined : onClick}
+          disabled={isLocked}
+          className={`w-full px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+            isLocked
+              ? "bg-gray-700/50 border border-gray-600/50 text-gray-500 cursor-not-allowed"
+              : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white shadow-lg hover:shadow-yellow-500/50"
+          }`}
+        >
+          <Zap className="w-4 h-4" />
+          {isLocked ? "Locked" : quiz.isNew ? "Start Quiz" : "Re-attempt Quiz"}
+        </button>
+
+        {/* View Results Button - Only for attempted quizzes */}
+        {quiz.bestScore !== undefined &&
+          quiz.bestScore !== null &&
+          !isLocked && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewResults?.();
+              }}
+              className="w-full px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 rounded-lg text-blue-400 text-xs font-medium transition-all flex items-center justify-center gap-1.5"
+            >
+              <History className="w-3.5 h-3.5" />
+              View Results History
+            </button>
+          )}
+      </div>
 
       {/* New Badge */}
       {quiz.isNew && !isLocked && (
