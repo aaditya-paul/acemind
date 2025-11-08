@@ -27,7 +27,7 @@ const getTimeLimit = (difficulty, questionCount) => {
     advanced: 75, // 75 seconds per question
     expert: 80, // 80 seconds per question
   };
-  
+
   const secondsPerQ = timePerQuestion[difficulty] || 60;
   return Math.ceil((questionCount * secondsPerQ) / 60); // Return in minutes
 };
@@ -379,7 +379,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         console.log(
           `✅ Generated ${data.questions.length} questions from backend (secure)`
         );
-        
+
         // Return questions with security metadata
         return {
           questions: data.questions,
@@ -542,8 +542,8 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       );
 
       // Update quiz with generated questions and security metadata
-      const updatedQuiz = { 
-        ...quiz, 
+      const updatedQuiz = {
+        ...quiz,
         questions: quizData.questions,
         sessionId: quizData.sessionId,
         sessionHash: quizData.sessionHash,

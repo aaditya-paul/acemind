@@ -82,9 +82,9 @@ const QuizInterface = ({ quiz, onComplete, onExit }) => {
 
     try {
       const submitTime = Date.now();
-      
+
       // Convert answers object to array format (null for unanswered)
-      const userAnswers = quiz.questions.map((_, index) => 
+      const userAnswers = quiz.questions.map((_, index) =>
         answers[index] !== undefined ? answers[index] : null
       );
 
@@ -108,8 +108,7 @@ const QuizInterface = ({ quiz, onComplete, onExit }) => {
       if (!data.success) {
         console.error("Quiz submission failed:", data.message);
         alert(
-          "Quiz submission failed: " +
-            (data.message || "Please try again")
+          "Quiz submission failed: " + (data.message || "Please try again")
         );
         setIsSubmitting(false);
         return;
@@ -135,7 +134,9 @@ const QuizInterface = ({ quiz, onComplete, onExit }) => {
       onComplete(results);
     } catch (error) {
       console.error("Error submitting quiz:", error);
-      alert("Failed to submit quiz. Please check your connection and try again.");
+      alert(
+        "Failed to submit quiz. Please check your connection and try again."
+      );
       setIsSubmitting(false);
     }
   };
