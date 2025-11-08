@@ -1,7 +1,7 @@
 "use client";
 
-import React, {useState} from "react";
-import {motion, AnimatePresence} from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 function LandingPage() {
@@ -24,7 +24,7 @@ function LandingPage() {
 
   // Animation variants
   const containerVariants = {
-    hidden: {opacity: 0},
+    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
@@ -56,50 +56,170 @@ function LandingPage() {
   const buttonVariants = {
     hover: {
       scale: 1.02,
-      transition: {type: "spring", stiffness: 400, damping: 10},
+      transition: { type: "spring", stiffness: 400, damping: 10 },
     },
     tap: {
       scale: 0.98,
-      transition: {type: "spring", stiffness: 400, damping: 10},
+      transition: { type: "spring", stiffness: 400, damping: 10 },
     },
   };
 
   const features = [
     {
       icon: "🗺️",
-      title: "Visual Syllabus Maps",
+      title: "AI-Powered Mind Maps",
+      tagline: "Turn Chaos into Visual Clarity",
       description:
-        "Upload your syllabus and get a dynamic, clickable knowledge tree that makes complex courses easy to navigate.",
+        "Upload any syllabus and watch it transform into an interactive knowledge tree. Click nodes to explore, mark topics complete, and see how everything connects.",
+      highlights: [
+        "Auto-parse PDFs & text",
+        "Interactive nodes",
+        "Visual progress",
+        "Infinite subtopics",
+      ],
     },
     {
-      icon: "💡",
-      title: "Instant Topic Help",
+      icon: "🤖",
+      title: "24/7 AI Study Assistant",
+      tagline: "Your Personal Tutor, Always Available",
       description:
-        "Click any topic to get a concise explanation or summary. Never struggle with understanding course concepts again.",
+        "Stuck on a concept? Click any topic in your mind map to chat with our AI tutor. Get instant explanations, examples, and breakdowns tailored to your level. It's like having a patient teacher who never gets tired of your questions - perfect for late-night study sessions!",
+      highlights: [
+        "Context-aware explanations",
+        "Remembers your conversation history",
+        "Adapts to your learning pace",
+        "Supports all subjects and topics",
+      ],
+    },
+    {
+      icon: "📝",
+      title: "Smart Quiz System",
+      tagline: "Test Yourself, Level Up",
+      description:
+        "Generate custom quizzes for any topic with 6 difficulty levels: Beginner (10 questions), Intermediate (12 questions), Revision (15 questions), Super Revision (20 questions), Advanced (18 questions), and Expert (25 questions). Each quiz is tailored to test your knowledge and help you improve. Track your scores, see detailed explanations, and identify weak areas.",
+      highlights: [
+        "6 difficulty levels with varying question counts",
+        "Instant answer validation & explanations",
+        "Time tracking for each quiz",
+        "Performance analytics & trends",
+      ],
+    },
+    {
+      icon: "🎮",
+      title: "Gamified Learning Experience",
+      tagline: "Make Studying Addictively Fun",
+      description:
+        "Earn XP for every quiz you complete - the better you perform, the more you earn! Level up from beginner to master as you progress. Each quiz difficulty rewards different XP amounts, and your level increases exponentially, making every achievement count. Watch your XP bar fill up and compete with yourself to reach the next milestone!",
+      highlights: [
+        "Earn XP based on quiz performance",
+        "Exponential leveling system (200 XP → 250 XP → 300 XP...)",
+        "Track total XP and current level",
+        "Visual progress bars for motivation",
+      ],
+    },
+    {
+      icon: "🏆",
+      title: "Global Leaderboard",
+      tagline: "Compete with Students Worldwide",
+      description:
+        "See how you stack up against learners from around the world! The leaderboard ranks users by level and XP, showing top performers with special badges. View detailed profiles, compare stats like average scores and total quizzes, and find motivation to climb higher. Filter by Top 10, Top 50, or browse all users with smart pagination.",
+      highlights: [
+        "Real-time global rankings",
+        "Special badges for top 3 users",
+        "View other students' profiles & stats",
+        "Track your rank and progress over time",
+      ],
     },
     {
       icon: "📊",
-      title: "Progress Tracker",
+      title: "Advanced Analytics Dashboard",
+      tagline: "Know Your Strengths & Weaknesses",
       description:
-        "Know what's done, what's pending, and what's critical for exams with intelligent progress tracking.",
+        "Get deep insights into your learning journey. Track your average quiz score, highest score, total quizzes taken, and XP earned. See which topics you've mastered and which need more attention. Visualize your progress over time with intuitive charts and metrics that help you study smarter, not harder.",
+      highlights: [
+        "Comprehensive quiz statistics",
+        "Average & best score tracking",
+        "Total quizzes and study sessions",
+        "Level progression history",
+      ],
     },
     {
-      icon: "🧭",
-      title: "Explore Without Getting Lost",
+      icon: "💬",
+      title: "AI Doubt Solver",
+      tagline: "Ask Anything, Get Smart Answers",
       description:
-        "Dive into subtopics and still stay aligned with the main course. Never lose sight of the big picture.",
+        "Have a specific question while studying? Our AI doubt solver provides instant, context-aware answers. Unlike generic chatbots, it understands the topic you're studying and gives explanations that build on your current knowledge. Ask follow-up questions, request examples, or get concepts explained in simpler terms.",
+      highlights: [
+        "Instant doubt resolution",
+        "Context-aware responses",
+        "Supports follow-up questions",
+        "Explains concepts at your level",
+      ],
     },
     {
       icon: "🔄",
-      title: "Auto-Updated Knowledge Graph",
+      title: "Dynamic Subtopic Expansion",
+      tagline: "Dive Deep Without Getting Lost",
       description:
-        "Progress in one topic auto-updates connected nodes, showing how concepts relate to each other.",
+        "Every topic can be expanded to reveal deeper subtopics and related concepts. Click on 'Machine Learning' to see Neural Networks, Deep Learning, and more. Click on Neural Networks to explore CNNs, RNNs, Transformers. Go as deep as you need, and the mind map keeps everything organized so you never lose track of the big picture.",
+      highlights: [
+        "Infinite depth topic exploration",
+        "AI-generated subtopics on demand",
+        "Breadcrumb navigation",
+        "Maintains visual hierarchy",
+      ],
     },
     {
-      icon: "🎯",
-      title: "Smart Study Planning",
+      icon: "✅",
+      title: "Progress Tracking",
+      tagline: "See Your Journey, Stay Motivated",
       description:
-        "Get personalized study recommendations based on your progress and upcoming deadlines.",
+        "Mark topics as complete as you study them. Watch your progress bar fill up as you work through your course. See exactly how many topics you've mastered, what's in progress, and what's left to cover. Perfect for planning study sessions and staying motivated as you approach your goals.",
+      highlights: [
+        "One-click topic completion",
+        "Visual progress indicators",
+        "Course completion percentage",
+        "Study session history",
+      ],
+    },
+    {
+      icon: "📱",
+      title: "Fully Responsive Design",
+      tagline: "Study Anywhere, On Any Device",
+      description:
+        "Whether you're on your laptop at home, tablet in the library, or phone on the bus - AceMind works perfectly. The interface adapts beautifully to any screen size, so you can study on the go without compromising on functionality. Your progress syncs automatically across all devices.",
+      highlights: [
+        "Optimized for mobile, tablet & desktop",
+        "Touch-friendly interface",
+        "Adaptive layouts",
+        "Cross-device sync",
+      ],
+    },
+    {
+      icon: "�",
+      title: "Auto-Save & Cloud Sync",
+      tagline: "Never Lose Your Progress",
+      description:
+        "Everything is saved automatically in real-time. Close your browser, switch devices, or take a break - your mind maps, quiz scores, and study progress are always safe in the cloud. Come back anytime and pick up exactly where you left off, from any device.",
+      highlights: [
+        "Real-time auto-save",
+        "Cloud backup & sync",
+        "Cross-device continuity",
+        "Zero data loss guarantee",
+      ],
+    },
+    {
+      icon: "�",
+      title: "Secure & Private",
+      tagline: "Your Data, Your Privacy",
+      description:
+        "We take your privacy seriously. All your data is encrypted and stored securely in Firebase. We never share your information with third parties, and you have full control over your account. Study with peace of mind knowing your learning journey is completely private.",
+      highlights: [
+        "End-to-end encryption",
+        "Secure Firebase authentication",
+        "No data sharing with third parties",
+        "Full account control",
+      ],
     },
   ];
 
@@ -139,9 +259,9 @@ function LandingPage() {
           <div className="flex justify-between items-center h-16">
             <motion.div
               className="flex items-center space-x-2"
-              initial={{opacity: 0, x: -20}}
-              animate={{opacity: 1, x: 0}}
-              transition={{duration: 0.6}}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
             >
               <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
                 <span className="text-xl">🧠</span>
@@ -153,9 +273,9 @@ function LandingPage() {
 
             <motion.div
               className="hidden md:flex items-center space-x-8"
-              initial={{opacity: 0, x: 20}}
-              animate={{opacity: 1, x: 0}}
-              transition={{duration: 0.6, delay: 0.2}}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               <button
                 onClick={() => scrollToSection("features")}
@@ -188,8 +308,13 @@ function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Background gradient effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-transparent to-orange-500/10 pointer-events-none"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto relative">
           <motion.div
             className="text-center"
             variants={containerVariants}
@@ -201,17 +326,19 @@ function LandingPage() {
                 <span className="text-4xl">🧠</span>
               </div>
               <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-                Your Personal{" "}
+                Master Any Subject with{" "}
                 <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                  Syllabus Navigator
+                  AI-Powered Learning
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
-                Turn Course Chaos into Clarity with Interactive Study Maps
+              <p className="text-xl md:text-2xl text-gray-300 mb-4 max-w-3xl mx-auto">
+                Your All-in-One Study Platform: Mind Maps, AI Tutoring, Quizzes
+                & More
               </p>
               <p className="text-lg text-gray-400 mb-12 max-w-2xl mx-auto">
-                Transform overwhelming syllabi into visual knowledge maps, track
-                your progress, and get instant explanations for any topic.
+                Transform complex syllabi into visual knowledge maps, compete on
+                global leaderboards, and accelerate your learning with
+                AI-powered study tools.
               </p>
             </motion.div>
 
@@ -221,44 +348,79 @@ function LandingPage() {
             >
               <Link href="/learn">
                 <motion.button
-                  className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 font-bold rounded-xl text-lg shadow-lg"
+                  className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 font-bold rounded-xl text-lg shadow-lg hover:shadow-yellow-500/50 transition-shadow"
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                 >
-                  🚀 Try for Free
+                  🚀 Start Learning Free
+                </motion.button>
+              </Link>
+              <Link href="#features">
+                <motion.button
+                  className="px-8 py-4 bg-gray-800 border-2 border-gray-700 text-white font-bold rounded-xl text-lg hover:border-yellow-500 transition-colors"
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                >
+                  Explore Features
                 </motion.button>
               </Link>
             </motion.div>
 
-            {/* Hero Animation/Preview */}
-            <motion.div variants={itemVariants} className="max-w-4xl mx-auto">
-              <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 shadow-2xl">
-                <div className="bg-gray-900 rounded-xl p-6 mb-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-sm text-gray-400 mb-2">
-                      Upload your syllabus...
-                    </div>
-                    <div className="bg-gray-700 rounded-lg p-3 text-sm text-gray-300">
-                      "Introduction to Machine Learning 1. Linear Regression 2.
-                      Classification Algorithms 3. Neural Networks..."
-                    </div>
-                  </div>
+            {/* Stats Section */}
+            <motion.div
+              variants={itemVariants}
+              className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-16"
+            >
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                  18+
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl mb-4">⬇️</div>
-                  <div className="bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-xl p-6 border border-yellow-500/30">
-                    <div className="text-sm text-yellow-400 mb-2">
-                      Transforms into...
-                    </div>
-                    <div className="text-lg font-semibold">
-                      Interactive Knowledge Map 🗺️
-                    </div>
+                <div className="text-sm text-gray-400 mt-1">Features</div>
+              </div>
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                  AI
+                </div>
+                <div className="text-sm text-gray-400 mt-1">Powered</div>
+              </div>
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                  24/7
+                </div>
+                <div className="text-sm text-gray-400 mt-1">Available</div>
+              </div>
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                  ∞
+                </div>
+                <div className="text-sm text-gray-400 mt-1">Subjects</div>
+              </div>
+            </motion.div>
+
+            {/* Hero Animation/Preview */}
+            <motion.div variants={itemVariants} className="max-w-5xl mx-auto">
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700 shadow-2xl">
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="bg-gray-900/50 rounded-xl p-6 border border-yellow-500/30">
+                    <div className="text-4xl mb-3">🗺️</div>
+                    <h3 className="font-semibold mb-2">Mind Maps</h3>
+                    <p className="text-sm text-gray-400">
+                      Visual knowledge trees
+                    </p>
+                  </div>
+                  <div className="bg-gray-900/50 rounded-xl p-6 border border-orange-500/30">
+                    <div className="text-4xl mb-3">🤖</div>
+                    <h3 className="font-semibold mb-2">AI Tutor</h3>
+                    <p className="text-sm text-gray-400">
+                      24/7 study assistant
+                    </p>
+                  </div>
+                  <div className="bg-gray-900/50 rounded-xl p-6 border border-yellow-500/30">
+                    <div className="text-4xl mb-3">🏆</div>
+                    <h3 className="font-semibold mb-2">Compete</h3>
+                    <p className="text-sm text-gray-400">Global leaderboards</p>
                   </div>
                 </div>
               </div>
@@ -270,44 +432,68 @@ function LandingPage() {
       {/* Features Section */}
       <section
         id="features"
-        className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-800/50"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-800/30"
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
             className="text-center mb-16"
-            initial={{opacity: 0, y: 30}}
-            whileInView={{opacity: 1, y: 0}}
-            transition={{duration: 0.6}}
-            viewport={{once: true}}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Everything You Need to{" "}
+              Powerful Features for{" "}
               <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                Excel
+                Modern Learners
               </span>
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Powerful features designed to transform how you learn and master
-              your coursework
+              Everything you need to transform your study experience - from
+              AI-powered tools to gamification
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                className="bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-yellow-500/30 transition-all duration-300"
-                initial={{opacity: 0, y: 30}}
-                whileInView={{opacity: 1, y: 0}}
-                transition={{duration: 0.6, delay: index * 0.1}}
-                viewport={{once: true}}
-                whileHover={{scale: 1.02}}
+                className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 p-6 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10 transition-all duration-300 group"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                viewport={{ once: true }}
               >
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold mb-3 text-white">
+                {/* Icon */}
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-xl mb-4 border border-yellow-500/30 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">{feature.icon}</span>
+                </div>
+
+                {/* Title & Tagline */}
+                <h3 className="text-xl font-bold text-white mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-gray-300">{feature.description}</p>
+                <p className="text-yellow-400 text-sm font-medium mb-3">
+                  {feature.tagline}
+                </p>
+
+                {/* Description */}
+                <p className="text-gray-400 text-sm leading-relaxed mb-4">
+                  {feature.description}
+                </p>
+
+                {/* Highlights - Compact bullets */}
+                <div className="space-y-2">
+                  {feature.highlights.map((highlight, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 text-gray-500 text-xs"
+                    >
+                      <div className="w-1 h-1 bg-yellow-400/60 rounded-full flex-shrink-0"></div>
+                      <span>{highlight}</span>
+                    </div>
+                  ))}
+                </div>
               </motion.div>
             ))}
           </div>
@@ -319,10 +505,10 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <motion.div
             className="text-center mb-16"
-            initial={{opacity: 0, y: 30}}
-            whileInView={{opacity: 1, y: 0}}
-            transition={{duration: 0.6}}
-            viewport={{once: true}}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               See AceMind in{" "}
@@ -338,10 +524,10 @@ function LandingPage() {
 
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
-              initial={{opacity: 0, x: -30}}
-              whileInView={{opacity: 1, x: 0}}
-              transition={{duration: 0.6}}
-              viewport={{once: true}}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
             >
               <h3 className="text-2xl font-semibold mb-6">
                 From Chaos to Clarity
@@ -375,10 +561,10 @@ function LandingPage() {
             </motion.div>
 
             <motion.div
-              initial={{opacity: 0, x: 30}}
-              whileInView={{opacity: 1, x: 0}}
-              transition={{duration: 0.6}}
-              viewport={{once: true}}
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
               className="bg-gray-800 rounded-2xl p-8 border border-gray-700"
             >
               <div className="space-y-6">
@@ -426,10 +612,10 @@ function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <motion.div
             className="text-center mb-16"
-            initial={{opacity: 0, y: 30}}
-            whileInView={{opacity: 1, y: 0}}
-            transition={{duration: 0.6}}
-            viewport={{once: true}}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Frequently Asked{" "}
@@ -447,10 +633,10 @@ function LandingPage() {
               <motion.div
                 key={index}
                 className="bg-gray-800 rounded-xl border border-gray-700"
-                initial={{opacity: 0, y: 20}}
-                whileInView={{opacity: 1, y: 0}}
-                transition={{duration: 0.6, delay: index * 0.1}}
-                viewport={{once: true}}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
               >
                 <button
                   className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-700/50 transition-colors rounded-xl"
@@ -459,8 +645,8 @@ function LandingPage() {
                   <span className="font-semibold">{faq.question}</span>
                   <motion.span
                     className="text-2xl"
-                    animate={{rotate: openFaq === index ? 45 : 0}}
-                    transition={{duration: 0.2, ease: "easeInOut"}}
+                    animate={{ rotate: openFaq === index ? 45 : 0 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
                   >
                     +
                   </motion.span>
@@ -468,20 +654,20 @@ function LandingPage() {
                 <AnimatePresence>
                   {openFaq === index && (
                     <motion.div
-                      initial={{opacity: 0, height: 0}}
+                      initial={{ opacity: 0, height: 0 }}
                       animate={{
                         opacity: 1,
                         height: "auto",
                         transition: {
-                          height: {duration: 0.3, ease: "easeInOut"},
-                          opacity: {duration: 0.2, delay: 0.1},
+                          height: { duration: 0.3, ease: "easeInOut" },
+                          opacity: { duration: 0.2, delay: 0.1 },
                         },
                       }}
                       exit={{
                         opacity: 0,
                         height: 0,
                         transition: {
-                          opacity: {duration: 0.1},
+                          opacity: { duration: 0.1 },
                           height: {
                             duration: 0.3,
                             delay: 0.1,
@@ -489,14 +675,14 @@ function LandingPage() {
                           },
                         },
                       }}
-                      style={{overflow: "hidden"}}
+                      style={{ overflow: "hidden" }}
                       className="px-6"
                     >
                       <motion.div
-                        initial={{y: -10}}
-                        animate={{y: 0}}
-                        exit={{y: -10}}
-                        transition={{duration: 0.2}}
+                        initial={{ y: -10 }}
+                        animate={{ y: 0 }}
+                        exit={{ y: -10 }}
+                        transition={{ duration: 0.2 }}
                         className="pb-4"
                       >
                         <p className="text-gray-300">{faq.answer}</p>
@@ -514,10 +700,10 @@ function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
-            initial={{opacity: 0, y: 30}}
-            whileInView={{opacity: 1, y: 0}}
-            transition={{duration: 0.6}}
-            viewport={{once: true}}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Ready to Master Your{" "}
