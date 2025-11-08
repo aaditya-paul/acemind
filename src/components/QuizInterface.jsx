@@ -255,14 +255,14 @@ const QuizInterface = ({ quiz, onComplete, onExit }) => {
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                          className={`w-6 h-6 aspect-square rounded-full border-2 flex items-center justify-center transition-all ${
                             isSelected
                               ? "border-yellow-500 bg-yellow-500"
                               : "border-gray-600"
                           }`}
                         >
                           {isSelected && (
-                            <div className="w-3 h-3 bg-gray-900 rounded-full" />
+                            <div className="w-3 h-3 aspect-square bg-gray-900 rounded-full" />
                           )}
                         </div>
                         <span
