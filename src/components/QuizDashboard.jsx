@@ -433,7 +433,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
             difficulty,
             questionCount: count,
             courseContext,
-            timeLimit: getTimeLimit(difficulty, count), // Send time limit for security
+            timeLimit: getTimeLimit(difficulty, count) * 60, // Convert minutes to seconds for backend
             userId: user?.uid || "anonymous", // Track user for analytics
           }),
         }
@@ -477,7 +477,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         sessionId: null,
         sessionHash: null,
         startTime: Date.now(),
-        timeLimit: getTimeLimit(difficulty, count),
+        timeLimit: getTimeLimit(difficulty, count) * 60, // Convert minutes to seconds for consistency
       };
     }
   };
@@ -622,7 +622,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         sessionId: quizData.sessionId,
         sessionHash: quizData.sessionHash,
         startTime: quizData.startTime,
-        timeLimit: Math.floor(quizData.timeLimit / 60), // Convert seconds to minutes for display
+        timeLimit: quizData.timeLimit, // Already in seconds from backend
       };
       setActiveQuiz(updatedQuiz);
 
@@ -694,6 +694,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
         quiz={activeQuiz}
         onComplete={handleQuizComplete}
         onExit={() => setActiveQuiz(null)}
+        userId={user?.uid} // Pass userId for analytics tracking
       />
     );
   }

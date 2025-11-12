@@ -14,10 +14,10 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-const QuizInterface = ({ quiz, onComplete, onExit }) => {
+const QuizInterface = ({ quiz, onComplete, onExit, userId }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(quiz.timeLimit * 60); // Convert minutes to seconds
+  const [timeLeft, setTimeLeft] = useState(quiz.timeLimit); // Backend returns seconds, no conversion needed
   const [isPaused, setIsPaused] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState(new Set());
@@ -99,6 +99,7 @@ const QuizInterface = ({ quiz, onComplete, onExit }) => {
             sessionHash: sessionHashRef.current,
             userAnswers,
             submitTime,
+            userId: userId || "anonymous", // Include userId for analytics
           }),
         }
       );
