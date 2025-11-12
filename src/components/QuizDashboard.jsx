@@ -434,7 +434,7 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
             questionCount: count,
             courseContext,
             timeLimit: getTimeLimit(difficulty, count), // Send time limit for security
-            userId: "user-id-placeholder", // TODO: Replace with actual user ID from auth
+            userId: user?.uid || "anonymous", // Track user for analytics
           }),
         }
       );

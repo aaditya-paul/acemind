@@ -802,6 +802,7 @@ function MindMap({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          userId: user?.uid, // Track user for analytics
           topic: chatData.topic,
           subtopic: subtopicTitle,
           unitTitle: unitTitle,
@@ -984,6 +985,7 @@ function MindMap({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          userId: user?.uid, // Track user for analytics
           topic: chatData.topic,
           subtopic: subtopicTitle,
           syllabus: chatData.syllabusContext || "No syllabus context provided",
@@ -1249,6 +1251,7 @@ function MindMap({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          userId: user?.uid, // Track user for analytics
           topic: topic,
           subtopic: subtopicTitle,
           syllabus: syllabus,

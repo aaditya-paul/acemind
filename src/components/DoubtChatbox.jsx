@@ -308,6 +308,7 @@ const DoubtChatbox = forwardRef(
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
+              userId: user?.uid, // Track user for analytics
               question: inputMessage,
               context: context,
               selectedText: selectedText || null,

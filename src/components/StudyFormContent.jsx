@@ -1,10 +1,10 @@
 "use client";
 
-import React, {useState} from "react";
-import {motion} from "framer-motion";
-import {setResponseDB} from "@/lib/db";
-import {useAuth} from "@/contexts/AuthContext";
-import {useRouter} from "next/navigation";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { setResponseDB } from "@/lib/db";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 const StudyFormContent = () => {
   const [topic, setTopic] = useState("");
@@ -13,7 +13,7 @@ const StudyFormContent = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const {user} = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const popularTopics = [
     "JavaScript",
@@ -28,7 +28,7 @@ const StudyFormContent = () => {
 
   // Animation variants
   const containerVariants = {
-    hidden: {opacity: 0},
+    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
@@ -79,11 +79,11 @@ const StudyFormContent = () => {
   const buttonVariants = {
     hover: {
       scale: 1.02,
-      transition: {type: "spring", stiffness: 400, damping: 10},
+      transition: { type: "spring", stiffness: 400, damping: 10 },
     },
     tap: {
       scale: 0.98,
-      transition: {type: "spring", stiffness: 400, damping: 10},
+      transition: { type: "spring", stiffness: 400, damping: 10 },
     },
   };
 
@@ -92,11 +92,11 @@ const StudyFormContent = () => {
       scale: 1.05,
       backgroundColor: "#374151",
       borderColor: "#6b7280",
-      transition: {type: "spring", stiffness: 400, damping: 10},
+      transition: { type: "spring", stiffness: 400, damping: 10 },
     },
     tap: {
       scale: 0.95,
-      transition: {type: "spring", stiffness: 400, damping: 10},
+      transition: { type: "spring", stiffness: 400, damping: 10 },
     },
   };
 
@@ -131,6 +131,7 @@ const StudyFormContent = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          userId: user?.uid, // Track user for analytics
           topic: topic,
           syllabus: syllabus,
         }),
@@ -193,8 +194,8 @@ const StudyFormContent = () => {
         {/* Error Message */}
         {error && (
           <motion.div
-            initial={{opacity: 0, y: -10}}
-            animate={{opacity: 1, y: 0}}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
             className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200 text-sm w-full mx-auto"
           >
             {error}
@@ -204,8 +205,8 @@ const StudyFormContent = () => {
         {/* Success Message */}
         {success && (
           <motion.div
-            initial={{opacity: 0, y: -10}}
-            animate={{opacity: 1, y: 0}}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
             className="mb-4 p-3 bg-green-900/50 border border-green-500 rounded-lg text-green-200 text-sm w-full mx-auto"
           >
             {success}
@@ -238,7 +239,7 @@ const StudyFormContent = () => {
               whileFocus={{
                 scale: 1.01,
                 borderColor: "#eab308",
-                transition: {type: "spring", stiffness: 300, damping: 20},
+                transition: { type: "spring", stiffness: 300, damping: 20 },
               }}
             />
           </motion.div>
@@ -263,7 +264,7 @@ const StudyFormContent = () => {
               whileFocus={{
                 scale: 1.01,
                 borderColor: "#eab308",
-                transition: {type: "spring", stiffness: 300, damping: 20},
+                transition: { type: "spring", stiffness: 300, damping: 20 },
               }}
             />
           </motion.div>
@@ -279,7 +280,7 @@ const StudyFormContent = () => {
               whileTap="tap"
               whileFocus={{
                 boxShadow: "0 0 0 4px rgba(234, 179, 8, 0.5)",
-                transition: {type: "spring", stiffness: 300, damping: 20},
+                transition: { type: "spring", stiffness: 300, damping: 20 },
               }}
               disabled={loading}
             >
@@ -339,7 +340,7 @@ const StudyFormContent = () => {
                 variants={topicButtonVariants}
                 whileHover="hover"
                 whileTap="tap"
-                initial={{opacity: 0, scale: 0.8}}
+                initial={{ opacity: 0, scale: 0.8 }}
                 animate={{
                   opacity: 1,
                   scale: 1,
