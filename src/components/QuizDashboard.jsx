@@ -32,7 +32,7 @@ const getTimeLimit = (difficulty, questionCount) => {
   return Math.ceil((questionCount * secondsPerQ) / 60); // Return in minutes
 };
 
-const QuizDashboard = ({ chatId, chatData, onClose }) => {
+const QuizDashboard = ({ chatId, chatData, onClose, onStatsUpdate }) => {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const [quizzes, setQuizzes] = useState([]);
@@ -546,6 +546,9 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
       const statsResult = await getUserQuizStats(user.uid);
       if (statsResult.success) {
         setUserStats(statsResult.data);
+        if (onStatsUpdate) {
+          onStatsUpdate(statsResult.data);
+        }
       }
     }
   };
@@ -637,7 +640,13 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
     }
   };
 
-  const getXPForNextLevel = () => {
+  const getLevelStartXP = (level) => {
+    if (level <= 1) return 0;
+    // Formula matches db.js: 200 * (L-1) + 25 * (L-1) * (L-2)
+    return 200 * (level - 1) + 25 * (level - 1) * (level - 2);
+  };
+
+  const getXPForCurrentLevel = () => {
     if (!userStats) return 200;
     // Exponential progression: each level needs more XP
     return 200 + (userStats.level - 1) * 50;
@@ -646,11 +655,14 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
   const getXPProgress = () => {
     if (!userStats) return 0;
 
-    // Simple: just show progress within current level
-    const xpNeeded = getXPForNextLevel();
+    const startXP = getLevelStartXP(userStats.level);
+    const levelXP = getXPForCurrentLevel();
+    const currentLevelXP = Math.max(0, userStats.xp - startXP);
+
+    // Progress within current level
     const progress = Math.max(
       0,
-      Math.min(100, (userStats.xp / xpNeeded) * 100)
+      Math.min(100, (currentLevelXP / levelXP) * 100)
     );
 
     return progress;
@@ -766,7 +778,11 @@ const QuizDashboard = ({ chatId, chatData, onClose }) => {
                     XP to Lv {userStats.level + 1}
                   </span>
                   <span className="text-xs font-medium text-yellow-400">
-                    {userStats.xp} / {getXPForNextLevel()}
+                    {Math.max(
+                      0,
+                      userStats.xp - getLevelStartXP(userStats.level)
+                    )}{" "}
+                    / {getXPForCurrentLevel()}
                   </span>
                 </div>
                 <div className="h-2 bg-gray-700 rounded-full overflow-hidden">

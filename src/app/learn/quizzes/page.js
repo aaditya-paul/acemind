@@ -46,6 +46,10 @@ function QuizzesPageContent() {
       .includes(searchQuery.toLowerCase())
   );
 
+  const handleStatsUpdate = (newStats) => {
+    setUserStats(newStats);
+  };
+
   useEffect(() => {
     // Don't redirect while auth is still loading
     if (authLoading) return;
@@ -333,6 +337,7 @@ function QuizzesPageContent() {
                     chatId={selectedChat.chatId}
                     chatData={selectedChat}
                     onClose={() => router.push("/learn")}
+                    onStatsUpdate={handleStatsUpdate}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
