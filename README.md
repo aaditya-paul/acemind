@@ -243,7 +243,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Aaditya Paul**
 
 - GitHub: [@aaditya-paul](https://github.com/aaditya-paul)
-- Email: aaditya@example.com
+- Email: aadityapaul2006@gmail.com
 
 ## 🙏 Acknowledgments
 
