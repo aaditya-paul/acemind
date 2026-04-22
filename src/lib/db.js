@@ -1474,3 +1474,977 @@ export async function getLeaderboard(limit = 100) {
     };
   }
 }
+
+// ==================== CHALLENGE DUEL FUNCTIONS ====================
+
+function normalizeEmail(email) {
+  return String(email || "")
+    .trim()
+    .toLowerCase();
+}
+
+function createDuelAttemptSummary(result) {
+  const score = Number(result?.score) || 0;
+  const totalQuestions = Number(result?.totalQuestions) || 0;
+  const correctAnswers = Number(result?.correctAnswers) || 0;
+  const timeTaken = Number(result?.timeTaken) || 0;
+
+  return {
+    score,
+    totalQuestions,
+    correctAnswers,
+    wrongAnswers: Math.max(0, totalQuestions - correctAnswers),
+    timeTaken,
+    difficulty: result?.difficulty || "intermediate",
+    quizTitle: result?.quizTitle || "Duel Quiz",
+    accuracy: totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0,
+    submittedAt: new Date().toISOString(),
+  };
+}
+
+function decideDuelWinner(challengerId, opponentId, challengerAttempt, opponentAttempt) {
+  if (challengerAttempt.score > opponentAttempt.score) {
+    return { winnerId: challengerId, isDraw: false };
+  }
+
+  if (opponentAttempt.score > challengerAttempt.score) {
+    return { winnerId: opponentId, isDraw: false };
+  }
+
+  if (challengerAttempt.timeTaken < opponentAttempt.timeTaken) {
+    return { winnerId: challengerId, isDraw: false };
+  }
+
+  if (opponentAttempt.timeTaken < challengerAttempt.timeTaken) {
+    return { winnerId: opponentId, isDraw: false };
+  }
+
+  return { winnerId: null, isDraw: true };
+}
+
+export async function findUserByEmail(email) {
+  try {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) {
+      return {
+        success: false,
+        message: "Email is required",
+        code: 400,
+      };
+    }
+
+    const usersRef = collection(db, "users");
+    const usersQuery = query(usersRef, where("email", "==", normalizedEmail));
+    const querySnapshot = await getDocs(usersQuery);
+
+    if (querySnapshot.empty) {
+      return {
+        success: false,
+        message: "User not found",
+        code: 404,
+      };
+    }
+
+    const userDoc = querySnapshot.docs[0];
+    const userData = userDoc.data();
+
+    return {
+      success: true,
+      data: {
+        uid: userDoc.id,
+        email: userData.email || normalizedEmail,
+        displayName: userData.displayName || "Anonymous User",
+        firstName: userData.firstName || "",
+        lastName: userData.lastName || "",
+        photoURL: userData.photoURL || null,
+      },
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error finding user by email:", error);
+    return {
+      success: false,
+      message: "Failed to find user",
+      code: 500,
+    };
+  }
+}
+
+export async function createDuelChallenge(payload) {
+  try {
+    const {
+      challengerId,
+      challengerName,
+      challengerEmail,
+      opponentId,
+      opponentName,
+      opponentEmail,
+      chatId,
+      courseTitle,
+      courseContext,
+      difficulty = "intermediate",
+      questionCount = 12,
+      timeLimit = 600,
+    } = payload || {};
+
+    if (!challengerId || !opponentId) {
+      return {
+        success: false,
+        message: "Both challenger and opponent are required",
+        code: 400,
+      };
+    }
+
+    if (challengerId === opponentId) {
+      return {
+        success: false,
+        message: "You cannot challenge yourself",
+        code: 400,
+      };
+    }
+
+    const duelId = generateUniqueId("duel_");
+    const now = new Date().toISOString();
+
+    const duelData = {
+      duelId,
+      challengerId,
+      challengerName: challengerName || "Challenger",
+      challengerEmail: normalizeEmail(challengerEmail),
+      opponentId,
+      opponentName: opponentName || "Opponent",
+      opponentEmail: normalizeEmail(opponentEmail),
+      status: "pending",
+      course: {
+        chatId: chatId || null,
+        title: courseTitle || "General Course",
+      },
+      courseContext: String(courseContext || "").slice(0, 2000),
+      quizConfig: {
+        difficulty,
+        questionCount: Number(questionCount) || 12,
+        timeLimit: Number(timeLimit) || 600,
+      },
+      attempts: {},
+      winnerId: null,
+      isDraw: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await setDoc(doc(db, "duels", duelId), duelData);
+
+    return {
+      success: true,
+      data: duelData,
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error creating duel challenge:", error);
+    return {
+      success: false,
+      message: "Failed to create challenge",
+      code: 500,
+    };
+  }
+}
+
+export async function getUserDuelChallenges(uid) {
+  try {
+    if (!uid) {
+      return {
+        success: false,
+        message: "User ID is required",
+        code: 400,
+      };
+    }
+
+    const duelsRef = collection(db, "duels");
+    const [asChallengerSnapshot, asOpponentSnapshot] = await Promise.all([
+      getDocs(query(duelsRef, where("challengerId", "==", uid))),
+      getDocs(query(duelsRef, where("opponentId", "==", uid))),
+    ]);
+
+    const duelMap = new Map();
+
+    asChallengerSnapshot.forEach((duelDoc) => {
+      duelMap.set(duelDoc.id, {
+        duelId: duelDoc.id,
+        ...duelDoc.data(),
+      });
+    });
+
+    asOpponentSnapshot.forEach((duelDoc) => {
+      duelMap.set(duelDoc.id, {
+        duelId: duelDoc.id,
+        ...duelDoc.data(),
+      });
+    });
+
+    const duels = Array.from(duelMap.values()).sort(
+      (a, b) =>
+        new Date(b.updatedAt || b.createdAt || 0) -
+        new Date(a.updatedAt || a.createdAt || 0)
+    );
+
+    return {
+      success: true,
+      data: duels,
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error fetching duel challenges:", error);
+    return {
+      success: false,
+      message: "Failed to fetch challenges",
+      code: 500,
+    };
+  }
+}
+
+export async function respondToDuelChallenge(duelId, uid, action) {
+  try {
+    if (!duelId || !uid || !["accept", "decline"].includes(action)) {
+      return {
+        success: false,
+        message: "Invalid challenge response",
+        code: 400,
+      };
+    }
+
+    const duelRef = doc(db, "duels", duelId);
+    const duelDoc = await getDoc(duelRef);
+
+    if (!duelDoc.exists()) {
+      return {
+        success: false,
+        message: "Challenge not found",
+        code: 404,
+      };
+    }
+
+    const duelData = duelDoc.data();
+    if (duelData.opponentId !== uid) {
+      return {
+        success: false,
+        message: "Only the invited friend can respond",
+        code: 403,
+      };
+    }
+
+    if (duelData.status !== "pending") {
+      return {
+        success: false,
+        message: `Challenge is already ${duelData.status}`,
+        code: 409,
+      };
+    }
+
+    const now = new Date().toISOString();
+    const updatePayload =
+      action === "accept"
+        ? {
+            status: "active",
+            acceptedAt: now,
+            updatedAt: now,
+          }
+        : {
+            status: "declined",
+            declinedAt: now,
+            updatedAt: now,
+          };
+
+    await setDoc(duelRef, updatePayload, { merge: true });
+
+    return {
+      success: true,
+      message: `Challenge ${action}ed successfully`,
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error responding to duel challenge:", error);
+    return {
+      success: false,
+      message: "Failed to respond to challenge",
+      code: 500,
+    };
+  }
+}
+
+export async function cancelDuelChallenge(duelId, uid) {
+  try {
+    const duelRef = doc(db, "duels", duelId);
+    const duelDoc = await getDoc(duelRef);
+
+    if (!duelDoc.exists()) {
+      return {
+        success: false,
+        message: "Challenge not found",
+        code: 404,
+      };
+    }
+
+    const duelData = duelDoc.data();
+    if (duelData.challengerId !== uid) {
+      return {
+        success: false,
+        message: "Only challenger can cancel this challenge",
+        code: 403,
+      };
+    }
+
+    if (duelData.status !== "pending") {
+      return {
+        success: false,
+        message: "Only pending challenges can be cancelled",
+        code: 409,
+      };
+    }
+
+    await setDoc(
+      duelRef,
+      {
+        status: "cancelled",
+        cancelledAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+
+    return {
+      success: true,
+      message: "Challenge cancelled",
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error cancelling challenge:", error);
+    return {
+      success: false,
+      message: "Failed to cancel challenge",
+      code: 500,
+    };
+  }
+}
+
+export async function submitDuelAttempt(duelId, uid, result) {
+  try {
+    const duelRef = doc(db, "duels", duelId);
+    const duelDoc = await getDoc(duelRef);
+
+    if (!duelDoc.exists()) {
+      return {
+        success: false,
+        message: "Challenge not found",
+        code: 404,
+      };
+    }
+
+    const duelData = duelDoc.data();
+    const isParticipant = uid === duelData.challengerId || uid === duelData.opponentId;
+    if (!isParticipant) {
+      return {
+        success: false,
+        message: "Unauthorized challenge access",
+        code: 403,
+      };
+    }
+
+    if (duelData.status !== "active") {
+      return {
+        success: false,
+        message: "Challenge is not active",
+        code: 409,
+      };
+    }
+
+    const attempts = { ...(duelData.attempts || {}) };
+    if (attempts[uid]) {
+      return {
+        success: false,
+        message: "Attempt already submitted",
+        code: 409,
+      };
+    }
+
+    attempts[uid] = createDuelAttemptSummary(result);
+
+    const now = new Date().toISOString();
+    const updatePayload = {
+      attempts,
+      updatedAt: now,
+    };
+
+    const challengerAttempt = attempts[duelData.challengerId];
+    const opponentAttempt = attempts[duelData.opponentId];
+
+    if (challengerAttempt && opponentAttempt) {
+      const winner = decideDuelWinner(
+        duelData.challengerId,
+        duelData.opponentId,
+        challengerAttempt,
+        opponentAttempt
+      );
+
+      updatePayload.status = "completed";
+      updatePayload.completedAt = now;
+      updatePayload.winnerId = winner.winnerId;
+      updatePayload.isDraw = winner.isDraw;
+    }
+
+    await setDoc(duelRef, updatePayload, { merge: true });
+
+    return {
+      success: true,
+      data: {
+        ...duelData,
+        ...updatePayload,
+      },
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error submitting duel attempt:", error);
+    return {
+      success: false,
+      message: "Failed to submit duel attempt",
+      code: 500,
+    };
+  }
+}
+
+function getDuelOutcomeForUser(duel, uid) {
+  if (duel.status !== "completed") return null;
+  if (duel.isDraw) return "draw";
+  return duel.winnerId === uid ? "win" : "loss";
+}
+
+function computeWinStreakMetrics(sortedResults) {
+  let bestWinStreak = 0;
+  let runningWinStreak = 0;
+
+  sortedResults.forEach((result) => {
+    if (result.outcome === "win") {
+      runningWinStreak += 1;
+      bestWinStreak = Math.max(bestWinStreak, runningWinStreak);
+    } else {
+      runningWinStreak = 0;
+    }
+  });
+
+  let currentWinStreak = 0;
+  for (let index = sortedResults.length - 1; index >= 0; index -= 1) {
+    if (sortedResults[index].outcome === "win") {
+      currentWinStreak += 1;
+    } else {
+      break;
+    }
+  }
+
+  return {
+    currentWinStreak,
+    bestWinStreak,
+  };
+}
+
+function getOrCreateDuelStatsEntry(statsMap, payload) {
+  const existing = statsMap.get(payload.uid);
+  if (existing) {
+    if (payload.displayName && payload.displayName !== "Anonymous User") {
+      existing.displayName = payload.displayName;
+    }
+    if (payload.photoURL) {
+      existing.photoURL = payload.photoURL;
+    }
+    if (payload.email) {
+      existing.email = payload.email;
+    }
+    return existing;
+  }
+
+  const entry = {
+    uid: payload.uid,
+    displayName: payload.displayName || "Anonymous User",
+    email: payload.email || "",
+    photoURL: payload.photoURL || null,
+    totalDuels: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    totalScore: 0,
+    attemptsCount: 0,
+    averageScore: 0,
+    points: 0,
+    currentWinStreak: 0,
+    bestWinStreak: 0,
+    recentResults: [],
+  };
+
+  statsMap.set(payload.uid, entry);
+  return entry;
+}
+
+export async function getDuelLeaderboard(currentUid, limit = 20) {
+  try {
+    const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
+    const completedDuelsQuery = query(
+      collection(db, "duels"),
+      where("status", "==", "completed")
+    );
+
+    const snapshot = await getDocs(completedDuelsQuery);
+    const statsMap = new Map();
+
+    snapshot.forEach((duelDoc) => {
+      const duel = duelDoc.data();
+      const completedAt =
+        duel.completedAt || duel.updatedAt || duel.createdAt || new Date().toISOString();
+
+      const challengerAttempt = duel?.attempts?.[duel.challengerId] || null;
+      const opponentAttempt = duel?.attempts?.[duel.opponentId] || null;
+
+      const challengerEntry = getOrCreateDuelStatsEntry(statsMap, {
+        uid: duel.challengerId,
+        displayName: duel.challengerName,
+        email: duel.challengerEmail,
+        photoURL: duel.challengerPhotoURL || null,
+      });
+
+      const opponentEntry = getOrCreateDuelStatsEntry(statsMap, {
+        uid: duel.opponentId,
+        displayName: duel.opponentName,
+        email: duel.opponentEmail,
+        photoURL: duel.opponentPhotoURL || null,
+      });
+
+      const challengerOutcome = getDuelOutcomeForUser(duel, duel.challengerId);
+      const opponentOutcome = getDuelOutcomeForUser(duel, duel.opponentId);
+
+      const participants = [
+        {
+          entry: challengerEntry,
+          attempt: challengerAttempt,
+          outcome: challengerOutcome,
+          opponentName: duel.opponentName || "Opponent",
+          opponentId: duel.opponentId,
+        },
+        {
+          entry: opponentEntry,
+          attempt: opponentAttempt,
+          outcome: opponentOutcome,
+          opponentName: duel.challengerName || "Opponent",
+          opponentId: duel.challengerId,
+        },
+      ];
+
+      participants.forEach((participant) => {
+        if (!participant.outcome) return;
+
+        participant.entry.totalDuels += 1;
+        if (participant.outcome === "win") participant.entry.wins += 1;
+        if (participant.outcome === "loss") participant.entry.losses += 1;
+        if (participant.outcome === "draw") participant.entry.draws += 1;
+
+        if (participant.attempt) {
+          participant.entry.totalScore += Number(participant.attempt.score) || 0;
+          participant.entry.attemptsCount += 1;
+        }
+
+        participant.entry.recentResults.push({
+          duelId: duel.duelId || duelDoc.id,
+          outcome: participant.outcome,
+          score: participant.attempt?.score ?? null,
+          completedAt,
+          opponentName: participant.opponentName,
+          opponentId: participant.opponentId,
+          courseTitle: duel?.course?.title || "Duel Course",
+        });
+      });
+    });
+
+    const rankedStats = Array.from(statsMap.values())
+      .map((entry) => {
+        const sortedResults = [...entry.recentResults].sort(
+          (a, b) => new Date(a.completedAt || 0) - new Date(b.completedAt || 0)
+        );
+
+        const streaks = computeWinStreakMetrics(sortedResults);
+        const averageScore =
+          entry.attemptsCount > 0
+            ? Number((entry.totalScore / entry.attemptsCount).toFixed(1))
+            : 0;
+
+        const winRate =
+          entry.totalDuels > 0
+            ? Number(((entry.wins / entry.totalDuels) * 100).toFixed(1))
+            : 0;
+
+        const points = entry.wins * 3 + entry.draws;
+
+        return {
+          ...entry,
+          averageScore,
+          winRate,
+          points,
+          currentWinStreak: streaks.currentWinStreak,
+          bestWinStreak: streaks.bestWinStreak,
+          recentResults: sortedResults.sort(
+            (a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0)
+          ),
+        };
+      })
+      .sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        if (b.currentWinStreak !== a.currentWinStreak)
+          return b.currentWinStreak - a.currentWinStreak;
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        return b.averageScore - a.averageScore;
+      });
+
+    const leaderboard = rankedStats.slice(0, safeLimit).map((entry, index) => ({
+      ...entry,
+      rank: index + 1,
+    }));
+
+    const currentUserStats =
+      rankedStats.find((entry) => entry.uid === currentUid) || {
+        uid: currentUid,
+        displayName: "You",
+        totalDuels: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        averageScore: 0,
+        winRate: 0,
+        points: 0,
+        currentWinStreak: 0,
+        bestWinStreak: 0,
+        recentResults: [],
+        rank: null,
+      };
+
+    if (currentUserStats.rank == null) {
+      const foundIndex = rankedStats.findIndex((entry) => entry.uid === currentUid);
+      if (foundIndex >= 0) {
+        currentUserStats.rank = foundIndex + 1;
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        leaderboard,
+        currentUserStats,
+        totalPlayers: rankedStats.length,
+      },
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error getting duel leaderboard:", error);
+    return {
+      success: false,
+      message: "Failed to fetch duel leaderboard",
+      code: 500,
+    };
+  }
+}
+
+// ==================== FLASHCARD FUNCTIONS ====================
+
+function getDefaultFlashcardCard(card = {}, index = 0) {
+  const now = new Date().toISOString();
+  return {
+    id: card.id || generateUniqueId(`card_${index}_`),
+    front: String(card.front || "").trim(),
+    back: String(card.back || "").trim(),
+    tags: Array.isArray(card.tags)
+      ? card.tags.map((tag) => String(tag).trim()).filter(Boolean).slice(0, 5)
+      : [],
+    easeFactor: 2.5,
+    interval: 0,
+    repetitions: 0,
+    lapses: 0,
+    dueDate: now,
+    lastReviewedAt: null,
+    reviewHistory: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function applySpacedRepetition(card, rating) {
+  const quality = Math.max(0, Math.min(5, Number(rating) || 0));
+
+  let repetitions = Number(card.repetitions) || 0;
+  let interval = Number(card.interval) || 0;
+  let easeFactor = Number(card.easeFactor) || 2.5;
+  let lapses = Number(card.lapses) || 0;
+
+  if (quality < 3) {
+    repetitions = 0;
+    interval = 0;
+    lapses += 1;
+  } else {
+    if (repetitions === 0) {
+      interval = 1;
+    } else if (repetitions === 1) {
+      interval = 3;
+    } else {
+      interval = Math.max(1, Math.round(interval * easeFactor));
+    }
+
+    repetitions += 1;
+    easeFactor = Math.max(
+      1.3,
+      easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+    );
+
+    if (quality === 5) {
+      interval = Math.max(1, Math.round(interval * 1.2));
+    }
+
+    if (quality === 3) {
+      interval = Math.max(1, Math.round(interval * 0.8));
+    }
+  }
+
+  const now = new Date();
+  const dueDate =
+    interval === 0
+      ? new Date(now.getTime() + 10 * 60 * 1000)
+      : new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
+
+  return {
+    repetitions,
+    interval,
+    easeFactor: Number(easeFactor.toFixed(2)),
+    lapses,
+    dueDate: dueDate.toISOString(),
+    lastReviewedAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    reviewHistoryEntry: {
+      quality,
+      reviewedAt: now.toISOString(),
+      interval,
+      easeFactor: Number(easeFactor.toFixed(2)),
+    },
+  };
+}
+
+export async function createFlashcardDeck(uid, deckData) {
+  try {
+    const { title, chatId = null, cards = [], source = "ai" } = deckData || {};
+
+    if (!uid) {
+      return {
+        success: false,
+        message: "User ID is required",
+        code: 400,
+      };
+    }
+
+    const normalizedCards = cards
+      .map((card, index) => getDefaultFlashcardCard(card, index))
+      .filter((card) => card.front && card.back);
+
+    if (normalizedCards.length === 0) {
+      return {
+        success: false,
+        message: "No valid flashcards to save",
+        code: 400,
+      };
+    }
+
+    const deckId = generateUniqueId("deck_");
+    const now = new Date().toISOString();
+
+    const payload = {
+      deckId,
+      userId: uid,
+      title: String(title || "Untitled Deck").trim(),
+      chatId,
+      source,
+      cards: normalizedCards,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await setDoc(doc(db, "flashcardDecks", deckId), payload);
+
+    return {
+      success: true,
+      data: payload,
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error creating flashcard deck:", error);
+    return {
+      success: false,
+      message: "Failed to create flashcard deck",
+      code: 500,
+    };
+  }
+}
+
+export async function getUserFlashcardDecks(uid) {
+  try {
+    if (!uid) {
+      return {
+        success: false,
+        message: "User ID is required",
+        code: 400,
+      };
+    }
+
+    const deckQuery = query(collection(db, "flashcardDecks"), where("userId", "==", uid));
+    const snapshot = await getDocs(deckQuery);
+    const now = Date.now();
+
+    const decks = [];
+    snapshot.forEach((deckDoc) => {
+      const deck = deckDoc.data();
+      const cards = Array.isArray(deck.cards) ? deck.cards : [];
+      const dueCount = cards.filter(
+        (card) => !card?.dueDate || new Date(card.dueDate).getTime() <= now
+      ).length;
+
+      decks.push({
+        deckId: deckDoc.id,
+        ...deck,
+        totalCards: cards.length,
+        dueCount,
+      });
+    });
+
+    decks.sort(
+      (a, b) =>
+        new Date(b.updatedAt || b.createdAt || 0) -
+        new Date(a.updatedAt || a.createdAt || 0)
+    );
+
+    return {
+      success: true,
+      data: decks,
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error fetching flashcard decks:", error);
+    return {
+      success: false,
+      message: "Failed to fetch flashcard decks",
+      code: 500,
+    };
+  }
+}
+
+export async function getFlashcardDeck(deckId, uid) {
+  try {
+    const deckRef = doc(db, "flashcardDecks", deckId);
+    const deckDoc = await getDoc(deckRef);
+
+    if (!deckDoc.exists()) {
+      return {
+        success: false,
+        message: "Deck not found",
+        code: 404,
+      };
+    }
+
+    const deckData = deckDoc.data();
+    if (deckData.userId !== uid) {
+      return {
+        success: false,
+        message: "Unauthorized access",
+        code: 403,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        deckId: deckDoc.id,
+        ...deckData,
+      },
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error fetching flashcard deck:", error);
+    return {
+      success: false,
+      message: "Failed to fetch flashcard deck",
+      code: 500,
+    };
+  }
+}
+
+export async function reviewFlashcard(deckId, uid, cardId, rating) {
+  try {
+    const deckRef = doc(db, "flashcardDecks", deckId);
+    const deckDoc = await getDoc(deckRef);
+
+    if (!deckDoc.exists()) {
+      return {
+        success: false,
+        message: "Deck not found",
+        code: 404,
+      };
+    }
+
+    const deckData = deckDoc.data();
+    if (deckData.userId !== uid) {
+      return {
+        success: false,
+        message: "Unauthorized access",
+        code: 403,
+      };
+    }
+
+    const cards = Array.isArray(deckData.cards) ? [...deckData.cards] : [];
+    const targetIndex = cards.findIndex((card) => card.id === cardId);
+
+    if (targetIndex === -1) {
+      return {
+        success: false,
+        message: "Card not found",
+        code: 404,
+      };
+    }
+
+    const schedule = applySpacedRepetition(cards[targetIndex], rating);
+    const reviewHistory = Array.isArray(cards[targetIndex].reviewHistory)
+      ? [...cards[targetIndex].reviewHistory, schedule.reviewHistoryEntry].slice(-20)
+      : [schedule.reviewHistoryEntry];
+
+    cards[targetIndex] = {
+      ...cards[targetIndex],
+      repetitions: schedule.repetitions,
+      interval: schedule.interval,
+      easeFactor: schedule.easeFactor,
+      lapses: schedule.lapses,
+      dueDate: schedule.dueDate,
+      lastReviewedAt: schedule.lastReviewedAt,
+      updatedAt: schedule.updatedAt,
+      reviewHistory,
+    };
+
+    await setDoc(
+      deckRef,
+      {
+        cards,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+
+    return {
+      success: true,
+      data: cards[targetIndex],
+      code: 200,
+    };
+  } catch (error) {
+    console.error("Error reviewing flashcard:", error);
+    return {
+      success: false,
+      message: "Failed to review flashcard",
+      code: 500,
+    };
+  }
+}

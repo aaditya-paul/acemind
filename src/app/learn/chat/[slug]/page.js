@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/contexts/AuthContext";

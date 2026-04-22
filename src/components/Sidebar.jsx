@@ -278,6 +278,41 @@ const Sidebar = ({ children }) => {
     </div>
   );
 
+  const quickLinks = [
+    {
+      href: "/learn/quizzes",
+      title: "Quiz Center",
+      subtitle: "Test your knowledge",
+      gradient: "from-purple-500 to-pink-500",
+      accent: "purple",
+      badge: "Q",
+    },
+    {
+      href: "/learn/challenges",
+      title: "Challenge Mode",
+      subtitle: "Duel your friends",
+      gradient: "from-indigo-500 to-blue-500",
+      accent: "indigo",
+      badge: "D",
+    },
+    {
+      href: "/learn/flashcards",
+      title: "Smart Flashcards",
+      subtitle: "Spaced repetition",
+      gradient: "from-cyan-500 to-teal-500",
+      accent: "cyan",
+      badge: "F",
+    },
+    {
+      href: "/leaderboard",
+      title: "Leaderboard",
+      subtitle: "Compete globally",
+      gradient: "from-yellow-500 to-orange-500",
+      accent: "yellow",
+      badge: "L",
+    },
+  ];
+
   return (
     <>
       {/* Delete Confirmation Modal */}
@@ -329,13 +364,13 @@ const Sidebar = ({ children }) => {
         </svg>
       </button>
 
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-gray-900 overflow-hidden">
         {/* Sidebar */}
         <aside
           className={`
         ${
           sidebarCollapsed ? "w-20" : "w-80"
-        } h-screen bg-gray-800 border-r border-gray-700 flex flex-col z-40 transition-all duration-300 ease-in-out
+        } h-screen min-h-0 bg-gray-800 border-r border-gray-700 flex flex-col z-40 transition-all duration-300 ease-in-out
         lg:relative lg:translate-x-0
         fixed inset-y-0 left-0 transform
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
@@ -415,7 +450,7 @@ const Sidebar = ({ children }) => {
           </div>
 
           {/* Chat History Section */}
-          <div className="flex-1 p-4 overflow-y-auto min-h-0 flex flex-col">
+          <div className="flex-1 p-4 min-h-0 flex flex-col">
             {!sidebarCollapsed && (
               <>
                 <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">
@@ -506,7 +541,7 @@ const Sidebar = ({ children }) => {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto space-y-2">
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
               {!user?.uid ? (
                 // Skeleton loading for chats
                 Array.from({ length: 3 }).map((_, index) => (
@@ -589,156 +624,76 @@ const Sidebar = ({ children }) => {
             {/* Render children if provided */}
           </div>
 
-          {/* Quiz Section */}
+          {/* Quick Links */}
           {!sidebarCollapsed && (
-            <div className="mx-3 mb-3 space-y-3">
-              <Link
-                href="/learn/quizzes"
-                className="block bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded-xl p-3 transition-all duration-200 group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                      <svg
-                        className="w-5 h-5 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white text-sm font-bold group-hover:text-purple-400 transition-colors">
-                        Quiz Center
-                      </p>
-                      <p className="text-gray-400 text-xs">
-                        Test your knowledge
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-gray-400 group-hover:text-purple-400 transition-colors">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
+            <div className="mx-3 mb-2 grid grid-cols-2 gap-2 flex-shrink-0">
+              {quickLinks.map((item) => {
+                const isActive = path === item.href;
+                const hoverTextColor = {
+                  purple: "group-hover:text-purple-400",
+                  indigo: "group-hover:text-indigo-400",
+                  cyan: "group-hover:text-cyan-400",
+                  yellow: "group-hover:text-yellow-400",
+                }[item.accent];
 
-              {/* Leaderboard Link */}
-              <Link
-                href="/leaderboard"
-                className="block bg-gradient-to-r from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 border border-yellow-500/30 hover:border-yellow-500/50 rounded-xl p-3 transition-all duration-200 group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                      <svg
-                        className="w-5 h-5 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`group rounded-xl border p-2.5 transition-all duration-200 ${
+                      isActive
+                        ? "bg-gray-700/70 border-gray-500/60"
+                        : "bg-gray-750/50 border-gray-600/30 hover:bg-gray-700/70 hover:border-gray-500/50"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <div
+                        className={`w-8 h-8 rounded-lg bg-gradient-to-r ${item.gradient} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
+                        {item.badge}
+                      </div>
+                      <div className="min-w-0">
+                        <p
+                          className={`text-xs font-semibold text-white transition-colors ${hoverTextColor}`}
+                        >
+                          {item.title}
+                        </p>
+                        <p className="text-[11px] text-gray-400 truncate">
+                          {item.subtitle}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-white text-sm font-bold group-hover:text-yellow-400 transition-colors">
-                        Leaderboard
-                      </p>
-                      <p className="text-gray-400 text-xs">Compete globally</p>
-                    </div>
-                  </div>
-                  <div className="text-gray-400 group-hover:text-yellow-400 transition-colors">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
+                  </Link>
+                );
+              })}
             </div>
           )}
 
-          {/* Collapsed Quiz & Leaderboard Buttons */}
           {sidebarCollapsed && (
-            <div className="mx-2 mb-3 space-y-2">
-              <Link
-                href="/learn/quizzes"
-                className="block bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded-xl p-2 transition-all duration-200"
-                title="Quiz Center"
-              >
-                <div className="flex justify-center">
-                  <div className="w-9 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
-
-              <Link
-                href="/leaderboard"
-                className="block bg-gradient-to-r from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 border border-yellow-500/30 hover:border-yellow-500/50 rounded-xl p-2 transition-all duration-200"
-                title="Leaderboard"
-              >
-                <div className="flex justify-center">
-                  <div className="w-9 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
+            <div className="mx-2 mb-3 space-y-2 flex-shrink-0">
+              {quickLinks.map((item) => {
+                const isActive = path === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`block rounded-xl p-2 transition-all duration-200 ${
+                      isActive
+                        ? "bg-gray-700/80 border border-gray-500/60"
+                        : "bg-gray-750/50 border border-gray-600/30 hover:bg-gray-700/70 hover:border-gray-500/50"
+                    }`}
+                    title={item.title}
+                  >
+                    <div className="flex justify-center">
+                      <div
+                        className={`w-9 h-8 bg-gradient-to-r ${item.gradient} rounded-lg flex items-center justify-center text-white text-xs font-bold`}
+                      >
+                        {item.badge}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
 
@@ -822,7 +777,9 @@ const Sidebar = ({ children }) => {
         {
           /* Render children if provided */
           children ? (
-            <div className="flex-1 md:mt-0 md:pt-0 pt-16 ">{children}</div>
+            <div className="flex-1 min-h-0 overflow-y-auto md:mt-0 md:pt-0 pt-16 bg-gray-900">
+              {children}
+            </div>
           ) : null
         }
       </div>
