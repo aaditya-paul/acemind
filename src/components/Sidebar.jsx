@@ -62,7 +62,7 @@ const Sidebar = ({ children }) => {
           showModal(
             "success",
             "Chat Deleted",
-            "Chat has been successfully deleted."
+            "Chat has been successfully deleted.",
           );
 
           // Refresh the chats list
@@ -80,7 +80,7 @@ const Sidebar = ({ children }) => {
           showModal(
             "error",
             "Delete Failed",
-            res.message || "Failed to delete chat. Please try again."
+            res.message || "Failed to delete chat. Please try again.",
           );
         }
       } catch (error) {
@@ -88,7 +88,7 @@ const Sidebar = ({ children }) => {
         showModal(
           "error",
           "Error",
-          "An unexpected error occurred while deleting the chat."
+          "An unexpected error occurred while deleting the chat.",
         );
       }
 
@@ -113,7 +113,7 @@ const Sidebar = ({ children }) => {
         if (data.success) {
           // set in ascending order
           let chatOrder = data.chats.sort(
-            (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+            (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
           );
           setChats(chatOrder);
         } else {
@@ -121,7 +121,7 @@ const Sidebar = ({ children }) => {
           showModal(
             "error",
             "Error Loading Chats",
-            data.message || "Failed to load your chat history."
+            data.message || "Failed to load your chat history.",
           );
         }
       })
@@ -130,7 +130,7 @@ const Sidebar = ({ children }) => {
         showModal(
           "error",
           "Network Error",
-          "Unable to load chats. Please check your internet connection."
+          "Unable to load chats. Please check your internet connection.",
         );
       });
   }, [user?.uid, router]);
@@ -150,7 +150,7 @@ const Sidebar = ({ children }) => {
     return chats.filter((chat) =>
       chat?.aiResponse?.courseTitle
         ?.toLowerCase()
-        .includes(searchQuery.toLowerCase())
+        .includes(searchQuery.toLowerCase()),
     );
   }, [chats, searchQuery]);
 
@@ -583,7 +583,7 @@ const Sidebar = ({ children }) => {
                     <div className="space-y-2">
                       <h4 className="text-xs text-gray-500 px-2">Today</h4>
                       {groupedChats.today.map((chat, index) =>
-                        renderChatItem(chat, index)
+                        renderChatItem(chat, index),
                       )}
                     </div>
                   )}
@@ -593,7 +593,7 @@ const Sidebar = ({ children }) => {
                     <div className="space-y-2">
                       <h4 className="text-xs text-gray-500 px-2">Yesterday</h4>
                       {groupedChats.yesterday.map((chat, index) =>
-                        renderChatItem(chat, index)
+                        renderChatItem(chat, index),
                       )}
                     </div>
                   )}
@@ -603,7 +603,7 @@ const Sidebar = ({ children }) => {
                     <div className="space-y-2">
                       <h4 className="text-xs text-gray-500 px-2">This Week</h4>
                       {groupedChats.thisWeek.map((chat, index) =>
-                        renderChatItem(chat, index)
+                        renderChatItem(chat, index),
                       )}
                     </div>
                   )}
@@ -613,7 +613,7 @@ const Sidebar = ({ children }) => {
                     <div className="space-y-2">
                       <h4 className="text-xs text-gray-500 px-2">Older</h4>
                       {groupedChats.older.map((chat, index) =>
-                        renderChatItem(chat, index)
+                        renderChatItem(chat, index),
                       )}
                     </div>
                   )}

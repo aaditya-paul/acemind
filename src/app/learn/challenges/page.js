@@ -106,7 +106,7 @@ export default function ChallengesPage() {
 
       if (chatsResult.success) {
         const sortedChats = [...chatsResult.chats].sort(
-          (a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
+          (a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0),
         );
         setChats(sortedChats);
         if (!selectedChatId && sortedChats.length > 0) {
@@ -141,33 +141,33 @@ export default function ChallengesPage() {
 
   const selectedChat = useMemo(
     () => chats.find((chat) => chat.chatId === selectedChatId),
-    [chats, selectedChatId]
+    [chats, selectedChatId],
   );
 
   const incomingChallenges = useMemo(
     () =>
       duels.filter(
-        (duel) => duel.status === "pending" && duel.opponentId === user?.uid
+        (duel) => duel.status === "pending" && duel.opponentId === user?.uid,
       ),
-    [duels, user?.uid]
+    [duels, user?.uid],
   );
 
   const sentChallenges = useMemo(
     () =>
       duels.filter(
-        (duel) => duel.status === "pending" && duel.challengerId === user?.uid
+        (duel) => duel.status === "pending" && duel.challengerId === user?.uid,
       ),
-    [duels, user?.uid]
+    [duels, user?.uid],
   );
 
   const activeChallenges = useMemo(
     () => duels.filter((duel) => duel.status === "active"),
-    [duels]
+    [duels],
   );
 
   const completedChallenges = useMemo(
     () => duels.filter((duel) => duel.status === "completed"),
-    [duels]
+    [duels],
   );
 
   const clearAlertsSoon = () => {
@@ -213,14 +213,19 @@ export default function ChallengesPage() {
       const createResult = await createDuelChallenge({
         challengerId: user.uid,
         challengerName:
-          userData?.displayName || user.displayName || userData?.firstName || "You",
+          userData?.displayName ||
+          user.displayName ||
+          userData?.firstName ||
+          "You",
         challengerEmail: user.email,
         opponentId: friend.uid,
         opponentName: friend.displayName,
         opponentEmail: friend.email,
         chatId: selectedChat.chatId,
         courseTitle:
-          selectedChat?.aiResponse?.courseTitle || selectedChat?.topic || "Course",
+          selectedChat?.aiResponse?.courseTitle ||
+          selectedChat?.topic ||
+          "Course",
         courseContext: context,
         difficulty,
         questionCount,
@@ -256,21 +261,26 @@ export default function ChallengesPage() {
 
     if (action === "accept") {
       try {
-        await fetch(process.env.NEXT_PUBLIC_API_ENDPOINT + "/api/duel/prepare-quiz", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            duelId,
-            userId: user.uid,
-            prepareOnly: true,
-          }),
-        });
+        await fetch(
+          process.env.NEXT_PUBLIC_API_ENDPOINT + "/api/duel/prepare-quiz",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              duelId,
+              userId: user.uid,
+              prepareOnly: true,
+            }),
+          },
+        );
       } catch (prepareError) {
         console.warn("Could not pre-prepare duel quiz:", prepareError);
       }
     }
 
-    setSuccess(action === "accept" ? "Challenge accepted" : "Challenge declined");
+    setSuccess(
+      action === "accept" ? "Challenge accepted" : "Challenge declined",
+    );
     await loadData();
     clearAlertsSoon();
   };
@@ -306,7 +316,7 @@ export default function ChallengesPage() {
             duelId: duel.duelId,
             userId: user.uid,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -337,7 +347,11 @@ export default function ChallengesPage() {
   const handleCompleteDuel = async (result) => {
     if (!activeQuiz?.duel?.duelId) return;
 
-    const submitResult = await submitDuelAttempt(activeQuiz.duel.duelId, user.uid, result);
+    const submitResult = await submitDuelAttempt(
+      activeQuiz.duel.duelId,
+      user.uid,
+      result,
+    );
     if (!submitResult.success) {
       setError(submitResult.message || "Failed to submit duel attempt");
       setActiveQuiz(null);
@@ -443,7 +457,9 @@ export default function ChallengesPage() {
                   ) : (
                     chats.map((chat) => (
                       <option key={chat.chatId} value={chat.chatId}>
-                        {chat?.aiResponse?.courseTitle || chat?.topic || "Untitled Course"}
+                        {chat?.aiResponse?.courseTitle ||
+                          chat?.topic ||
+                          "Untitled Course"}
                       </option>
                     ))
                   )}
@@ -474,7 +490,7 @@ export default function ChallengesPage() {
                   value={questionCount}
                   onChange={(e) =>
                     setQuestionCount(
-                      Math.max(5, Math.min(30, Number(e.target.value) || 5))
+                      Math.max(5, Math.min(30, Number(e.target.value) || 5)),
                     )
                   }
                   className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
@@ -485,7 +501,8 @@ export default function ChallengesPage() {
             <div className="flex items-center justify-between gap-3 flex-wrap text-xs text-gray-400">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-blue-400" />
-                Estimated time: {Math.ceil(getTimeLimit(difficulty, questionCount) / 60)} min
+                Estimated time:{" "}
+                {Math.ceil(getTimeLimit(difficulty, questionCount) / 60)} min
               </div>
               <button
                 type="submit"
@@ -542,7 +559,9 @@ export default function ChallengesPage() {
             </h3>
 
             {leaderboard.length === 0 ? (
-              <p className="text-sm text-gray-400">No completed duel stats yet.</p>
+              <p className="text-sm text-gray-400">
+                No completed duel stats yet.
+              </p>
             ) : (
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
@@ -571,13 +590,21 @@ export default function ChallengesPage() {
                         {entry.displayName || "Anonymous User"}
                         {entry.uid === user.uid ? " (You)" : ""}
                       </td>
-                      <td className="py-2 pr-2 text-blue-300">{entry.points}</td>
+                      <td className="py-2 pr-2 text-blue-300">
+                        {entry.points}
+                      </td>
                       <td className="py-2 pr-2 text-gray-200">
                         {entry.wins}-{entry.losses}-{entry.draws}
                       </td>
-                      <td className="py-2 pr-2 text-green-300">{entry.winRate}%</td>
-                      <td className="py-2 pr-2 text-orange-300">{entry.currentWinStreak}</td>
-                      <td className="py-2 pr-2 text-gray-200">{entry.averageScore}%</td>
+                      <td className="py-2 pr-2 text-green-300">
+                        {entry.winRate}%
+                      </td>
+                      <td className="py-2 pr-2 text-orange-300">
+                        {entry.currentWinStreak}
+                      </td>
+                      <td className="py-2 pr-2 text-gray-200">
+                        {entry.averageScore}%
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -597,13 +624,20 @@ export default function ChallengesPage() {
               )}
 
               {incomingChallenges.map((duel) => (
-                <div key={duel.duelId} className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-2">
+                <div
+                  key={duel.duelId}
+                  className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-2"
+                >
                   <p className="text-sm text-gray-200">
-                    <span className="text-purple-300 font-medium">{duel.challengerName}</span>{" "}
-                    challenged you in <span className="font-medium">{duel?.course?.title}</span>
+                    <span className="text-purple-300 font-medium">
+                      {duel.challengerName}
+                    </span>{" "}
+                    challenged you in{" "}
+                    <span className="font-medium">{duel?.course?.title}</span>
                   </p>
                   <p className="text-xs text-gray-400">
-                    {duel?.quizConfig?.difficulty} • {duel?.quizConfig?.questionCount} questions
+                    {duel?.quizConfig?.difficulty} •{" "}
+                    {duel?.quizConfig?.questionCount} questions
                   </p>
                   <div className="flex items-center gap-2">
                     <button
@@ -630,13 +664,21 @@ export default function ChallengesPage() {
               </h3>
 
               {sentChallenges.length === 0 && (
-                <p className="text-gray-400 text-sm">No pending challenges sent.</p>
+                <p className="text-gray-400 text-sm">
+                  No pending challenges sent.
+                </p>
               )}
 
               {sentChallenges.map((duel) => (
-                <div key={duel.duelId} className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-2">
+                <div
+                  key={duel.duelId}
+                  className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-2"
+                >
                   <p className="text-sm text-gray-200">
-                    Waiting for <span className="text-blue-300 font-medium">{duel.opponentName}</span>
+                    Waiting for{" "}
+                    <span className="text-blue-300 font-medium">
+                      {duel.opponentName}
+                    </span>
                   </p>
                   <p className="text-xs text-gray-400">
                     {duel?.course?.title} • {duel?.quizConfig?.difficulty}
@@ -659,21 +701,31 @@ export default function ChallengesPage() {
             </h3>
 
             {activeChallenges.length === 0 && (
-              <p className="text-gray-400 text-sm">No active duels right now.</p>
+              <p className="text-gray-400 text-sm">
+                No active duels right now.
+              </p>
             )}
 
             {activeChallenges.map((duel) => {
               const myAttempt = duel?.attempts?.[user.uid];
               const opponentId =
-                duel.challengerId === user.uid ? duel.opponentId : duel.challengerId;
+                duel.challengerId === user.uid
+                  ? duel.opponentId
+                  : duel.challengerId;
               const opponentAttempt = duel?.attempts?.[opponentId];
 
               return (
-                <div key={duel.duelId} className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-3">
+                <div
+                  key={duel.duelId}
+                  className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-3"
+                >
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <p className="text-sm text-gray-200 font-medium">{duel?.course?.title}</p>
+                    <p className="text-sm text-gray-200 font-medium">
+                      {duel?.course?.title}
+                    </p>
                     <p className="text-xs text-gray-400">
-                      {duel?.quizConfig?.difficulty} • {duel?.quizConfig?.questionCount} questions
+                      {duel?.quizConfig?.difficulty} •{" "}
+                      {duel?.quizConfig?.questionCount} questions
                     </p>
                   </div>
 
@@ -681,7 +733,9 @@ export default function ChallengesPage() {
                     <div className="bg-gray-800 rounded-md p-2">
                       <p className="text-gray-400">Your status</p>
                       <p className="text-white font-medium">
-                        {myAttempt ? `Submitted (${myAttempt.score}%)` : "Not attempted"}
+                        {myAttempt
+                          ? `Submitted (${myAttempt.score}%)`
+                          : "Not attempted"}
                       </p>
                     </div>
                     <div className="bg-gray-800 rounded-md p-2">
@@ -702,7 +756,9 @@ export default function ChallengesPage() {
                       Start Duel Quiz
                     </button>
                   ) : (
-                    <p className="text-xs text-green-300">Attempt already submitted.</p>
+                    <p className="text-xs text-green-300">
+                      Attempt already submitted.
+                    </p>
                   )}
                 </div>
               );
@@ -720,16 +776,23 @@ export default function ChallengesPage() {
             )}
 
             {completedChallenges.map((duel) => (
-              <div key={duel.duelId} className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-2">
+              <div
+                key={duel.duelId}
+                className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-2"
+              >
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm text-gray-200 font-medium">{duel?.course?.title}</p>
+                  <p className="text-sm text-gray-200 font-medium">
+                    {duel?.course?.title}
+                  </p>
                   <span className="text-xs px-2 py-1 rounded bg-gray-800 border border-gray-700 text-yellow-300">
                     {getDuelOutcomeLabel(duel, user.uid)}
                   </span>
                 </div>
                 <div className="text-xs text-gray-400">
-                  {duel.challengerName}: {duel?.attempts?.[duel.challengerId]?.score ?? "-"}% • {" "}
-                  {duel.opponentName}: {duel?.attempts?.[duel.opponentId]?.score ?? "-"}%
+                  {duel.challengerName}:{" "}
+                  {duel?.attempts?.[duel.challengerId]?.score ?? "-"}% •{" "}
+                  {duel.opponentName}:{" "}
+                  {duel?.attempts?.[duel.opponentId]?.score ?? "-"}%
                 </div>
               </div>
             ))}

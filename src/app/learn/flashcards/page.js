@@ -70,7 +70,7 @@ export default function FlashcardsPage() {
 
       if (chatsResult.success) {
         const sortedChats = [...chatsResult.chats].sort(
-          (a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
+          (a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0),
         );
         setChats(sortedChats);
         if (!selectedChatId && sortedChats.length > 0) {
@@ -100,7 +100,7 @@ export default function FlashcardsPage() {
 
   const selectedChat = useMemo(
     () => chats.find((chat) => chat.chatId === selectedChatId),
-    [chats, selectedChatId]
+    [chats, selectedChatId],
   );
 
   const currentCard = reviewQueue[currentIndex] || null;
@@ -130,12 +130,14 @@ export default function FlashcardsPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             topic:
-              selectedChat?.aiResponse?.courseTitle || selectedChat?.topic || "Course",
+              selectedChat?.aiResponse?.courseTitle ||
+              selectedChat?.topic ||
+              "Course",
             courseContext: buildCourseContext(selectedChat),
             cardCount,
             userId: user.uid,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -146,7 +148,9 @@ export default function FlashcardsPage() {
 
       const deckResult = await createFlashcardDeck(user.uid, {
         title: `${
-          selectedChat?.aiResponse?.courseTitle || selectedChat?.topic || "Course"
+          selectedChat?.aiResponse?.courseTitle ||
+          selectedChat?.topic ||
+          "Course"
         } - Smart Deck`,
         chatId: selectedChat.chatId,
         source: "ai",
@@ -196,7 +200,12 @@ export default function FlashcardsPage() {
   const handleReview = async (rating) => {
     if (!activeDeck || !currentCard) return;
 
-    const result = await reviewFlashcard(activeDeck.deckId, user.uid, currentCard.id, rating);
+    const result = await reviewFlashcard(
+      activeDeck.deckId,
+      user.uid,
+      currentCard.id,
+      rating,
+    );
     if (!result.success) {
       setError(result.message || "Failed to save card review");
       return;
@@ -278,7 +287,9 @@ export default function FlashcardsPage() {
                   ) : (
                     chats.map((chat) => (
                       <option key={chat.chatId} value={chat.chatId}>
-                        {chat?.aiResponse?.courseTitle || chat?.topic || "Untitled Course"}
+                        {chat?.aiResponse?.courseTitle ||
+                          chat?.topic ||
+                          "Untitled Course"}
                       </option>
                     ))
                   )}
@@ -293,7 +304,9 @@ export default function FlashcardsPage() {
                   max={40}
                   value={cardCount}
                   onChange={(e) =>
-                    setCardCount(Math.max(5, Math.min(40, Number(e.target.value) || 5)))
+                    setCardCount(
+                      Math.max(5, Math.min(40, Number(e.target.value) || 5)),
+                    )
                   }
                   className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500"
                 />
@@ -317,18 +330,27 @@ export default function FlashcardsPage() {
               </h3>
 
               {decks.length === 0 && (
-                <p className="text-gray-400 text-sm">Generate your first deck to begin revision.</p>
+                <p className="text-gray-400 text-sm">
+                  Generate your first deck to begin revision.
+                </p>
               )}
 
               {decks.map((deck) => (
-                <div key={deck.deckId} className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-2">
+                <div
+                  key={deck.deckId}
+                  className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-2"
+                >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-gray-100">{deck.title}</p>
+                    <p className="text-sm font-medium text-gray-100">
+                      {deck.title}
+                    </p>
                     <span className="text-xs px-2 py-1 rounded bg-gray-800 border border-gray-700 text-yellow-300">
                       Due {deck.dueCount}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400">{deck.totalCards} cards</p>
+                  <p className="text-xs text-gray-400">
+                    {deck.totalCards} cards
+                  </p>
                   <button
                     onClick={() => handleStartReview(deck.deckId)}
                     className="px-3 py-1.5 text-xs rounded-md bg-blue-600 hover:bg-blue-700"
@@ -346,7 +368,9 @@ export default function FlashcardsPage() {
               </h3>
 
               {!activeDeck && !sessionDone && (
-                <p className="text-gray-400 text-sm">Choose a deck and start review to practice due cards.</p>
+                <p className="text-gray-400 text-sm">
+                  Choose a deck and start review to practice due cards.
+                </p>
               )}
 
               {activeDeck && currentCard && !sessionDone && (
@@ -359,14 +383,22 @@ export default function FlashcardsPage() {
                   </div>
 
                   <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 space-y-3">
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Front</p>
-                    <p className="text-sm md:text-base text-gray-100">{currentCard.front}</p>
+                    <p className="text-xs uppercase tracking-wide text-gray-500">
+                      Front
+                    </p>
+                    <p className="text-sm md:text-base text-gray-100">
+                      {currentCard.front}
+                    </p>
                   </div>
 
                   {showAnswer ? (
                     <div className="bg-green-900/20 border border-green-700 rounded-lg p-4 space-y-3">
-                      <p className="text-xs uppercase tracking-wide text-green-400">Back</p>
-                      <p className="text-sm md:text-base text-green-100">{currentCard.back}</p>
+                      <p className="text-xs uppercase tracking-wide text-green-400">
+                        Back
+                      </p>
+                      <p className="text-sm md:text-base text-green-100">
+                        {currentCard.back}
+                      </p>
                       <div className="grid grid-cols-2 gap-2 pt-2">
                         <button
                           onClick={() => handleReview(0)}
@@ -419,7 +451,8 @@ export default function FlashcardsPage() {
                     Session Complete
                   </p>
                   <p className="text-sm text-green-100">
-                    Great work. Your spaced repetition schedule has been updated.
+                    Great work. Your spaced repetition schedule has been
+                    updated.
                   </p>
                   <button
                     onClick={resetReviewSession}

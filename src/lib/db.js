@@ -150,7 +150,7 @@ export async function setResponseDB(response, uid) {
           chatId: chat_id,
         }),
       },
-      { merge: true }
+      { merge: true },
     );
 
     // Sanitize the aiResponse to prevent nested array issues
@@ -170,7 +170,7 @@ export async function setResponseDB(response, uid) {
         chatId: chat_id,
         syllabusContext: response.syllabusContext,
       },
-      { merge: true }
+      { merge: true },
     );
     return {
       success: true,
@@ -246,7 +246,7 @@ export async function deleteSingleChat(chatID, uid) {
       {
         chats: userDoc.data().chats.filter((chat) => chat.chatId !== chatID),
       },
-      { merge: true }
+      { merge: true },
     );
 
     const chatDoc = await getDoc(chatRef);
@@ -294,7 +294,7 @@ export async function saveMindmapState(chatID, uid, mindmapState) {
           savedAt: new Date().toISOString(),
         },
       },
-      { merge: true }
+      { merge: true },
     );
 
     return {
@@ -347,7 +347,7 @@ export async function setSubtopicDataDB(chatID, uid, subtopicData) {
           [subtopicKey]: sanitizedSubtopicData,
         },
       },
-      { merge: true }
+      { merge: true },
     );
 
     console.log(`💾 Saved regular subtopic data for key: ${subtopicKey}`);
@@ -408,7 +408,7 @@ export async function getSubtopicDataDB(chatID, uid, unitIndex, subTopicIndex) {
     };
 
     console.log(
-      `📚 Retrieved regular subtopic data from cache for key: ${subtopicKey}`
+      `📚 Retrieved regular subtopic data from cache for key: ${subtopicKey}`,
     );
 
     return {
@@ -433,7 +433,7 @@ export async function addExpandedSubtopics(
   uid,
   unitIndex,
   subTopicIndex,
-  newSubtopics
+  newSubtopics,
 ) {
   try {
     const chatRef = doc(db, "chats", chatID);
@@ -491,7 +491,7 @@ export async function addExpandedSubtopics(
         aiResponse: sanitizedCourseData,
         updatedAt: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     return {
@@ -566,7 +566,7 @@ export async function addMultiLevelSubtopics(
   hierarchyPath,
   newSubtopics,
   parentTitle,
-  level = 1
+  level = 1,
 ) {
   try {
     const chatRef = doc(db, "chats", chatID);
@@ -627,7 +627,7 @@ export async function addMultiLevelSubtopics(
         aiResponse: sanitizedCourseData,
         updatedAt: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     return {
@@ -652,7 +652,7 @@ export async function setHierarchicalSubtopicDataDB(
   chatID,
   uid,
   subtopicData,
-  hierarchyPath
+  hierarchyPath,
 ) {
   try {
     const chatRef = doc(db, "chats", chatID);
@@ -675,7 +675,7 @@ export async function setHierarchicalSubtopicDataDB(
     if (nestedArrays.length > 0) {
       console.warn(
         "🔍 Nested arrays detected before sanitization:",
-        nestedArrays
+        nestedArrays,
       );
     }
 
@@ -694,16 +694,16 @@ export async function setHierarchicalSubtopicDataDB(
     // Debug: Check if any nested arrays remain after sanitization
     const remainingNestedArrays = checkForNestedArrays(
       sanitizedSubtopicData,
-      "sanitizedData"
+      "sanitizedData",
     );
     if (remainingNestedArrays.length > 0) {
       console.error(
         "❌ Nested arrays still present after sanitization:",
-        remainingNestedArrays
+        remainingNestedArrays,
       );
       console.error(
         "❌ Problematic data:",
-        JSON.stringify(sanitizedSubtopicData, null, 2)
+        JSON.stringify(sanitizedSubtopicData, null, 2),
       );
     }
 
@@ -714,7 +714,7 @@ export async function setHierarchicalSubtopicDataDB(
           [hierarchyKey]: sanitizedSubtopicData,
         },
       },
-      { merge: true }
+      { merge: true },
     );
 
     console.log(`💾 Saved hierarchical subtopic data for key: ${hierarchyKey}`);
@@ -740,7 +740,7 @@ export async function setHierarchicalSubtopicDataDB(
 export async function getHierarchicalSubtopicDataDB(
   chatID,
   uid,
-  hierarchyPath
+  hierarchyPath,
 ) {
   try {
     const chatRef = doc(db, "chats", chatID);
@@ -779,7 +779,7 @@ export async function getHierarchicalSubtopicDataDB(
     };
 
     console.log(
-      `📚 Retrieved hierarchical subtopic data from cache for key: ${hierarchyKey}`
+      `📚 Retrieved hierarchical subtopic data from cache for key: ${hierarchyKey}`,
     );
 
     return {
@@ -915,7 +915,7 @@ export async function clearSubtopicCache(chatID, uid, hierarchyPath = null) {
           subtopicData: updatedSubtopicData,
           cacheCleared: new Date().toISOString(),
         },
-        { merge: true }
+        { merge: true },
       );
 
       console.log(`🗑️ Cleared cache for subtopic: ${hierarchyKey}`);
@@ -932,7 +932,7 @@ export async function clearSubtopicCache(chatID, uid, hierarchyPath = null) {
           subtopicData: {},
           cacheCleared: new Date().toISOString(),
         },
-        { merge: true }
+        { merge: true },
       );
 
       console.log("🗑️ Cleared all subtopic cache");
@@ -1043,7 +1043,7 @@ export async function saveDoubtMessage(chatID, uid, message) {
         doubtMessages: doubtMessages,
         lastDoubtMessageAt: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     return {
@@ -1117,7 +1117,7 @@ export async function deleteDoubtMessage(chatID, uid, messageId) {
         doubtMessages: updatedMessages,
         lastDoubtMessageDeletedAt: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     return {
@@ -1156,7 +1156,7 @@ export async function clearAllDoubtMessages(chatID, uid) {
         doubtMessages: [],
         lastDoubtMessagesClearedAt: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     return {
@@ -1204,7 +1204,7 @@ export async function saveQuizResult(chatID, uid, quizData) {
         totalQuizzesTaken: (chatData.totalQuizzesTaken || 0) + 1,
         lastQuizTakenAt: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     // Update user stats
@@ -1296,7 +1296,7 @@ async function updateUserQuizStats(uid, quizResult) {
     // Calculate XP and level (more balanced formula)
     // Base XP from score + bonus per correct answer
     const xpGained = Math.floor(
-      quizResult.score * 0.5 + quizResult.correctAnswers * 2
+      quizResult.score * 0.5 + quizResult.correctAnswers * 2,
     );
     newStats.xp = currentStats.xp + xpGained;
 
@@ -1497,12 +1497,20 @@ function createDuelAttemptSummary(result) {
     timeTaken,
     difficulty: result?.difficulty || "intermediate",
     quizTitle: result?.quizTitle || "Duel Quiz",
-    accuracy: totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0,
+    accuracy:
+      totalQuestions > 0
+        ? Math.round((correctAnswers / totalQuestions) * 100)
+        : 0,
     submittedAt: new Date().toISOString(),
   };
 }
 
-function decideDuelWinner(challengerId, opponentId, challengerAttempt, opponentAttempt) {
+function decideDuelWinner(
+  challengerId,
+  opponentId,
+  challengerAttempt,
+  opponentAttempt,
+) {
   if (challengerAttempt.score > opponentAttempt.score) {
     return { winnerId: challengerId, isDraw: false };
   }
@@ -1684,7 +1692,7 @@ export async function getUserDuelChallenges(uid) {
     const duels = Array.from(duelMap.values()).sort(
       (a, b) =>
         new Date(b.updatedAt || b.createdAt || 0) -
-        new Date(a.updatedAt || a.createdAt || 0)
+        new Date(a.updatedAt || a.createdAt || 0),
     );
 
     return {
@@ -1808,7 +1816,7 @@ export async function cancelDuelChallenge(duelId, uid) {
         cancelledAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     return {
@@ -1840,7 +1848,8 @@ export async function submitDuelAttempt(duelId, uid, result) {
     }
 
     const duelData = duelDoc.data();
-    const isParticipant = uid === duelData.challengerId || uid === duelData.opponentId;
+    const isParticipant =
+      uid === duelData.challengerId || uid === duelData.opponentId;
     if (!isParticipant) {
       return {
         success: false,
@@ -1882,7 +1891,7 @@ export async function submitDuelAttempt(duelId, uid, result) {
         duelData.challengerId,
         duelData.opponentId,
         challengerAttempt,
-        opponentAttempt
+        opponentAttempt,
       );
 
       updatePayload.status = "completed";
@@ -1987,7 +1996,7 @@ export async function getDuelLeaderboard(currentUid, limit = 20) {
     const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
     const completedDuelsQuery = query(
       collection(db, "duels"),
-      where("status", "==", "completed")
+      where("status", "==", "completed"),
     );
 
     const snapshot = await getDocs(completedDuelsQuery);
@@ -1996,7 +2005,10 @@ export async function getDuelLeaderboard(currentUid, limit = 20) {
     snapshot.forEach((duelDoc) => {
       const duel = duelDoc.data();
       const completedAt =
-        duel.completedAt || duel.updatedAt || duel.createdAt || new Date().toISOString();
+        duel.completedAt ||
+        duel.updatedAt ||
+        duel.createdAt ||
+        new Date().toISOString();
 
       const challengerAttempt = duel?.attempts?.[duel.challengerId] || null;
       const opponentAttempt = duel?.attempts?.[duel.opponentId] || null;
@@ -2044,7 +2056,8 @@ export async function getDuelLeaderboard(currentUid, limit = 20) {
         if (participant.outcome === "draw") participant.entry.draws += 1;
 
         if (participant.attempt) {
-          participant.entry.totalScore += Number(participant.attempt.score) || 0;
+          participant.entry.totalScore +=
+            Number(participant.attempt.score) || 0;
           participant.entry.attemptsCount += 1;
         }
 
@@ -2063,7 +2076,7 @@ export async function getDuelLeaderboard(currentUid, limit = 20) {
     const rankedStats = Array.from(statsMap.values())
       .map((entry) => {
         const sortedResults = [...entry.recentResults].sort(
-          (a, b) => new Date(a.completedAt || 0) - new Date(b.completedAt || 0)
+          (a, b) => new Date(a.completedAt || 0) - new Date(b.completedAt || 0),
         );
 
         const streaks = computeWinStreakMetrics(sortedResults);
@@ -2087,7 +2100,8 @@ export async function getDuelLeaderboard(currentUid, limit = 20) {
           currentWinStreak: streaks.currentWinStreak,
           bestWinStreak: streaks.bestWinStreak,
           recentResults: sortedResults.sort(
-            (a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0)
+            (a, b) =>
+              new Date(b.completedAt || 0) - new Date(a.completedAt || 0),
           ),
         };
       })
@@ -2104,25 +2118,28 @@ export async function getDuelLeaderboard(currentUid, limit = 20) {
       rank: index + 1,
     }));
 
-    const currentUserStats =
-      rankedStats.find((entry) => entry.uid === currentUid) || {
-        uid: currentUid,
-        displayName: "You",
-        totalDuels: 0,
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        averageScore: 0,
-        winRate: 0,
-        points: 0,
-        currentWinStreak: 0,
-        bestWinStreak: 0,
-        recentResults: [],
-        rank: null,
-      };
+    const currentUserStats = rankedStats.find(
+      (entry) => entry.uid === currentUid,
+    ) || {
+      uid: currentUid,
+      displayName: "You",
+      totalDuels: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      averageScore: 0,
+      winRate: 0,
+      points: 0,
+      currentWinStreak: 0,
+      bestWinStreak: 0,
+      recentResults: [],
+      rank: null,
+    };
 
     if (currentUserStats.rank == null) {
-      const foundIndex = rankedStats.findIndex((entry) => entry.uid === currentUid);
+      const foundIndex = rankedStats.findIndex(
+        (entry) => entry.uid === currentUid,
+      );
       if (foundIndex >= 0) {
         currentUserStats.rank = foundIndex + 1;
       }
@@ -2156,7 +2173,10 @@ function getDefaultFlashcardCard(card = {}, index = 0) {
     front: String(card.front || "").trim(),
     back: String(card.back || "").trim(),
     tags: Array.isArray(card.tags)
-      ? card.tags.map((tag) => String(tag).trim()).filter(Boolean).slice(0, 5)
+      ? card.tags
+          .map((tag) => String(tag).trim())
+          .filter(Boolean)
+          .slice(0, 5)
       : [],
     easeFactor: 2.5,
     interval: 0,
@@ -2194,7 +2214,7 @@ function applySpacedRepetition(card, rating) {
     repetitions += 1;
     easeFactor = Math.max(
       1.3,
-      easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+      easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)),
     );
 
     if (quality === 5) {
@@ -2294,7 +2314,10 @@ export async function getUserFlashcardDecks(uid) {
       };
     }
 
-    const deckQuery = query(collection(db, "flashcardDecks"), where("userId", "==", uid));
+    const deckQuery = query(
+      collection(db, "flashcardDecks"),
+      where("userId", "==", uid),
+    );
     const snapshot = await getDocs(deckQuery);
     const now = Date.now();
 
@@ -2303,7 +2326,7 @@ export async function getUserFlashcardDecks(uid) {
       const deck = deckDoc.data();
       const cards = Array.isArray(deck.cards) ? deck.cards : [];
       const dueCount = cards.filter(
-        (card) => !card?.dueDate || new Date(card.dueDate).getTime() <= now
+        (card) => !card?.dueDate || new Date(card.dueDate).getTime() <= now,
       ).length;
 
       decks.push({
@@ -2317,7 +2340,7 @@ export async function getUserFlashcardDecks(uid) {
     decks.sort(
       (a, b) =>
         new Date(b.updatedAt || b.createdAt || 0) -
-        new Date(a.updatedAt || a.createdAt || 0)
+        new Date(a.updatedAt || a.createdAt || 0),
     );
 
     return {
@@ -2410,7 +2433,10 @@ export async function reviewFlashcard(deckId, uid, cardId, rating) {
 
     const schedule = applySpacedRepetition(cards[targetIndex], rating);
     const reviewHistory = Array.isArray(cards[targetIndex].reviewHistory)
-      ? [...cards[targetIndex].reviewHistory, schedule.reviewHistoryEntry].slice(-20)
+      ? [
+          ...cards[targetIndex].reviewHistory,
+          schedule.reviewHistoryEntry,
+        ].slice(-20)
       : [schedule.reviewHistoryEntry];
 
     cards[targetIndex] = {
@@ -2431,7 +2457,7 @@ export async function reviewFlashcard(deckId, uid, cardId, rating) {
         cards,
         updatedAt: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     return {
