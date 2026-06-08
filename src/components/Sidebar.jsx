@@ -311,6 +311,14 @@ const Sidebar = ({ children }) => {
       accent: "yellow",
       badge: "L",
     },
+    {
+      href: "/learn/timer",
+      title: "Focus Space",
+      subtitle: "Study with Pomodoro",
+      gradient: "from-emerald-500 to-teal-500",
+      accent: "emerald",
+      badge: "⏰",
+    },
   ];
 
   return (
@@ -627,14 +635,17 @@ const Sidebar = ({ children }) => {
           {/* Quick Links */}
           {!sidebarCollapsed && (
             <div className="mx-3 mb-2 grid grid-cols-2 gap-2 flex-shrink-0">
-              {quickLinks.map((item) => {
+              {quickLinks.map((item, index) => {
                 const isActive = path === item.href;
                 const hoverTextColor = {
                   purple: "group-hover:text-purple-400",
                   indigo: "group-hover:text-indigo-400",
                   cyan: "group-hover:text-cyan-400",
                   yellow: "group-hover:text-yellow-400",
+                  emerald: "group-hover:text-emerald-400",
                 }[item.accent];
+
+                const isLastAndOdd = index === quickLinks.length - 1 && quickLinks.length % 2 !== 0;
 
                 return (
                   <Link
@@ -644,7 +655,7 @@ const Sidebar = ({ children }) => {
                       isActive
                         ? "bg-gray-700/70 border-gray-500/60"
                         : "bg-gray-750/50 border-gray-600/30 hover:bg-gray-700/70 hover:border-gray-500/50"
-                    }`}
+                    } ${isLastAndOdd ? "col-span-2" : ""}`}
                   >
                     <div className="flex items-start gap-2.5">
                       <div
